@@ -1,5 +1,7 @@
+import os as os 
 import requests as r
 import datetime as dt
+import csv as csv 
 
 base: str = "https://api.bybit.com"
 tickers: str = "/v5/market/tickers"
@@ -37,6 +39,7 @@ def get_ohlc(symbol: str, interval: str) :
     params: dict = {"category": "linear", 
                     "symbol": symbol, 
                     "interval": interval,
+                    "limit": 1000
                     }
     res = r.request("GET", url=base+kline, params=params) 
     code: int = res.status_code
@@ -60,16 +63,57 @@ def convert_time(time: str) -> tuple:
 
 
 def main():
-    ohlc = get_ohlc(bitcoin, "D")
-    for tf in ohlc:
-        t = convert_time(tf[0])
+    timeframe: str = "D"
+    asset: str = "bitcoin"
+    fname: str = f"{asset}-{timeframe}.csv"
+
+    if fname not in os.listdir("./"):
+        with open(fname, "a") as file:
+            writer = csv.writer(file)
+            writer.writerow(["date,time,open,high,low,close,volume"]) 
+
+            ohlc = get_ohlc(bitcoin, "D")
+            ohlc.reverse()
+            for tf in ohlc:
+                date, time = convert_time(tf[0])
         
-        print(t[0], t[1], tf[1], tf[2], tf[3], tf[4], tf[5], tf[6])
+                writer.writerow([f"{tf[0]},{date},{time},{tf[1]},{tf[2]},{tf[3]},{tf[4]},{tf[6]}"])
+                # print(date, time, tf[1], tf[2], tf[3], tf[4], tf[6])
+    else:
+        with open(fname, "r") as file:
+            reader = csv.reader(file)
+            ls = []
+            for row in reader:
+                ls.append(row)
 
+            if len(ls) == 0:
+                # Setup the file, maybe def setup_file()
+                pass
+            
+            # Get the current time 
+            current_time = dt.datetime.now(dt.timezone.utc).timestamp()*1000
+            print(f"Current time {current_time}")
+           
+            # Get the time from the last record
+            last_rec_time = ls[-1][0].split(",")[0]
+            print(f"Last record time {last_rec_time}")
+            
+            # Get the difference between the two 
+            time_diff = int(current_time) - int(last_rec_time)
+            print(f"Time difference {time_diff}")
 
-    # btc_price: str = get_current_price(bitcoin)
-    # print("Bitcoin: $"+btc_price)
+            # Should be a map of tf to seconds or milliseconds, manual for now 
+            tf_milliseconds = 24 * 60 * 60 * 1000
+            print(f"Timeframe time {tf_milliseconds}")
 
+            # Find out how many multiples of the Timeframe is missing from records 
+            multiples = time_diff // tf_milliseconds
+            print(f"Mutliples missing {multiples}")
+
+            # Delete the last record always and write how many are missing + 1 
+            # delete(1)
+            # write(multiples + 1)
+            print(len(ls))
 
 if __name__ == "__main__":
     main()
