@@ -35,11 +35,11 @@ def get_current_price(symbol: str) -> str:
     return json 
 
 
-def get_ohlc(symbol: str, interval: str) :
+def get_ohlc(symbol: str, interval: str, limit: int=1000) :
     params: dict = {"category": "linear", 
                     "symbol": symbol, 
                     "interval": interval,
-                    "limit": 1000
+                    "limit": limit 
                     }
     res = r.request("GET", url=base+kline, params=params) 
     code: int = res.status_code
@@ -60,6 +60,27 @@ def convert_time(time: str) -> tuple:
     t: str = split_str[1].split("+")[0]
 
     return d, t
+
+
+def read(fname: str) -> list:
+    with open(fname, "r") as file:
+        return file.readlines()
+
+
+def write(fname: str, num: int) -> None:
+    with open(fname, "a") as file:
+        writer = csv.writer(file)
+        ohlc = get_ohlc(bitcoin, "D", num)
+        ohlc.reverse()
+        for tf in ohlc:
+            date, time = convert_time(tf[0])
+            writer.writerow([f"{tf[0]},{date},{time},{tf[1]},{tf[2]},{tf[3]},{tf[4]},{tf[6]}"])
+
+
+def delete(fname: str, num: int) -> None:
+    ls = read(fname)
+    with open(fname, "w") as file:
+        file.writelines(ls[-1]) 
 
 
 def main():
@@ -111,8 +132,8 @@ def main():
             print(f"Mutliples missing {multiples}")
 
             # Delete the last record always and write how many are missing + 1 
-            # delete(1)
-            # write(multiples + 1)
+            delete(fname, 1)
+            write(fname, multiples + 1)
             print(len(ls))
 
 if __name__ == "__main__":
