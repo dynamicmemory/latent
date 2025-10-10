@@ -2,23 +2,12 @@ import os as os
 import requests as r
 import datetime as dt
 import csv as csv 
+from exchange import Exchange as e
 
 base: str = "https://api.bybit.com"
 tickers: str = "/v5/market/tickers"
 kline: str = "/v5/market/kline"
 bitcoin: str = "BTCUSDT"
-
-# def request(method: str, url: str, params: dict) -> dict:
-#     json: dict = {}
-#     res = r.request(method, url, params=params);
-#     code: int = res.status_code
-#     if code == 200:
-#         json = res.json()
-#     else: 
-#         json["error"] = code
-#
-#     return json
-
 
 def get_current_price(symbol: str) -> str: 
     json: str = ""
@@ -35,21 +24,6 @@ def get_current_price(symbol: str) -> str:
     return json 
 
 
-def get_ohlc(symbol: str, interval: str, limit: int=1000) :
-    params: dict = {"category": "linear", 
-                    "symbol": symbol, 
-                    "interval": interval,
-                    "limit": limit 
-                    }
-    res = r.request("GET", url=base+kline, params=params) 
-    code: int = res.status_code
-    if code == 200:
-        json = res.json()["result"]["list"]
-    else: 
-        json = str(code) 
-    return json
-
-
 def convert_time(time: str) -> tuple:
     convert: float = int(time) / 1000
     temp = str(dt.datetime.fromtimestamp(convert, tz=dt.timezone.utc))
@@ -62,79 +36,57 @@ def convert_time(time: str) -> tuple:
     return d, t
 
 
-def read(fname: str) -> list:
-    with open(fname, "r") as file:
-        return file.readlines()
-
-
-def write(fname: str, num: int) -> None:
-    with open(fname, "a") as file:
-        writer = csv.writer(file)
-        ohlc = get_ohlc(bitcoin, "D", num)
-        ohlc.reverse()
-        for tf in ohlc:
-            date, time = convert_time(tf[0])
-            writer.writerow([f"{tf[0]},{date},{time},{tf[1]},{tf[2]},{tf[3]},{tf[4]},{tf[6]}"])
-
-
-def delete(fname: str, num: int) -> None:
-    ls = read(fname)
-    with open(fname, "w") as file:
-        file.writelines(ls[-1]) 
-
-
 def main():
     timeframe: str = "D"
     asset: str = "bitcoin"
     fname: str = f"{asset}-{timeframe}.csv"
+    bitcoin: str = "BTCUSDT"
+    ex = e(bitcoin, timeframe)
+    ex.get_ohlc(1)
+    ex.get_price()
 
-    if fname not in os.listdir("./"):
-        with open(fname, "a") as file:
-            writer = csv.writer(file)
-            writer.writerow(["date,time,open,high,low,close,volume"]) 
-
-            ohlc = get_ohlc(bitcoin, "D")
-            ohlc.reverse()
-            for tf in ohlc:
-                date, time = convert_time(tf[0])
-        
-                writer.writerow([f"{tf[0]},{date},{time},{tf[1]},{tf[2]},{tf[3]},{tf[4]},{tf[6]}"])
-                # print(date, time, tf[1], tf[2], tf[3], tf[4], tf[6])
-    else:
-        with open(fname, "r") as file:
-            reader = csv.reader(file)
-            ls = []
-            for row in reader:
-                ls.append(row)
-
-            if len(ls) == 0:
-                # Setup the file, maybe def setup_file()
-                pass
-            
-            # Get the current time 
-            current_time = dt.datetime.now(dt.timezone.utc).timestamp()*1000
-            print(f"Current time {current_time}")
-           
-            # Get the time from the last record
-            last_rec_time = ls[-1][0].split(",")[0]
-            print(f"Last record time {last_rec_time}")
-            
-            # Get the difference between the two 
-            time_diff = int(current_time) - int(last_rec_time)
-            print(f"Time difference {time_diff}")
-
-            # Should be a map of tf to seconds or milliseconds, manual for now 
-            tf_milliseconds = 24 * 60 * 60 * 1000
-            print(f"Timeframe time {tf_milliseconds}")
-
-            # Find out how many multiples of the Timeframe is missing from records 
-            multiples = time_diff // tf_milliseconds
-            print(f"Mutliples missing {multiples}")
-
-            # Delete the last record always and write how many are missing + 1 
-            delete(fname, 1)
-            write(fname, multiples + 1)
-            print(len(ls))
+    # if fname not in os.listdir("./"):
+    #     with open(fname, "a") as file:
+    #         writer = csv.writer(file)
+    #         writer.writerow(["date,time,open,high,low,close,volume"]) 
+    #
+    #         ohlc = get_ohlc(bitcoin, "D")
+    #         ohlc.reverse()
+    #         for tf in ohlc:
+    #             date, time = convert_time(tf[0])
+    #
+    #             writer.writerow([f"{tf[0]},{date},{time},{tf[1]},{tf[2]},{tf[3]},{tf[4]},{tf[6]}"])
+    #             # print(date, time, tf[1], tf[2], tf[3], tf[4], tf[6])
+    # else:
+    #     with open(fname, "r") as file:
+    #         reader = csv.reader(file)
+    #         ls = []
+    #         for row in reader:
+    #             ls.append(row)
+    #
+    #         if len(ls) == 0:
+    #             # Setup the file, maybe def setup_file()
+    #             pass
+    #
+    #         # Get the current time 
+    #         current_time = dt.datetime.now(dt.timezone.utc).timestamp()*1000
+    #         print(f"Current time {current_time}")
+    #
+    #         # Get the time from the last record
+    #         last_rec_time = ls[-1][0].split(",")[0]
+    #         print(f"Last record time {last_rec_time}")
+    #
+    #         # Get the difference between the two 
+    #         time_diff = int(current_time) - int(last_rec_time)
+    #         print(f"Time difference {time_diff}")
+    #
+    #         # Should be a map of tf to seconds or milliseconds, manual for now 
+    #         tf_milliseconds = 24 * 60 * 60 * 1000
+    #         print(f"Timeframe time {tf_milliseconds}")
+    #
+    #         # Find out how many multiples of the Timeframe is missing from records 
+    #         multiples = time_diff // tf_milliseconds
+            # print(f"Mutliples missing {multiples}")
 
 if __name__ == "__main__":
     main()
