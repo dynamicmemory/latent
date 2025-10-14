@@ -45,18 +45,18 @@ def main():
     ex.get_ohlc(1)
     ex.get_price()
 
-    # if fname not in os.listdir("./"):
-    #     with open(fname, "a") as file:
-    #         writer = csv.writer(file)
-    #         writer.writerow(["date,time,open,high,low,close,volume"]) 
-    #
-    #         ohlc = get_ohlc(bitcoin, "D")
-    #         ohlc.reverse()
-    #         for tf in ohlc:
-    #             date, time = convert_time(tf[0])
-    #
-    #             writer.writerow([f"{tf[0]},{date},{time},{tf[1]},{tf[2]},{tf[3]},{tf[4]},{tf[6]}"])
-    #             # print(date, time, tf[1], tf[2], tf[3], tf[4], tf[6])
+    if fname not in os.listdir("./"):
+        with open(fname, "a") as file:
+            writer = csv.writer(file)
+            writer.writerow(["date,time,open,high,low,close,volume"]) 
+
+            ohlc = ex.get_ohlc()
+            ohlc.reverse()
+            for tf in ohlc:
+                date, time = convert_time(tf[0])
+
+                writer.writerow([tf[0],date,time,tf[1],tf[2],tf[3],tf[4],tf[6]])
+                # print(date, time, tf[1], tf[2], tf[3], tf[4], tf[6])
     # else:
     #     with open(fname, "r") as file:
     #         reader = csv.reader(file)
