@@ -45,8 +45,8 @@ class Exchange:
         self.handle_error(json)
 
         results = json["result"]["list"]
-        for line in results: 
-            print(line)
+        # for line in results: 
+        #     print(line)
         return results
 
 

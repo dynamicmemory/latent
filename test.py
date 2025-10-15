@@ -1,32 +1,17 @@
-def add_nums(num_list: list) -> int:
-    total: int = 0
-    for line in num_list:
-        try:
-            line.strip()
-            line: int = int(line) 
+import csv 
 
-            total += line 
-        except:
-            print("Line was not an int")
-    return total
+fname: str = "example.csv"
+data = [
+    ["A", "B", "C"],
+    ["D", "E", "F"],
+    ["H", "I", "J"]
+    ]
 
+with open(fname, "w", newline='') as csvfile:
+    writer = csv.writer(csvfile)
 
-def read_lines(fname: str) -> list: 
-    with open(fname, "r") as file:
-        lines: list = file.readlines()
+    writer.writerow(data[0])
+    writer.writerows(data[1:])
 
-    file.close()
-    return lines 
+print(f"Data written to {fname}") 
 
-
-def write_line(line: str) -> None:
-    with open(fname, "a") as file:
-        file.write(line)
-        file.close()
-    
-
-fname = "test.txt"
-lines = read_lines(fname)
-total = add_nums(lines)
-write_line(str(total))
-print([line.strip() for line in read_lines(fname)])

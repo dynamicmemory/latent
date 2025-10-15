@@ -1,6 +1,7 @@
 # TODO: Rewrite using a csv or better yet use sqlite
 
 import os as os 
+import csv 
 
 class Database:
 
@@ -27,20 +28,29 @@ class Database:
         """ 
         Reads all lines from the db file and stores them under 'lines'
         """
+        # with open(self.fname, 'r') as file:
+        #     self.lines = file.readlines()
         with open(self.fname, 'r') as file:
-            self.lines = file.readlines()
+            reader = csv.reader(file, delimiter=",")
+            for line in reader:
+                self.lines.append(line)
 
-
-    def write_records(self, n: int) -> None:
+    def write_records(self, lines: list, n: int=1000) -> None:
         """ 
         Write 'n' number of lines into the db file. 
         Param: n - int number of lines to write in.
         """
+        # with open(self.fname, 'a') as file:
+        #     exchange = []    # I need to make an exchange obj
+        #     file.writelines(exchange)
+        #     self.read_records()       # Update the lines store from the db
         with open(self.fname, 'a') as file:
-            exchange = []    # I need to make an exchange obj
-            file.writelines(exchange)
-            self.read_records()       # Update the lines store from the db
-            
+            writer = csv.writer(file)
+            writer.writerows(lines)
+            # exchange = []    # I need to make an exchange obj
+            # file.writelines(exchange)
+            # self.read_records()       # Update the lines store from the db
+            #
 
     def delete_records(self) -> None:
         """ 

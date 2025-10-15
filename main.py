@@ -3,6 +3,7 @@ import requests as r
 import datetime as dt
 import csv as csv 
 from exchange import Exchange as e
+from database import Database as d
 
 base: str = "https://api.bybit.com"
 tickers: str = "/v5/market/tickers"
@@ -42,20 +43,24 @@ def main():
     fname: str = f"{asset}-{timeframe}.csv"
     bitcoin: str = "BTCUSDT"
     ex = e(bitcoin, timeframe)
-    ex.get_ohlc(1)
-    ex.get_price()
+    db = d(bitcoin, timeframe)
+    # ex.get_ohlc(1)
+    # ex.get_price()
+    ls = ex.get_ohlc(1)    
+    db.write_records(ls)
+    print(ls)
 
-    if fname not in os.listdir("./"):
-        with open(fname, "a") as file:
-            writer = csv.writer(file)
-            writer.writerow(["date,time,open,high,low,close,volume"]) 
+    # if fname not in os.listdir("./"):
+    #     with open(fname, "a") as file:
+            # writer = csv.writer(file)
+            # writer.writerow(["date,time,open,high,low,close,volume"]) 
 
-            ohlc = ex.get_ohlc()
-            ohlc.reverse()
-            for tf in ohlc:
-                date, time = convert_time(tf[0])
-
-                writer.writerow([tf[0],date,time,tf[1],tf[2],tf[3],tf[4],tf[6]])
+            # ohlc = ex.get_ohlc()
+            # ohlc.reverse()
+            # for tf in ohlc:
+                # date, time = convert_time(tf[0])
+                #
+                # writer.writerow([tf[0],date,time,tf[1],tf[2],tf[3],tf[4],tf[6]])
                 # print(date, time, tf[1], tf[2], tf[3], tf[4], tf[6])
     # else:
     #     with open(fname, "r") as file:
