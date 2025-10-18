@@ -14,7 +14,7 @@ class Exchange:
         self.symbol: str = symbol 
         self.interval: str = interval
         self.base_url: str = "https://api.bybit.com"
-        self.db: Database = Database(self.symbol, self.interval) 
+        # self.db: Database = Database(f"{self.symbol}-{self.interval}.csv") 
 
 
     def make_request(self, method: str, url: str, params: dict) -> dict:
@@ -45,8 +45,7 @@ class Exchange:
         self.handle_error(json)
 
         results = json["result"]["list"]
-        # for line in results: 
-        #     print(line)
+        results.reverse()
         return results
 
 
@@ -85,8 +84,8 @@ class Exchange:
         return None
 
 
-    # def update_db(self, n: int = 1000):
-    #     self.db.update_records(self.get_ohlc(n))
+    # def update_db(self, num_of_records: int = 1000):
+    #     self.db.update_records(self.get_ohlc(num_of_records), num_of_records)
 
 
     # TRADE OPS
