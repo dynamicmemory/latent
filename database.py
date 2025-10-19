@@ -1,18 +1,3 @@
-
-# IMPORT TO READY BEFORE WRITING NEXT 
-#
-# The control flow with updating it broken, delete has been strange, update 
-# has been strange, writing has been strange, db class repeating lots of code 
-# focus on getting the csv to update correctly, then we can move onto bigger 
-# refactor into dbm class.
-
-
-
-
-
-
-
-
 import os as os 
 import datetime as dt
 import csv
@@ -24,52 +9,17 @@ class Database:
         self.lines: list = []
 
 
-    def update_records(self, records: list, n: int) -> None:
+    def update_records(self, records: list, n: int=0) -> None:
         """ 
         Updates the db with 'n' number of lines.
         Param: n - int number of lines to update the db with
         """
         self.read_records()
         self.delete_records()
-        self.write_records(records, n)
+        self.write_records(records)
 
 
 #    ---- Database Operations -----
-    def convert_time(self, time: str) -> tuple:
-        convert: float = int(time) / 1000
-        temp = str(dt.datetime.fromtimestamp(convert, tz=dt.timezone.utc))
-
-        # Current format XXXX/XX/XX XX:XX:XX+XX:XX we must break it up
-        split_str: list = temp.split(" ")
-        d: str = split_str[0]
-        t: str = split_str[1].split("+")[0]
-
-        return d, t
-
-
-    def find_multiples(self) -> int:
-        """
-        Calculates the number of records missing according to utc 
-        Returns the amount as an int
-        """
-
-        # Get the current time 
-        current_time = dt.datetime.now(dt.timezone.utc).timestamp()*1000
-        print(f"Current time {current_time}")
-        # Get the time from the last record
-        last_rec_time = self.lines[-1][0].split(",")[0]
-        print(f"Last record time {last_rec_time}")
-        # Get the difference between the two 
-        time_diff = int(current_time) - int(last_rec_time)
-        print(f"Time difference {time_diff}")
-        # Should be a map of tf to seconds or milliseconds, manual for now 
-        tf_milliseconds = 24 * 60 * 60 * 1000
-        print(f"Timeframe time {tf_milliseconds}")
-        # Find out how many multiples of the Timeframe is missing from records 
-        multiples = time_diff // tf_milliseconds
-        print(f"Mutliples missing {multiples}")
-        return multiples
-
 
     # TODO: Change hard coded header into more modular solution 
     def create_db(self, records: list) -> None:
@@ -95,17 +45,21 @@ class Database:
         """
         with open(self.fname, 'r') as file:
             reader = csv.reader(file, delimiter=",")
+            self.lines = []      # Always reset rows before rereading the db
             for line in reader:
                 self.lines.append(line)
 
 
     def write_headers(self, headers: list) -> None:
+        """
+        Writes the headings/column names for a csv
+        """
         with open(self.fname, 'a') as file:
             writer = csv.writer(file)
             writer.writerows(headers)
 
 
-    # TODO: Im going to have problems if I pass in a num bigger then lines len 
+    # TODO: Currently not using length at all  
     # TODO: Redo line writing logic
     def write_records(self, lines: list, n: int=1000) -> None:
         """ 
@@ -119,22 +73,57 @@ class Database:
                 writer.writerow([line[0],date,time,line[1],line[2],line[3],line[4],line[6]])
 
 
-
-    # TODO: currently not doing csv ops
-    # TODO: Change to read in all self.lines and only write upto last line
     def delete_records(self) -> None:
         """ 
         Deletes the last line in the db. 
         """
-        # print(self.lines[-1])
         with open(self.fname, 'w') as file:
             writer = csv.writer(file)
             rows = []
+            
             for line in self.lines[:-1]:
                 rows.append(line) 
-            print(rows)
             writer.writerows(rows)
 
+
+    def convert_time(self, time: str) -> tuple:
+        """
+        Converts utc time into year/day/month & hh:mm:ss 
+        Params: utc string 
+        """
+        convert: float = int(time) / 1000
+        temp = str(dt.datetime.fromtimestamp(convert, tz=dt.timezone.utc))
+
+        # Current format XXXX/XX/XX XX:XX:XX+XX:XX we must break it up
+        split_str: list = temp.split(" ")
+        d: str = split_str[0]
+        t: str = split_str[1].split("+")[0]
+
+        return d, t
+
+
+    def find_multiples(self) -> int:
+        """
+        Calculates the number of records missing according to utc 
+        Returns the amount as an int
+        """
+
+        # Get the current time 
+        current_time = dt.datetime.now(dt.timezone.utc).timestamp()*1000
+        # print(f"Current time {current_time}")
+        # # Get the time from the last record
+        last_rec_time = self.lines[-1][0].split(",")[0]
+        # print(f"Last record time {last_rec_time}")
+        # # Get the difference between the two 
+        time_diff = int(current_time) - int(last_rec_time)
+        # print(f"Time difference {time_diff}")
+        # # Should be a map of tf to seconds or milliseconds, manual for now 
+        tf_milliseconds = 24 * 60 * 60 * 1000
+        # print(f"Timeframe time {tf_milliseconds}")
+        # # Find out how many multiples of the Timeframe is missing from records 
+        multiples = time_diff // tf_milliseconds
+        # print(f"Mutliples missing {multiples}")
+        return multiples
 
 
 

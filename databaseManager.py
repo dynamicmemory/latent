@@ -14,19 +14,20 @@ class DatabaseManager:
 
 
     def update_db(self):
+        # Create db and exchange instances 
         db: Database = self.db
         ex: Exchange = self.exchange
-        # Check if db file exists from the file name the exchange gives us 
-        records = ex.get_ohlc()
-        db.create_db(records)
-        # Sort control paths for create file 
+
+        # TODO: Rewrite the check for the db here outside of the db class 
+        # Check is db exists yet, pass in the maximum rows from the exchange
+        db.create_db(ex.get_ohlc())
 
         # Calculate how many records are missing 
         db.read_records()
         record_numbers: int = db.find_multiples() + 1
         # Request that number of records from the exchange  + 1 for the delete 
         records = ex.get_ohlc(record_numbers)
-        # call write for the db with that number.
-        db.update_records(records, record_numbers)
-        pass 
+
+        # Update the db with the missing record(s).
+        db.update_records(records)
 
