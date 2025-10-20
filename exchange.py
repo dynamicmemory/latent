@@ -84,11 +84,9 @@ class Exchange:
         return None
 
 
-    # def update_db(self, num_of_records: int = 1000):
-    #     self.db.update_records(self.get_ohlc(num_of_records), num_of_records)
+# ---- TRADE OPERATIONS ----
+# ---- ACCOUNT OPERATIONS ----
 
-
-    # TRADE OPS
     # Auth
     # get account details
     # get order details 
