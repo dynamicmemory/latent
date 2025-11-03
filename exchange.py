@@ -1,3 +1,4 @@
+# TODO: Auth, Personal account ops
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
@@ -49,7 +50,7 @@ class Exchange:
         return results
 
 
-    def get_price(self):
+    def get_price(self) -> dict:
         """ 
         Returns the current market price for the symbol provided to the exchange
         """

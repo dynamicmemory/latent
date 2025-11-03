@@ -7,23 +7,24 @@ class Features:
 
     def __init__(self, fname: str):
         self.fname = fname
+        self.features = []
 
 
     def everything(self):
         """
         Temp function building all features inside of till finished fully
         """
-
+        # ------------ FEATURE RELATED CODE ------------------
         df = pd.read_csv(self.fname)
-
         df.drop(["utc", "time"], axis=1, inplace=True)
-       
         df["diff"] = df["close"] - df["open"]
 
         self.rsi(df)
         self.simple_moving_average(df, 50)
         self.simple_moving_average(df, 100)
         self.simple_moving_average(df, 200)
+
+        # ---------- PLOT RELATED CODE ---------------------
         y_values = ["sma_50", "sma_100", "sma_200"]
         line_fig = px.line(df, x="date", y=y_values, title="Price over time")
         fig2 = px.line(df, x="date", y="rsi", title="Price over time")
@@ -42,6 +43,8 @@ class Features:
         self.add_line(fig, df)
         
 
+        # ---------- DASHBOARD RELATED CODE ---------------------
+        y_values = ["sma_50", "sma_100", "sma_200"]
         # Dash app to visualize what I am doing to the data.
         app = Dash(__name__)
         app.layout = [ 
@@ -49,7 +52,6 @@ class Features:
             dcc.Graph(id="price-chart", figure=fig, style={"height": "800px"}),
             dcc.Graph(id="rsi", figure=fig2)
         ]
-
         app.run(debug=True)
 
 
@@ -65,6 +67,7 @@ class Features:
 
         # Backfill pre-period rows with first average value, this stops nans
         df[sname] = df[sname].fillna(df.loc[df[sname].first_valid_index(), sname])
+        self.features.append(sname)   # Add the new feature to the features list 
 
 
     def rsi(self, df: pd.DataFrame):
@@ -78,7 +81,7 @@ class Features:
         df["rs"] = df["avgGain"] / df["avgLoss"]
         df["rsi"] = 100 - 100/(1+ df["rs"])
         df.drop(["gain", "loss", "avgGain", "avgLoss", "rs"], axis = 1, inplace=True)
-
+        self.features.append("rsi")
 
 
     # ---- Chart related functions ----
