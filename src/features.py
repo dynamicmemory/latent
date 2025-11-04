@@ -2,11 +2,13 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 from dash import Dash, Input, Output, html, dcc
+from src.paths import get_data_path
 
 class Features:
 
     def __init__(self, fname: str):
         self.fname = fname
+        self.path = get_data_path(fname)
         self.features = []
 
 
@@ -15,7 +17,11 @@ class Features:
         Temp function building all features inside of till finished fully
         """
         # ------------ FEATURE RELATED CODE ------------------
-        df = pd.read_csv(self.fname)
+        df = pd.read_csv(self.path)
+        # Force numeric
+        # for col in ["open","high","low","close","volume"]:
+        #     df[col] = pd.to_numeric(df[col], errors="raise")       
+
         df.drop(["utc", "time"], axis=1, inplace=True)
         df["diff"] = df["close"] - df["open"]
 
@@ -52,7 +58,7 @@ class Features:
             dcc.Graph(id="price-chart", figure=fig, style={"height": "800px"}),
             dcc.Graph(id="rsi", figure=fig2)
         ]
-        app.run(debug=True)
+        # app.run(debug=True)
 
 
     def simple_moving_average(self, df: pd.DataFrame, period: int):

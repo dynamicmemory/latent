@@ -1,11 +1,15 @@
 import os as os 
 import datetime as dt
 import csv
+from pathlib import Path
+from src.paths import get_data_path
 
 class Database:
 
     def __init__(self, fname: str) -> None:
         self.fname: str = fname
+        self.path = get_data_path(fname)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         self.lines: list = []
 
 
@@ -27,7 +31,7 @@ class Database:
         Checks directory for an existing db file, creates one if it doesn't 
         exist, checks to make sure the file has correct headers 
         """ 
-        if self.fname not in os.listdir("./"):
+        if not self.path.exists(): 
             headers: list = [["utc","date","time","open","high","low","close","volume"]]
             self.write_headers(headers)
             self.write_records(records)
@@ -43,7 +47,7 @@ class Database:
         """ 
         Reads all lines from the db file and stores them under 'lines'
         """
-        with open(self.fname, 'r') as file:
+        with self.path.open('r') as file:
             reader = csv.reader(file, delimiter=",")
             self.lines = []      # Always reset rows before rereading the db
             for line in reader:
@@ -54,7 +58,7 @@ class Database:
         """
         Writes the headings/column names for a csv
         """
-        with open(self.fname, 'a') as file:
+        with self.path.open('a') as file:
             writer = csv.writer(file)
             writer.writerows(headers)
 
@@ -66,7 +70,7 @@ class Database:
         Write 'n' number of lines into the db file. 
         Param: n - int number of lines to write in.
         """
-        with open(self.fname, 'a') as file:
+        with self.path.open('a') as file:
             writer = csv.writer(file)
             for line in lines:
                 date, time = self.convert_time(line[0]) 
@@ -77,7 +81,7 @@ class Database:
         """ 
         Deletes the last line in the db. 
         """
-        with open(self.fname, 'w') as file:
+        with self.path.open('w') as file:
             writer = csv.writer(file)
             rows = []
             

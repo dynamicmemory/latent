@@ -1,7 +1,7 @@
-from exchange import Exchange as exchange
-from database import Database as database 
-from databaseManager import DatabaseManager as databaseManager 
-from features import Features as features
+from src.exchange import Exchange as exchange
+from src.database import Database as database 
+from src.databaseManager import DatabaseManager as databaseManager 
+from src.features import Features as features
 
 base: str = "https://api.bybit.com"
 tickers: str = "/v5/market/tickers"

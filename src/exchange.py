@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import requests as r
-from database import Database 
+from src.database import Database 
 
 if TYPE_CHECKING:
     from requests import Response
