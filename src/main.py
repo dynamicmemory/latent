@@ -12,6 +12,35 @@ bitcoin: str = "BTCUSDT"
 
 # TODO: Generate name dynamically not hard coded
 def main():
+    #15min
+    fname: str = f"{bitcoin}-{"15"}.csv"
+    ex = exchange(bitcoin, "15")
+    db = database(fname)
+    dbm = databaseManager(db, ex)
+    dbm.update_db()
+
+    #1hr
+    fname: str = f"{bitcoin}-{"60"}.csv"
+    ex = exchange(bitcoin, "60")
+    db = database(fname)
+    dbm = databaseManager(db, ex)
+    dbm.update_db()
+
+    #4hr
+    fname: str = f"{bitcoin}-{"240"}.csv"
+    ex = exchange(bitcoin, "240")
+    db = database(fname)
+    dbm = databaseManager(db, ex)
+    dbm.update_db()
+
+
+    #weekly
+    fname: str = f"{bitcoin}-{"W"}.csv"
+    ex = exchange(bitcoin, "W")
+    db = database(fname)
+    dbm = databaseManager(db, ex)
+    dbm.update_db()
+
     fname: str = f"{bitcoin}-{timeframe}.csv"
     ex = exchange(bitcoin, timeframe)
     db = database(fname)
@@ -25,16 +54,21 @@ if __name__ == "__main__":
     main()
 
 
-# Program runs 
-# Checks db for history 
-# Updates csvs which should be sql dbs 
-# Asks what I would like to do? / already knows (design choice here)
-  # Auto mode or manual mode maybe....? 
-# Calculates features / metrics
-# if we are doing NN 
-  # Builds NN (NN should already be prebuilt I think)
-  # Feeds updated info in and gets answer out 
-  # executes on answer 
-# if we are doing probabilistic 
-  # .... dont know yet
+# Phase 1 
+# Run Program
+# Checks db for history and syncs up latest price records 
+# Calculates features 
+# Builds nn
+# Comes to a market conclusion
+
+# Phase 2 
+# Exchange Auth 
+# Manual and auto ability to set and cancel trades 
+# Logging of entire system 
+# Dashboard viewing integration
+
+# Phase 3 
+# End to End mode 
+# Rebuild DB in SQLite
+# Rebuild agent from NN to probabilistic 
 
