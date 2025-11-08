@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from src.database import Database as database
 
 if TYPE_CHECKING:
     from database import Database
@@ -8,18 +9,19 @@ if TYPE_CHECKING:
 
 class DatabaseManager:
 
-    def __init__(self, db, exchange):
-        self.db: Database = db 
+    def __init__(self, fname: str, timeframe: str, exchange: Exchange):
+        self.db: Database = database(fname, timeframe)
         self.exchange: Exchange = exchange 
 
 
+    # TODO: This is so broken of logic, serious rewrite of this class
     def update_db(self):
         # Create db and exchange instances 
         db: Database = self.db
         ex: Exchange = self.exchange
 
         # TODO: Rewrite the check for the db here outside of the db class 
-        # Check is db exists yet, pass in the maximum rows from the exchange
+        # Check if db exists yet, pass in the maximum rows from the exchange
         db.create_db(ex.get_ohlc())
 
         # Calculate how many records are missing 
