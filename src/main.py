@@ -1,6 +1,8 @@
 from src.exchange import Exchange as exchange
 from src.databaseManager import DatabaseManager as databaseManager 
 from src.features import Features as features
+from src.nn import NN as nn 
+import numpy as np
 
 base: str = "https://api.bybit.com"
 tickers: str = "/v5/market/tickers"
@@ -32,10 +34,19 @@ def main():
         # Feed preped features into NN 
         # Return decision
 
+
 if __name__ == "__main__":
-    main()
+    # main()
 
+    # ------- NN TESTING ---------
+    np.random.seed(1)
 
+    X = np.random.rand(6, 3)
+    y = (np.random.rand(6, 1) > 0.5).astype(float)
+    layers = [[5, "relu"], [4, "relu"]]
+
+    model = nn(X, y, "binary", epochs=1000, lr=0.01, layers=layers)
+    model.fit()
 # Phase 1 
 # Run Program
 # Checks db for history and syncs up latest price records 
