@@ -12,53 +12,36 @@ class Features:
         self.features = []
 
 
-    def everything(self):
+    def compute(self):
         """
         Temp function building all features inside of till finished fully
         """
         # ------------ FEATURE RELATED CODE ------------------
         df = pd.read_csv(self.path)
-        # Force numeric
-        # for col in ["open","high","low","close","volume"]:
-        #     df[col] = pd.to_numeric(df[col], errors="raise")       
 
+        # Probably wont drop time for tfs that could use it as metric
         df.drop(["utc", "time"], axis=1, inplace=True)
         df["diff"] = df["close"] - df["open"]
 
-        self.rsi(df)
+        self.assign_labels(df)
+
         self.simple_moving_average(df, 50)
         self.simple_moving_average(df, 100)
         self.simple_moving_average(df, 200)
+        self.rsi(df)
 
-        # ---------- PLOT RELATED CODE ---------------------
-        y_values = ["sma_50", "sma_100", "sma_200"]
-        line_fig = px.line(df, x="date", y=y_values, title="Price over time")
-        fig2 = px.line(df, x="date", y="rsi", title="Price over time")
-        # print(df)
 
-        # Creates candlestick chart for price
-        fig = go.Figure(data=[go.Candlestick(
-            x=df["date"],
-            open=df["open"],
-            high=df["high"],
-            low=df["low"],
-            close=df["close"],
-        )])
-        fig.update_layout(xaxis_rangeslider_visible=False)
-        fig.update_yaxes(fixedrange=False)
-        self.add_line(fig, df)
-        
 
-        # ---------- DASHBOARD RELATED CODE ---------------------
-        y_values = ["sma_50", "sma_100", "sma_200"]
-        # Dash app to visualize what I am doing to the data.
-        app = Dash(__name__)
-        app.layout = [ 
-            html.H1("Title"),
-            dcc.Graph(id="price-chart", figure=fig, style={"height": "800px"}),
-            dcc.Graph(id="rsi", figure=fig2)
-        ]
-        # app.run(debug=True)
+
+    # TODO: Consider adding text labels too and thresholds for catagorical labesl 
+    #       Big buy, buy, hold, sell, big sell.... etc more nuance.
+    def assign_labels(self, df: pd.DataFrame) -> None:
+        """
+        Assigns the traning label to the dataframe by looking for the last 24 
+        change to calculate whether or not it was a buy or sell.
+        """
+        # 1 for BUY 0 for SELL
+        df["label"] = df["diff"].apply(lambda x: 1 if x > 0 else 0)
 
 
     def simple_moving_average(self, df: pd.DataFrame, period: int):
@@ -99,4 +82,34 @@ class Features:
                           line=dict(width=1.5, color=colours[n]), name= avg))
 
 
+    # MOVE ALL BELOW CODE BACK INTO COMPUTE FUNCTION IF YOU WANT TO SEE IT WORK
+       # ---------- PLOT RELATED CODE ---------------------
+        y_values = ["sma_50", "sma_100", "sma_200"]
+        line_fig = px.line(df, x="date", y=y_values, title="Price over time")
+        fig2 = px.line(df, x="date", y="rsi", title="Price over time")
+        # print(df)
+
+        # Creates candlestick chart for price
+        fig = go.Figure(data=[go.Candlestick(
+            x=df["date"],
+            open=df["open"],
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
+        )])
+        fig.update_layout(xaxis_rangeslider_visible=False)
+        fig.update_yaxes(fixedrange=False)
+        self.add_line(fig, df)
+        
+
+        # ---------- DASHBOARD RELATED CODE ---------------------
+        y_values = ["sma_50", "sma_100", "sma_200"]
+        # Dash app to visualize what I am doing to the data.
+        app = Dash(__name__)
+        app.layout = [ 
+            html.H1("Title"),
+            dcc.Graph(id="price-chart", figure=fig, style={"height": "800px"}),
+            dcc.Graph(id="rsi", figure=fig2)
+        ]
+        # app.run(debug=True)
 
