@@ -194,3 +194,22 @@ class NN:
         """"""
         z_exp = np.exp(Z - np.max(Z, axis=1, keepdims=True))
         return z_exp / np.sum(z_exp, axis=1, keepdims=True)
+
+
+    # TODO: Rebuild function
+    def predict(self, X):
+        A = X 
+        for i in range(len(self.network["weights"])):
+            W = self.network["weights"][i]
+            b = self.network["biases"][i]
+            act = self.network["activations"][i]
+
+            Z = np.dot(A, W) + b 
+            A = self.activate(Z, act)
+
+        if self.type == "binary":
+            return (A > 0.5).astype(int)
+        elif self.type == "multi":
+            return np.argmax(A, axis=1)
+        else: 
+            return A 

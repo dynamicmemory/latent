@@ -26,8 +26,21 @@ def main():
     dbm = databaseManager(fname, timeframe,ex)
     dbm.update_db()
 
+    # Engineer the features
     f = features(fname)
-    f.compute() 
+    X_train, X_test, y_train, y_test = f.build_data()
+    print(X_train.shape, y_train.shape)
+    print(X_test.shape, y_test.shape)
+
+    # Build the NN and feed it the features
+    layers = [[5, "relu"], [4, "relu"]]
+    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.01, layers=layers)
+    model.fit()
+
+    x_pred = f.latest_features()
+    x_pred = np.resize(x_pred, (1, model.X.shape[1]))  # force shape match if tiny diff
+    pred_val = model.predict(x_pred)
+    print("Buy" if pred_val > 0.5 else "sell")
     # NNmanager to 
         # Prep features for NN
         # build NN
