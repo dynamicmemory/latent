@@ -13,6 +13,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 from dash import Dash, Input, Output, html, dcc
 from src.paths import get_data_path
+from src.machLearnTools import MachLearnTools 
 
 class Features:
 
@@ -126,8 +127,8 @@ class Features:
         # flatten the moving window so this works for a vanilla ann, change once 
         # I build out better framework
         X = X.reshape(X.shape[0], -1)  # (samples, window * features)
-
-        X_train, X_test, y_train, y_test = self.split_train_test(X, y)
+   
+        X_train, X_test, y_train, y_test = MachLearnTools().data_split(X, y)
         return X_train, X_test, y_train, y_test 
 
 

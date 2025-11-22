@@ -24,7 +24,7 @@ def main():
     update_all_tf()
 
     # Still hard coding Daily while building 
-    timeframe = "15"
+    timeframe = "D"
     fname: str = f"{bitcoin}-{timeframe}.csv"
     ex = exchange(bitcoin, timeframe)
     dbm = databaseManager(fname, timeframe,ex)
