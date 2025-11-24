@@ -108,13 +108,6 @@ class Features:
         return np.array(X), np.array(y).reshape(-1, 1)
 
  
-    def split_train_test(self, X, y, ratio=0.8):
-        split_idx = int(len(X) * ratio)
-        X_train, X_test = X[:split_idx], X[split_idx:]
-        y_train, y_test = y[:split_idx], y[split_idx:]
-        return X_train, X_test, y_train, y_test
-
-
     def build_data(self):
         # calc all the features 
         df = self.compute_features()
@@ -128,7 +121,7 @@ class Features:
         # I build out better framework
         X = X.reshape(X.shape[0], -1)  # (samples, window * features)
    
-        X_train, X_test, y_train, y_test = MachLearnTools().data_split(X, y)
+        X_train, X_test, y_train, y_test = MachLearnTools().split_data(X, y)
         return X_train, X_test, y_train, y_test 
 
 

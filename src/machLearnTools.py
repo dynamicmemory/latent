@@ -1,11 +1,36 @@
+# Load data *done in features class
+# compute targets/labels
+# compute features  *done in features class 
+# clean 
+# split data 
+# scale 
+# Encode 
+# train *done in nn 
+# eval 
+
+
 import numpy as np
 # Full pipeline wrapper
 class MachLearnTools:
 
-    def pipeline(self) -> None:
+    def pipeline(self, X, y) -> None:
+        self.compute_labels()
+        self.clean_data()
+        self.split_data(self, X, y)
+        s = Scaler().scale()
+        e = Encoder().encode()
         pass
 
-    def data_split(self, X, y, t_size=0.2, seed=None, shuffle=False) -> tuple:
+
+    def compute_labels(self) -> None:
+        pass
+
+
+    def clean_data(self) -> None:
+        pass 
+
+
+    def split_data(self, X, y, t_size=0.2, seed=None, shuffle=False) -> tuple:
         """
         My trim down version of scikitlearns test_train_split. Splits the given 
         data into 4 outputs, the X train, X test, y train and y test set in that 
@@ -67,6 +92,25 @@ class Scaler:
         pass
 
     def transform(self) -> None:
+        pass
+
+
+# Metrics for testing how good the model is
+class Evaluate:
+
+    def accuracy(self) -> None:
+        pass
+
+
+    def precision(self) -> None:
+        pass 
+
+
+    def recall(self) -> None:
+        pass
+
+
+    def f1_score(self) -> None:
         pass
 
 
