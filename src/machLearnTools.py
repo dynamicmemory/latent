@@ -10,11 +10,10 @@
 
 
 import numpy as np
+import pandas as pd
 # Full pipeline wrapper
 class MachLearnTools:
-
     def pipeline(self, X, y) -> None:
-        self.compute_labels()
         self.clean_data()
         self.split_data(self, X, y)
         s = Scaler().scale()
@@ -22,8 +21,24 @@ class MachLearnTools:
         pass
 
 
-    def compute_labels(self) -> None:
+    def create_n_labels(self, y: list) -> None:
+        """
+        Creates binary labels 
+        returns 
+        """
+        classes: set = set()
+        for row in y:
+            classes.add(row)
         pass
+
+
+    def create_binary_labels(self, y: pd.Series|list|np.ndarray) -> list[int]:
+        """
+        Create a 1D array of labels for a series of positive and negative values
+        Returns a 1D array with 1 for positive and 0 for negative
+        """
+        y = np.asarray(y)
+        return (y > 0).astype(int).tolist()
 
 
     def clean_data(self) -> None:
@@ -71,7 +86,6 @@ class MachLearnTools:
 
 # Encode non number vals
 class Encoder:
-
     def encode(self) -> None:
         pass
 
@@ -84,7 +98,6 @@ class Encoder:
 
 # Standard or MinMax scale
 class Scaler:
-
     def scale(self) -> None:
         pass
 
@@ -97,7 +110,6 @@ class Scaler:
 
 # Metrics for testing how good the model is
 class Evaluate:
-
     def accuracy(self) -> None:
         pass
 

@@ -9,14 +9,10 @@
 # TODO: Change the df to self.df... this class is so broken atm
 import pandas as pd 
 import numpy as np
-import plotly.express as px
-import plotly.graph_objs as go
-from dash import Dash, Input, Output, html, dcc
 from src.paths import get_data_path
 from src.machLearnTools import MachLearnTools 
 
 class Features:
-
     def __init__(self, fname: str):
         self.fname = fname
         self.path = get_data_path(fname)
@@ -35,6 +31,7 @@ class Features:
         df.drop(["utc", "time"], axis=1, inplace=True)
         df["diff"] = df["close"] - df["open"]
 
+        # df["label"]: pd.Series = MachLearnTools().create_binary_labels(df["diff"])
         self.assign_labels(df)
 
         self.simple_moving_average(df, 50)
@@ -57,7 +54,7 @@ class Features:
         self.features.append("label")
 
 
-    def simple_moving_average(self, df: pd.DataFrame, period: int):
+    def simple_moving_average(self, df: pd.DataFrame, period: int) -> None:
         """ 
         Calculates n period moving average 
         Params: 
@@ -72,7 +69,7 @@ class Features:
         self.features.append(sname)   # Add the new feature to the features list 
 
 
-    def rsi(self, df: pd.DataFrame):
+    def rsi(self, df: pd.DataFrame) -> None:
         """
         Calculates the RSI for a given asset in a dataframe. 
         """
@@ -86,18 +83,19 @@ class Features:
         self.features.append("rsi")
 
 
-    def select_features(self, df):
+    def select_features(self, df) -> pd.DataFrame:
         cols = self.features.copy()
         selected = df[cols].dropna()
         return selected 
 
     
-    def to_numpy(self, df, window=60): 
+    def to_numpy(self, df, window=60) -> tuple: 
         # Normalize each feature (z-score)
         features = df[self.features]
         X_norm = (features - features.mean()) / features.std()
         
-        labels = df["label"].to_numpy(dtype=np.float32)
+        # labels = df["label"].to_numpy(dtype=np.float32)
+        # labels = df["label"]
         data = X_norm.to_numpy(dtype=np.float32)
 
         X, y = [], []
@@ -108,7 +106,7 @@ class Features:
         return np.array(X), np.array(y).reshape(-1, 1)
 
  
-    def build_data(self):
+    def build_data(self) -> tuple:
         # calc all the features 
         df = self.compute_features()
         # select the features (can get rid of this eventually)
@@ -126,7 +124,7 @@ class Features:
 
 
     # TODO: Move this or rebuild this, just for proof of concept for the minute 
-    def latest_features(self, window: int=60):
+    def latest_features(self, window: int=60) -> list:
         """
         Used to predict the next move in the market
         """
