@@ -32,7 +32,7 @@ class MachLearnTools:
         pass
 
 
-    def create_binary_labels(self, y: pd.Series|list|np.ndarray) -> list[int]:
+    def create_binary_labels(self, y: pd.Series|pd.DataFrame|list|np.ndarray) -> list[int]:
         """
         Create a 1D array of labels for a series of positive and negative values
         Returns a 1D array with 1 for positive and 0 for negative
@@ -95,17 +95,70 @@ class Encoder:
     def transform(self) -> None:
         pass
 
+# TODO: Abstract is bounded and is outlier 
+# TODO: Actually be serious and fix up / optimize all the ops, this is cool
+# Standard, MinMax or robust scaling
+class DynamicScaler:
+    def __init__(self) -> None: 
+        self.scaler_types = [] 
 
-# Standard or MinMax scale
-class Scaler:
-    def scale(self) -> None:
-        pass
 
-    def fit(self) -> None:
-        pass
+    def fit(self, X) -> None:
 
-    def transform(self) -> None:
-        pass
+        for col in X.columns:
+            n = X[col]
+            is_bounded = False
+            is_outlier = False
+
+            if n.min() >= 0 and n.max() <= 100:
+                is_bounded = True
+            elif ((n < np.percentile(n, 25) - 3 * (np.percentile(n, 75) - np.percentile(n, 25))).any() or
+                (n > np.percentile(n, 75) + 3 * (np.percentile(n, 75) - np.percentile(n, 25))).any()):
+                is_outlier = True
+
+            if is_bounded: 
+                self.scaler_types.append(self.min_max)
+            elif is_outlier: 
+                self.scaler_types.append(self.robust)
+            else:
+                self.scaler_types.append(self.standard)
+        
+
+    def transform(self, X) -> None:
+        for idx, col in enumerate(X.columns):
+            X[col] = self.scaler_types[idx](X[col])
+        return X
+
+
+    def min_max(self, X):
+        """
+        Scales features that are bounded below and above
+        """
+        X = np.asarray(X, dtype=float)
+        X_max = X.max()
+        X_min = X.min()
+        return (X - X_min) / (X_max - X_min)
+        
+
+    def standard(self, X):
+        """
+        Scales features that have negative and positive values
+        """
+        X = np.asarray(X, dtype=float)
+        mu = X.mean()
+        std = X.std()
+        return (X - mu) / std 
+
+
+    def robust(self, X):
+        """
+        Scales features that are bounded > 0 and have many outliers 
+        """
+        X = np.asarray(X, dtype=float)
+        median = np.median(X)
+        q1 = np.percentile(X, 25)
+        q3 = np.percentile(X, 75)
+        return (X-median)/(q3 - q1)
 
 
 # Metrics for testing how good the model is
