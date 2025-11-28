@@ -16,7 +16,7 @@ class MachLearnTools:
     def pipeline(self, X, y) -> None:
         self.clean_data()
         self.split_data(self, X, y)
-        s = Scaler().scale()
+        s = DynamicScaler()
         e = Encoder().encode()
         pass
 
@@ -97,68 +97,97 @@ class Encoder:
 
 # TODO: Abstract is bounded and is outlier 
 # TODO: Actually be serious and fix up / optimize all the ops, this is cool
+# TODO: Change type from func calls to strings of names and update transform with 
+#       switch to accomodate this change.
 # Standard, MinMax or robust scaling
 class DynamicScaler:
     def __init__(self) -> None: 
         self.scaler_types = [] 
+        self.params: dict = {}
 
 
     def fit(self, X) -> None:
-
         for col in X.columns:
-            n = X[col]
-            is_bounded = False
-            is_outlier = False
-
-            if n.min() >= 0 and n.max() <= 100:
-                is_bounded = True
-            elif ((n < np.percentile(n, 25) - 3 * (np.percentile(n, 75) - np.percentile(n, 25))).any() or
-                (n > np.percentile(n, 75) + 3 * (np.percentile(n, 75) - np.percentile(n, 25))).any()):
-                is_outlier = True
-
-            if is_bounded: 
-                self.scaler_types.append(self.min_max)
-            elif is_outlier: 
-                self.scaler_types.append(self.robust)
+            if self._has_bounds(X[col], col):
+                continue
+            elif self._has_outliers(X[col], col):
+                continue
             else:
-                self.scaler_types.append(self.standard)
+                self._is_standard(X[col], col)
+
+
+    def _has_bounds(self, X, name) -> bool:
+        fmin: float = X.min()
+        fmax: float = X.max()
+        if fmin >= 0 and fmax <= 1e3:# TODO: Determine better range
+            self.params[name] = {"type": self.min_max, "min": fmin, "max": fmax}
+            return True
+        return False
+
         
+    def _has_outliers(self, X, name) -> bool:
+        temp: dict = {"type": self.robust}
+        q1: float = np.percentile(X, 25)
+        q3: float = np.percentile(X, 75)
+        iqr: float = q3 - q1
+
+        one = (X < q1-3 * iqr).any()
+        two = (X > q3+3 * iqr).any()
+        if one or two:
+            temp["q1"] = q1
+            temp["q3"] = q3
+            temp["iqr"] = iqr
+            temp["median"] = np.median(X)
+            self.params[name] = temp
+            return True 
+        return False
+
+
+    def _is_standard(self, X, name) -> None:
+        self.params[name] = {"type": self.standard,
+                             "mean": X.mean(),
+                             "std" : X.std()
+                             }
+
 
     def transform(self, X) -> None:
-        for idx, col in enumerate(X.columns):
-            X[col] = self.scaler_types[idx](X[col])
-        return X
+        transformed = X.copy()
+        for col in X.columns:
+            transformed[col] = self.params[col]["type"](col, X[col])
+        return transformed
 
 
-    def min_max(self, X):
+    def min_max(self, name, X):
         """
         Scales features that are bounded below and above
         """
+        X_max = self.params[name]["max"]
+        X_min = self.params[name]["min"]
         X = np.asarray(X, dtype=float)
-        X_max = X.max()
-        X_min = X.min()
         return (X - X_min) / (X_max - X_min)
         
 
-    def standard(self, X):
+    def standard(self, name, X):
         """
         Scales features that have negative and positive values
         """
+        mu = self.params[name]["mean"]
+        std = self.params[name]["std"]
         X = np.asarray(X, dtype=float)
-        mu = X.mean()
-        std = X.std()
         return (X - mu) / std 
 
 
-    def robust(self, X):
+    def robust(self, name, X):
         """
         Scales features that are bounded > 0 and have many outliers 
         """
+        median = self.params[name]["median"]
+        q1 = self.params[name]["q1"]
+        q3 = self.params[name]["q3"]
+        iqr = self.params[name]["iqr"]
+
         X = np.asarray(X, dtype=float)
-        median = np.median(X)
-        q1 = np.percentile(X, 25)
-        q3 = np.percentile(X, 75)
-        return (X-median)/(q3 - q1)
+        return (X-median)/iqr
 
 
 # Metrics for testing how good the model is
