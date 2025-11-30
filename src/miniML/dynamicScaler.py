@@ -6,7 +6,8 @@ class DynamicScaler:
     def __init__(self, range_dict: dict={}, outliers: float= 3) -> None: 
         """
         Initializes a dynamic scaler. 
-        range_dict allows specific lower and upper range vals for minmax scaling. 
+        :Params:
+        range_dict - allows specific lower and upper range vals for minmax scaling. 
         Dict keys must match feature names from the df. Example: {"rsi": (0,100)} 
         outliers - is the number of stds to assign to the outliers threshold 
         for the robust scaler.
@@ -95,7 +96,7 @@ class DynamicScaler:
         X_max: float = self.params[name]["max"]
         X_min: float = self.params[name]["min"]
         X = np.asarray(X, dtype=float)
-        # Protect against 0 divide
+
         denom = X_max - X_min 
         if denom == 0:
             return np.zeros_like(X)
@@ -109,7 +110,7 @@ class DynamicScaler:
         median: float = self.params[name]["median"]
         q1: float = self.params[name]["q1"]
         q3: float = self.params[name]["q3"]
-        # Protect against 0 divide
+
         denom: float = q3 - q1 
         if denom == 0:
             return np.ones_like(X)
@@ -122,7 +123,6 @@ class DynamicScaler:
         """
         Scales features that have negative and positive values
         """
-        # Protect against 0 divide
         std: float = self.params[name]["std"] 
         if std == 0:
             return np.zeros_like(X)

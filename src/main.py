@@ -36,6 +36,7 @@ def main():
     # print(X_train.shape, y_train.shape)
     # print(X_test.shape, y_test.shape)
 
+    # CREATE CLASS FOR BUILDING NN ARCHITECTURE AND DEPLOYING
     # Build the NN and feed it the features
     layers = [[4, "relu"], [3, "relu"]]
     model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.01, layers=layers)
@@ -51,13 +52,6 @@ if __name__ == "__main__":
     main()
 
 
-# Phase 1 
-# Run Program
-# Checks db for history and syncs up latest price records 
-# Calculates features 
-# Builds nn
-# Comes to a market conclusion
-
 # Phase 2 
 # Exchange Auth 
 # Manual and auto ability to set and cancel trades 
@@ -67,12 +61,40 @@ if __name__ == "__main__":
 # Phase 3 
 # End to End mode 
 # Rebuild DB in SQLite
-# Rebuild agent from NN to probabilistic 
+# Consider different model architectures 
 
 
-# class features 
-# class feature_manager
-    # class calculate_features
-    # class prepare_features
-    
+
+# main()
+  # Enter asset + tf 
+  # Creates exchange
+  # Creates db passing in asset + tf + exchange 
+    # db updates with latest data from exchange 
+
+  # Train/Retrain network on new data, save new model? 
+    # Calculate features 
+    # Select model architecture 
+    # Load pretrained model?
+    # New cycle of training?
+ 
+  # Decide on action to take 
+    # Check positions?
+    # Change Strategy?
+    # Simulate the market?
+    # Run the model i.e vibe-trading?
+    # Force open/close position i.e self-trading?
+    # Automate?
+    # Exit?
+
+  # Lets choose automate at the moment as that runs the end to end features 
+  
+  # Automate 
+    # ....
+
+
+
+
+
+
+
 

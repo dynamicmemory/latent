@@ -10,15 +10,16 @@
 # TODO: REDO labels to classify more fine grained lvls with % changes away from 0
 import pandas as pd 
 import numpy as np
+# from src import dynamicScaler
 from src.paths import get_data_path
-from src.machLearnTools import MachLearnTools 
+from src.machLearnTools import MachLearnTools, DynamicScaler 
 
 class Features:
     def __init__(self, fname: str) -> None:
         self.fname: str = fname
         self.path = get_data_path(fname)
         self.features: list[str] = []
-        self.df = None
+        self.df: pd.DataFrame 
         self.mlt = MachLearnTools()
 
     # KEEP
@@ -52,13 +53,13 @@ class Features:
 
     
     # MOVE 
-    def to_numpy(self, df, window=60) -> tuple: 
-        # Normalize each feature (z-score)
+    def convert_to_numpy(self, df, window=60) -> tuple: 
+        # Scale the features 
         features = df[self.features]
-        X_norm = (features - features.mean()) / features.std()
+        self.mlt.scaler.fit(features)
+        X_norm = self.mlt.scaler.transform(features)
         
         labels = df["label"].to_numpy(dtype=np.float32)
-        # labels = df["label"]
         data = X_norm.to_numpy(dtype=np.float32)
 
         X, y = [], []
@@ -76,7 +77,7 @@ class Features:
         # select the features (can get rid of this eventually)
         df = self.select_features(df)
         # reshape the data
-        X, y = self.to_numpy(df)
+        X, y = self.convert_to_numpy(df)
         # split the data 
 
         # flatten the moving window so this works for a vanilla ann, change once 
@@ -88,13 +89,13 @@ class Features:
 
 
     # TODO: Move this or rebuild this, just for proof of concept for the minute 
-    def latest_features(self, window: int=60) -> list:
+    def latest_features(self, window: int=60) -> np.ndarray:
         """
         Used to predict the next move in the market
         """
         # Redoing everythin in this class for the last 60 candles to produce a 
         # value to feed into the nn to predict the next market move.
-        df_live = self.df.copy()
+        df_live: pd.DataFrame = self.df.copy()
 
         feature_cols = self.features.copy()
         if "label" in feature_cols:
@@ -102,8 +103,7 @@ class Features:
 
         df_live = df_live[feature_cols].dropna()
 
-        x_norm = (df_live - df_live.mean()) / df_live.std()
-
+        x_norm = self.mlt.scaler.transform(df_live)
         X_input = x_norm[-window:].to_numpy(dtype=np.float32).reshape(1, -1)
         return X_input
 
