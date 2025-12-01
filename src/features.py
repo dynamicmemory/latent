@@ -1,13 +1,4 @@
-# TODO: Rebuild everything in here into my own scikitlearn equiv
-    # Pulling the data in
-    # Data cleaning 
-    # Feature engineering 
-    # Normalizing and scaling 
-    # Data splitting 
-    # Shaping 
-    # Single pipeline that always produces the same result.
-# TODO: Change the df to self.df... this class is so broken atm
-# TODO: REDO labels to classify more fine grained lvls with % changes away from 0
+# TODO: Once built, change to recieve cleaned df from external source, no csvread
 import pandas as pd 
 import numpy as np
 # from src import dynamicScaler
@@ -22,7 +13,7 @@ class Features:
         self.df: pd.DataFrame 
         self.mlt = MachLearnTools()
 
-    # KEEP
+    # Pipeline for this class, one call runs all functions
     def compute_features(self) -> pd.DataFrame:
         """
         Temp function building all features inside of till finished fully
@@ -34,7 +25,7 @@ class Features:
         df.drop(["utc", "time"], axis=1, inplace=True)
         df["diff"] = df["close"] - df["open"]
 
-        df["label"] = self.mlt.create_binary_labels(df["diff"])
+        df["label"] = self.create_binary_labels(df["diff"])
         self.features.append("label")
 
         self.simple_moving_average(df, 50)
@@ -45,7 +36,7 @@ class Features:
         return df
 
 
-    # KEEP
+    # This is probably not need, just run clean data on self.features 
     def select_features(self, df) -> pd.DataFrame:
         cols = self.features.copy()
         selected = df[cols].dropna()
@@ -109,7 +100,25 @@ class Features:
 
 
     #============================= CALCULATE FEATURES =========================
-    # KEEP
+
+    # TODO: this needs to intelligently look for problems in the df after each 
+    #       feature has been generated, and dynamically deal with each problem.
+    def clean(self, df) -> pd.DataFrame:
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+        df.dropna(inplace=True)
+        pass
+
+
+    # TODO: Create finer grained labels depending on % change magnitude
+    def create_binary_labels(self, y) -> list[int]:
+        """
+        Create a 1D array of labels for a series of positive and negative values
+        Returns a 1D array with 1 for positive and 0 for negative
+        """
+        y = np.asarray(y)
+        return (y > 0).astype(int).tolist()
+
+
     def simple_moving_average(self, df: pd.DataFrame, period: int) -> None:
         """ 
         Calculates n period moving average 
@@ -125,7 +134,6 @@ class Features:
         self.features.append(sname)   # Add the new feature to the features list 
 
 
-    # KEEP
     def rsi(self, df: pd.DataFrame) -> None:
         """
         Calculates the RSI for a given asset in a dataframe. 

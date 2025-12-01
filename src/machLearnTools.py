@@ -1,16 +1,7 @@
-# Load data *done in features class
-# compute targets/labels
-# compute features  *done in features class 
-# clean 
-# split data 
-# scale 
-# Encode 
-# train *done in nn 
-# eval 
-
-
+# TODO: Move this to the miniML dir and start splitting up the different classes
 import numpy as np
 import pandas as pd
+
 # Full pipeline wrapper
 class MachLearnTools:
     def __init__(self):
@@ -25,36 +16,16 @@ class MachLearnTools:
         pass
 
 
-    def create_n_labels(self, y: list) -> None:
-        """
-        Creates binary labels 
-        returns 
-        """
-        classes: set = set()
-        for row in y:
-            classes.add(row)
-        pass
-
-
-    def create_binary_labels(self, y: pd.Series|pd.DataFrame|list|np.ndarray) -> list[int]:
-        """
-        Create a 1D array of labels for a series of positive and negative values
-        Returns a 1D array with 1 for positive and 0 for negative
-        """
-        y = np.asarray(y)
-        return (y > 0).astype(int).tolist()
-
-
+    # TODO: Will be used to ensure data is clean during/post prepping for model
     def clean_data(self) -> None:
         pass 
 
 
     def split_data(self, X, y, t_size=0.2, seed=None, shuffle=False) -> tuple:
         """
-        My trim down version of scikitlearns test_train_split. Splits the given 
-        data into 4 outputs, the X train, X test, y train and y test set in that 
-        order.
-        Params: 
+        Spits data into 4 outputs, the X train, X test, y train and y test set 
+        in that order.
+        :Params: 
         X: Dataframe - Consisting of input features.
         y: 1d array - Array containing labels for the features.
         t_size: float - Percentage of the data put aside for testing.

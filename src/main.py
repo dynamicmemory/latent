@@ -1,3 +1,4 @@
+
 from src.exchange import Exchange as exchange
 from src.databaseManager import DatabaseManager as databaseManager 
 from src.features import Features as features
@@ -11,6 +12,7 @@ timeframe: str = "D"
 bitcoin: str = "BTCUSDT"
 time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
 
+
 def update_all_tf():
     # Updates all timeframes databases, probably move this to another class 
     for time in time_list: 
@@ -20,6 +22,8 @@ def update_all_tf():
         dbm.update_db()
         print(f"{time} data updated")
 
+
+# TODO: Clean this up by moving every task to their rightful place please!!!
 def main():
     update_all_tf()
 
@@ -38,8 +42,8 @@ def main():
 
     # CREATE CLASS FOR BUILDING NN ARCHITECTURE AND DEPLOYING
     # Build the NN and feed it the features
-    layers = [[4, "relu"], [3, "relu"]]
-    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.01, layers=layers)
+    layers = [[4, "relu"], [8, "relu"]]
+    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
     model.fit()
 
     x_pred = f.latest_features()
@@ -62,8 +66,6 @@ if __name__ == "__main__":
 # End to End mode 
 # Rebuild DB in SQLite
 # Consider different model architectures 
-
-
 
 # main()
   # Enter asset + tf 
@@ -90,11 +92,3 @@ if __name__ == "__main__":
   
   # Automate 
     # ....
-
-
-
-
-
-
-
-
