@@ -4,17 +4,18 @@ import pandas as pd
 
 # Full pipeline wrapper
 class MachLearnTools:
-    def __init__(self):
-        self.scaler = DynamicScaler()
+    def __init__(self, X: pd.DataFrame, y: pd.DataFrame):
+        self.dynamic_scaler = DynamicScaler()
+        self.X = X 
+        self.y = y
 
 
-    def pipeline(self, X, y) -> None:
-        self.clean_data()
-        self.split_data(self, X, y)
-        s = DynamicScaler()
-        e = Encoder().encode()
-        pass
-
+    def pipeline(self) -> tuple:
+        # self.clean_data()
+        # self.split_data(self, X, y)
+        # s = DynamicScaler()
+        # e = Encoder().encode()
+        return 1,2,3,4
 
     # TODO: Will be used to ensure data is clean during/post prepping for model
     def clean_data(self) -> None:
@@ -58,6 +59,108 @@ class MachLearnTools:
              
         return (X_train, X_test, y_train, y_test)
 
+
+    # This is probably not need, just run clean data on self.features 
+    # def select_features(self, df) -> pd.DataFrame:
+    #     cols = self.features.copy()
+    #     selected = df[cols].dropna()
+    #     return selected 
+
+    
+    # MOVE 
+    def convert_to_numpy(self, window=60) -> tuple: 
+        # Scale the features 
+        # features = df[self.features]
+        features = self.X
+        self.dynamic_scaler.fit(features)
+        X_norm = self.dynamic_scaler.transform(features)
+        
+        # labels = df["label"].to_numpy(dtype=np.float32)
+        labels = self.y.to_numpy(dtype=np.float32)
+        data = X_norm.to_numpy(dtype=np.float32)
+
+        X, y = [], []
+        for i in range(window, len(data)):
+            X.append(data[i-window:i])
+            y.append(labels[i])
+
+        return np.array(X), np.array(y).reshape(-1, 1)
+
+ 
+    # MOVE 
+    def build_data(self) -> tuple:
+        # calc all the features 
+        # df = self.compute_features()
+        # select the features (can get rid of this eventually)
+        # df = self.select_features(df)
+        # reshape the data
+        X, y = self.convert_to_numpy()
+        # split the data 
+
+        # flatten the moving window so this works for a vanilla ann, change once 
+        # I build out better framework
+        X = X.reshape(X.shape[0], -1)  # (samples, window * features)
+   
+        X_train, X_test, y_train, y_test = self.split_data(X, y)
+        return X_train, X_test, y_train, y_test 
+
+
+   # TODO: Move this or rebuild this, just for proof of concept for the minute 
+    def latest_features(self, window: int=60) -> np.ndarray:
+        """
+        Used to predict the next move in the market
+        """
+        # Redoing everythin in this class for the last 60 candles to produce a 
+        # value to feed into the nn to predict the next market move.
+        # df_live: pd.DataFrame = self.df.copy()
+        df_live: pd.DataFrame = self.X.copy()
+
+        # feature_cols = self.features.copy()
+        feature_cols = df_live.columns
+        # if "label" in feature_cols:
+        #     feature_cols.remove("label")
+
+        df_live = df_live[feature_cols].dropna()
+
+        x_norm = self.dynamic_scaler.transform(df_live)
+        X_input = x_norm[-window:].to_numpy(dtype=np.float32).reshape(1, -1)
+        return X_input
+
+
+# Encode non number vals
+class Encoder:
+    def encode(self) -> None:
+        pass
+
+    def fit(self) -> None:
+        pass
+
+    def transform(self) -> None:
+        pass
+
+
+
+# Metrics for testing how good the model is
+class Evaluate:
+    def accuracy(self) -> None:
+        pass
+
+
+    def precision(self) -> None:
+        pass 
+
+
+    def recall(self) -> None:
+        pass
+
+
+    def f1_score(self) -> None:
+        pass
+
+
+# Back burners 
+# pca 
+# text embedding
 
 # A Dynamic Scaler build primarily for scaling trading data, usable as normal
 class DynamicScaler:
@@ -187,40 +290,4 @@ class DynamicScaler:
 
         X = np.asarray(X, dtype=float)
         return (X - self.params[name]["mean"]) / std 
-
-
-# Encode non number vals
-class Encoder:
-    def encode(self) -> None:
-        pass
-
-    def fit(self) -> None:
-        pass
-
-    def transform(self) -> None:
-        pass
-
-
-
-# Metrics for testing how good the model is
-class Evaluate:
-    def accuracy(self) -> None:
-        pass
-
-
-    def precision(self) -> None:
-        pass 
-
-
-    def recall(self) -> None:
-        pass
-
-
-    def f1_score(self) -> None:
-        pass
-
-
-# Back burners 
-# pca 
-# text embedding
 

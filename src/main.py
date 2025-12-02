@@ -2,6 +2,7 @@
 from src.exchange import Exchange as exchange
 from src.databaseManager import DatabaseManager as databaseManager 
 from src.features import Features as features
+from src.machLearnTools import MachLearnTools
 from src.neuralnetwork import NN as nn 
 import numpy as np
 
@@ -35,8 +36,16 @@ def main():
     # dbm.update_db()
 
     # Engineer the features
-    f = features(fname)
-    X_train, X_test, y_train, y_test = f.build_data()
+    df = features(fname)
+
+    # TODO: WE WANT TO DO THIS INSTEAD
+        # X_train, X_test, y_train, y_test = MLTOOLS.build_data(df)
+    # Currently this does not do what we want, also df.df lol 
+    X, y = df.compute_features()
+
+    mlt = MachLearnTools(X, y)
+
+    X_train, X_test, y_train, y_test = mlt.build_data()
     # print(X_train.shape, y_train.shape)
     # print(X_test.shape, y_test.shape)
 
@@ -46,7 +55,7 @@ def main():
     model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
     model.fit()
 
-    x_pred = f.latest_features()
+    x_pred = mlt.latest_features()
     x_pred = np.resize(x_pred, (1, model.X.shape[1]))  # force shape match if tiny diff
     pred_val = model.predict(x_pred)
     print("Buy" if pred_val > 0.5 else "sell")
