@@ -5,6 +5,7 @@ from src.features import Features as features
 from src.machLearnTools import MachLearnTools
 from src.neuralnetwork import NN as nn 
 import numpy as np
+import sys
 
 base: str = "https://api.bybit.com"
 tickers: str = "/v5/market/tickers"
@@ -36,23 +37,17 @@ def main():
     # dbm.update_db()
 
     # Engineer the features
-    df = features(fname)
-
-    # TODO: WE WANT TO DO THIS INSTEAD
-        # X_train, X_test, y_train, y_test = MLTOOLS.build_data(df)
-    # Currently this does not do what we want, also df.df lol 
-    X, y = df.compute_features()
-
+    f = features(dbm.get_data())
+    X, y = f.compute_features()
     mlt = MachLearnTools(X, y)
-
-    X_train, X_test, y_train, y_test = mlt.build_data()
+    X_train, X_test, y_train, y_test = mlt.run_pipeline()
     # print(X_train.shape, y_train.shape)
     # print(X_test.shape, y_test.shape)
 
     # CREATE CLASS FOR BUILDING NN ARCHITECTURE AND DEPLOYING
     # Build the NN and feed it the features
-    layers = [[4, "relu"], [8, "relu"]]
-    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
+    layers = [[8, "relu"], [8, "relu"]]
+    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.001, layers=layers)
     model.fit()
 
     x_pred = mlt.latest_features()

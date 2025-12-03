@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from src.database import Database as database
+from src.paths import get_data_path
+import pandas as pd 
 
 if TYPE_CHECKING:
     from database import Database
@@ -12,10 +14,11 @@ class DatabaseManager:
     def __init__(self, fname: str, timeframe: str, exchange: Exchange):
         self.db: Database = database(fname, timeframe)
         self.exchange: Exchange = exchange 
+        self.path = get_data_path(fname)
 
 
     # TODO: This is so broken of logic, serious rewrite of this class
-    def update_db(self):
+    def update_db(self) -> pd.DataFrame:
         # Create db and exchange instances 
         db: Database = self.db
         ex: Exchange = self.exchange
@@ -32,4 +35,13 @@ class DatabaseManager:
 
         # Update the db with the missing record(s).
         db.update_records(records)
+
+
+    def get_data(self) -> pd.DataFrame:
+        """
+        Temporary class for returning a df from the db, need to add cleaning, 
+        time calcs, everything that would get the dataframe ready to calculate 
+        math on 
+        """
+        return pd.read_csv(self.path)
 

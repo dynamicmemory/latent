@@ -1,35 +1,31 @@
 # TODO: Once built, change to recieve cleaned df from external source, no csvread
+# TODO: We can now move from df to self.df within the class, when ready.
 import pandas as pd 
 import numpy as np
-from src.miniML import dynamicScaler
-from src.paths import get_data_path
-from src.machLearnTools import MachLearnTools, DynamicScaler 
 
 class Features:
-    def __init__(self, fname: str) -> None:
-        self.fname: str = fname
-        self.path = get_data_path(fname)
+    def __init__(self, df: pd.DataFrame) -> None:
         self.features: list[str] = []
-        self.df: pd.DataFrame 
+        self.df: pd.DataFrame = df
 
 
-    #============================= CALCULATE FEATURES =========================
-    # Pipeline for this class, one call runs all functions
+    # ============================= UTILS ====================================
+    # If this was cut out, this whole thing wouldnt work, either build this to 
+    # be more dynamic or build it specifically to be able to be replaced if you 
+    # want this class to work on a different set of columns
     def compute_features(self) -> tuple:
-        """
+        """ 
+        Pipeline for this class, one call runs all functions
         Temp function building all features inside of till finished fully
-        
         WILL BE WHAT IS CALLED TO PRODUCE THE DF TO BE FED INTO MLTOOLS
         """
-        # ------------ FEATURE RELATED CODE ------------------
-        df: pd.DataFrame = pd.read_csv(self.path)
+        df = self.df
 
         # Probably wont drop time for tfs that could use it as metric
         df.drop(["utc", "time"], axis=1, inplace=True)
         df["diff"] = df["close"] - df["open"]
         
         df["label"] = self.create_binary_labels(df["diff"])
-        # self.features.append("label")
 
         self.simple_moving_average(df, 50)
         self.simple_moving_average(df, 100)
@@ -38,8 +34,8 @@ class Features:
         self.df = df
         
         feature_cols = [col for col in self.features if col != "label"]
-        X = df.loc[:, feature_cols].dropna().copy()   # only drop the nas here
-        y = df.loc[X.index, "label"].copy()               # all rows that are in X now
+        X = df.loc[:, feature_cols].dropna().copy() # only drop the nas here
+        y = df.loc[X.index, "label"].copy()         # all rows that are in X now
         return X, y 
 
 
@@ -61,6 +57,7 @@ class Features:
         return (y > 0).astype(int).tolist()
 
 
+    # ==========================FEATURE CALCULATIONS==========================
     def simple_moving_average(self, df: pd.DataFrame, period: int) -> None:
         """ 
         Calculates n period moving average 
@@ -90,7 +87,5 @@ class Features:
         df["rsi"] = 100 - 100/(1+ df["rs"])
         df.drop(["gain", "loss", "avgGain", "avgLoss", "rs"], axis = 1, inplace=True)
         self.features.append("rsi")
-
-
-
-        # Database -> DataService -> Features -> MLTools -> NN 
+ 
+        # TODO: RUN THROUGH CLEAN AFTER

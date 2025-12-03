@@ -1,6 +1,11 @@
 # TODO: Move this to the miniML dir and start splitting up the different classes
+
+# TODO: TIME SERIES IS OPTIONAL SO THE PIPELINE FOR IT SHOULD BE TOO CHSNGE CLASS FOR THIS
+
 import numpy as np
+from numpy.random import shuffle
 import pandas as pd
+from src.miniML.dynamicScaler import DynamicScaler 
 
 # Full pipeline wrapper
 class MachLearnTools:
@@ -9,29 +14,49 @@ class MachLearnTools:
         self.X = X 
         self.y = y
 
+    
+    # TODO: Split this into different concerns and specialize each task
+    def run_pipeline(self, window:int = 60) -> tuple:
+        # Scale the features 
+        features = self.X
+        self.dynamic_scaler.fit(features)
+        X_norm = self.dynamic_scaler.transform(features)
+        
+        # Convert to arrays
+        labels = self.y.to_numpy(dtype=np.float32)
+        data = X_norm.to_numpy(dtype=np.float32)
 
-    def pipeline(self) -> tuple:
-        # self.clean_data()
-        # self.split_data(self, X, y)
-        # s = DynamicScaler()
-        # e = Encoder().encode()
-        return 1,2,3,4
+        # Creates the sliding window
+        X, y = [], []
+        for i in range(window, len(data)):
+            X.append(data[i-window:i])
+            y.append(labels[i])
+
+        # Turns the lists into arrays
+        X, y = np.array(X), np.array(y).reshape(-1, 1)
+
+        # Flattens windows for dense NN
+        X = X.reshape(X.shape[0], -1)  # (samples, window * features)
+   
+        # Test train split                 # Shuffle false cause time series, change pipeline, build different one for time series data and make default for standard nn stuff.
+        X_train, X_test, y_train, y_test = self.split_data(X, y, shuffle=False)
+        return X_train, X_test, y_train, y_test 
+
 
     # TODO: Will be used to ensure data is clean during/post prepping for model
     def clean_data(self) -> None:
+        # ACTUALLY USE THIS TO CLEAN THE DATA, MAYBE SHAPE IT TOO I DONT KNOW
         pass 
 
 
-    def split_data(self, X, y, t_size=0.2, seed=None, shuffle=False) -> tuple:
-        """
-        Spits data into 4 outputs, the X train, X test, y train and y test set 
-        in that order.
-        :Params: 
+    def split_data(self, X, y, t_size=0.2, seed=None, shuffle=True) -> tuple:
+        """ 
+        Spits data into X train/test, y train/test set in that order.
         X: Dataframe - Consisting of input features.
         y: 1d array - Array containing labels for the features.
         t_size: float - Percentage of the data put aside for testing.
         seed: int - Provide a random seed for consistance runs each time.
-        shuffle: bool - Mix the features up so there is no order.
+        shuffle: bool - shuffle the rows of the dataset 
         """
         rng = np.random.default_rng(seed)
 
@@ -59,235 +84,20 @@ class MachLearnTools:
              
         return (X_train, X_test, y_train, y_test)
 
-
-    # This is probably not need, just run clean data on self.features 
-    # def select_features(self, df) -> pd.DataFrame:
-    #     cols = self.features.copy()
-    #     selected = df[cols].dropna()
-    #     return selected 
-
     
-    # MOVE 
-    def convert_to_numpy(self, window=60) -> tuple: 
-        # Scale the features 
-        # features = df[self.features]
-        features = self.X
-        self.dynamic_scaler.fit(features)
-        X_norm = self.dynamic_scaler.transform(features)
-        
-        # labels = df["label"].to_numpy(dtype=np.float32)
-        labels = self.y.to_numpy(dtype=np.float32)
-        data = X_norm.to_numpy(dtype=np.float32)
-
-        X, y = [], []
-        for i in range(window, len(data)):
-            X.append(data[i-window:i])
-            y.append(labels[i])
-
-        return np.array(X), np.array(y).reshape(-1, 1)
-
- 
-    # MOVE 
-    def build_data(self) -> tuple:
-        # calc all the features 
-        # df = self.compute_features()
-        # select the features (can get rid of this eventually)
-        # df = self.select_features(df)
-        # reshape the data
-        X, y = self.convert_to_numpy()
-        # split the data 
-
-        # flatten the moving window so this works for a vanilla ann, change once 
-        # I build out better framework
-        X = X.reshape(X.shape[0], -1)  # (samples, window * features)
-   
-        X_train, X_test, y_train, y_test = self.split_data(X, y)
-        return X_train, X_test, y_train, y_test 
-
-
-   # TODO: Move this or rebuild this, just for proof of concept for the minute 
+    # REWRITE 
     def latest_features(self, window: int=60) -> np.ndarray:
         """
         Used to predict the next move in the market
         """
         # Redoing everythin in this class for the last 60 candles to produce a 
         # value to feed into the nn to predict the next market move.
-        # df_live: pd.DataFrame = self.df.copy()
         df_live: pd.DataFrame = self.X.copy()
 
-        # feature_cols = self.features.copy()
         feature_cols = df_live.columns
-        # if "label" in feature_cols:
-        #     feature_cols.remove("label")
 
         df_live = df_live[feature_cols].dropna()
 
         x_norm = self.dynamic_scaler.transform(df_live)
         X_input = x_norm[-window:].to_numpy(dtype=np.float32).reshape(1, -1)
         return X_input
-
-
-# Encode non number vals
-class Encoder:
-    def encode(self) -> None:
-        pass
-
-    def fit(self) -> None:
-        pass
-
-    def transform(self) -> None:
-        pass
-
-
-
-# Metrics for testing how good the model is
-class Evaluate:
-    def accuracy(self) -> None:
-        pass
-
-
-    def precision(self) -> None:
-        pass 
-
-
-    def recall(self) -> None:
-        pass
-
-
-    def f1_score(self) -> None:
-        pass
-
-
-# Back burners 
-# pca 
-# text embedding
-
-# A Dynamic Scaler build primarily for scaling trading data, usable as normal
-class DynamicScaler:
-    def __init__(self, range_dict: dict={}, outliers: float= 3) -> None: 
-        """
-        Initializes a dynamic scaler. 
-        :Params:
-        range_dict - allows specific lower and upper range vals for minmax scaling. 
-        Dict keys must match feature names from the df. Example: {"rsi": (0,100)} 
-        outliers - is the number of stds to assign to the outliers threshold 
-        for the robust scaler.
-        """
-        self.params: dict = {}
-        self.range_dict: dict[str, tuple] = range_dict
-        self.outliers: float = outliers
-
-
-    def fit(self, X: pd.DataFrame) -> None:
-        """
-        Dynamically assigns which scaler will apply to which feature in X 
-        Options: Minmax, Robust, Standard
-        """
-        for feat in X.columns:
-            if self._has_bounds(X[feat], feat):
-                continue
-            elif self._has_outliers(X[feat], feat): 
-                continue
-            else:
-                # Standard scaling applies to those who meet no criteria
-                self.params[feat] = {"type": "standard",
-                                     "mean": X[feat].mean(),
-                                     "std" : X[feat].std()}
-
-
-    def _has_bounds(self, X, name: str) -> bool:
-        """
-        Tests column vector for bounded like values, assigns vector to minmax.
-        """
-        fmin: float = X.min()
-        fmax: float = X.max()
-        if name in self.range_dict:
-            lower = self.range_dict[name][0]
-            upper = self.range_dict[name][1]
-        else:
-            lower = 0
-            upper = 100
-
-        if fmin >= lower and fmax <= upper: 
-            self.params[name] = {"type": "minmax", 
-                                 "min": fmin, 
-                                 "max": fmax}
-            return True
-        return False
-
-        
-    def _has_outliers(self, X, name: str) -> bool:
-        """
-        Tests column vector for outliers in values, assigns vector to Robust.
-        """
-        q1: float = float(np.percentile(X, 25))
-        q3: float = float(np.percentile(X, 75))
-        deviation: float = self.outliers * (q3 - q1)
-        lower = (X < q1 - deviation).any()
-        upper = (X > q3 + deviation).any()
-
-        if lower or upper:
-            self.params[name] = {"type": "robust",
-                                 "median": np.median(X), 
-                                 "q1":q1, "q3":q3}
-            return True 
-        return False
-
-
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        Transforms all features in X according to their stored type from 'fit'
-        """
-        t = X.copy()
-        for f in X.columns:
-            scaler = self.params[f]["type"]
-            if scaler == "minmax":
-                t[f] = self.min_max(X[f], f)
-            elif scaler == "robust":
-                t[f] = self.robust(X[f], f)
-            else:
-                 t[f] = self.standard(X[f], f)
-        return t
-
-
-    def min_max(self, X, name: str):
-        """
-        Scales features that are bounded below and above
-        """
-        X_max: float = self.params[name]["max"]
-        X_min: float = self.params[name]["min"]
-        X = np.asarray(X, dtype=float)
-
-        denom = X_max - X_min 
-        if denom == 0:
-            return np.zeros_like(X)
-        return (X - X_min) / denom
-        
-
-    def robust(self, X, name: str):
-        """
-        Scales features that are bounded > 0 and have many outliers 
-        """
-        median: float = self.params[name]["median"]
-        q1: float = self.params[name]["q1"]
-        q3: float = self.params[name]["q3"]
-
-        denom: float = q3 - q1 
-        if denom == 0:
-            return np.ones_like(X)
-
-        X = np.asarray(X, dtype=float)
-        return (X - median)/denom
-
-
-    def standard(self, X, name: str):
-        """
-        Scales features that have negative and positive values
-        """
-        std: float = self.params[name]["std"] 
-        if std == 0:
-            return np.zeros_like(X)
-
-        X = np.asarray(X, dtype=float)
-        return (X - self.params[name]["mean"]) / std 
-
