@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-from src.miniML.dynamicScaler import DynamicScaler 
+from miniML.dynamicScaler import DynamicScaler 
 
-# Full pipeline wrapper
 class MachLearnTools:
     def __init__(self, X: pd.DataFrame, y: pd.DataFrame):
         self.dynamic_scaler = DynamicScaler()
@@ -94,3 +93,4 @@ class MachLearnTools:
         """
         X_scaled = self.dynamic_scaler.transform(self.X)
         return X_scaled[-window:].to_numpy(dtype=np.float32).reshape(1, -1)
+

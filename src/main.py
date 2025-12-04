@@ -40,7 +40,7 @@ def main():
     f = features(dbm.get_data())
     X, y = f.compute_features()
     mlt = MachLearnTools(X, y)
-    X_train, X_test, y_train, y_test = mlt.run_pipeline()
+    X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
     # print(X_train.shape, y_train.shape)
     # print(X_test.shape, y_test.shape)
 

@@ -17,6 +17,12 @@ class DynamicScaler:
         self.outliers: float = outliers
 
 
+    def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Convience method for fitting and transforming X training at once."""
+        self.fit(X)
+        return self.transform(X)
+
+
     def fit(self, X: pd.DataFrame) -> None:
         """
         Dynamically assigns which scaler will apply to which feature in X 
@@ -74,8 +80,8 @@ class DynamicScaler:
 
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        Transforms all features in X according to their stored type from 'fit'
+        """ Transforms all features in X according to their stored type from 
+        'fit' and returns the scaled features as a Dataframe
         """
         t = X.copy()
         for f in X.columns:
