@@ -2,7 +2,7 @@
 from src.exchange import Exchange as exchange
 from src.databaseManager import DatabaseManager as databaseManager 
 from src.features import Features as features
-from src.machLearnTools import MachLearnTools
+from src.miniML.machLearnTools import MachLearnTools
 from src.neuralnetwork import NN as nn 
 import numpy as np
 import sys

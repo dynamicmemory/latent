@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from miniML.dynamicScaler import DynamicScaler 
+from src.miniML.dynamicScaler import DynamicScaler 
 
 class MachLearnTools:
     def __init__(self, X: pd.DataFrame, y: pd.DataFrame):

@@ -25,7 +25,10 @@ class Features:
         df.drop(["utc", "time"], axis=1, inplace=True)
         df["diff"] = df["close"] - df["open"]
         
-        df["label"] = self.create_binary_labels(df["diff"])
+        df["shifted_diff"] = df["close"].shift(-1) - df["open"].shift(-1)
+        df["label"] = self.create_binary_labels(df["shifted_diff"])
+
+        df.drop(["shifted_diff"], axis=1, inplace=True)
 
         self.simple_moving_average(df, 50)
         self.simple_moving_average(df, 100)
@@ -33,18 +36,26 @@ class Features:
         self.rsi(df)
         self.df = df
         
-        feature_cols = [col for col in self.features if col != "label"]
-        X = df.loc[:, feature_cols].dropna().copy() # only drop the nas here
-        y = df.loc[X.index, "label"].copy()         # all rows that are in X now
+        # Clean out X and realign y, then return both, we are done here.
+        X = self.clean(df)
+        y = df.loc[X.index, "label"].copy()     # all rows that are in X now
+        y = y.dropna()
+        X = X.loc[y.index]
+
         return X, y 
 
 
-    # TODO: this needs to intelligently look for problems in the df after each 
-    #       feature has been generated, and dynamically deal with each problem.
-    def clean(self, df) -> pd.DataFrame:
+    def clean(self, df: pd.DataFrame, label:str="label") -> pd.DataFrame:
+        """ Cleans a df of inf values, removes all nans, keeps labels aligned
+            for all columns in self.features.
+        """
+        # Copy the df so as to keep the original with all raw data for later
+        df = df.copy()
+        # Any infinite values become NaNs 
         df.replace([np.inf, -np.inf], np.nan, inplace=True)
-        df.dropna(inplace=True)
-        pass
+        # Now drop all the NaNs from only the features we will use.
+        df.dropna(subset=self.features, inplace=True)
+        return df 
 
 
     # TODO: Create finer grained labels depending on % change magnitude
@@ -67,10 +78,6 @@ class Features:
         """
         sname: str = f"sma_{period}"
         df[sname] = df["close"].rolling(period).mean()
-
-        # TODO: Replace with self.clean()
-        # Backfill pre-period rows with first average value, this stops nans
-        df[sname] = df[sname].fillna(df.loc[df[sname].first_valid_index(), sname])
 
         self.features.append(sname)   # Add the new feature to the features list 
 
