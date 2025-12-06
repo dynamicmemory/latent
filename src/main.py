@@ -27,7 +27,7 @@ def update_all_tf():
 
 # TODO: Clean this up by moving every task to their rightful place please!!!
 def main():
-    update_all_tf()
+    # update_all_tf()
 
     # Still hard coding Daily while building 
     timeframe = "D"
@@ -38,7 +38,7 @@ def main():
 
     # Engineer the features
     f = features(dbm.get_data())
-    X, y = f.compute_features()
+    X, y = f.run_features()
     mlt = MachLearnTools(X, y)
     X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
     # print(X_train.shape, y_train.shape)
@@ -47,7 +47,7 @@ def main():
     # CREATE CLASS FOR BUILDING NN ARCHITECTURE AND DEPLOYING
     # Build the NN and feed it the features
     layers = [[8, "relu"], [8, "relu"]]
-    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.001, layers=layers)
+    model = nn(X_train, y_train, "binary", epochs = 10000, lr=0.001, layers=layers)
     model.fit()
 
     x_pred = mlt.latest_features()

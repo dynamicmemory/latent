@@ -9,40 +9,43 @@ class Features:
         self.df: pd.DataFrame = df
 
 
-    # ============================= UTILS ====================================
-    # If this was cut out, this whole thing wouldnt work, either build this to 
-    # be more dynamic or build it specifically to be able to be replaced if you 
-    # want this class to work on a different set of columns
-    def compute_features(self) -> tuple:
-        """ 
-        Pipeline for this class, one call runs all functions
-        Temp function building all features inside of till finished fully
-        WILL BE WHAT IS CALLED TO PRODUCE THE DF TO BE FED INTO MLTOOLS
-        """
-        df = self.df
+    def run_features(self) -> tuple:
+        df = self.df 
 
-        # Probably wont drop time for tfs that could use it as metric
-        df.drop(["utc", "time"], axis=1, inplace=True)
-        df["diff"] = df["close"] - df["open"]
-        
-        df["shifted_diff"] = df["close"].shift(-1) - df["open"].shift(-1)
+        self.calc_price_diff(df)
+        df = self.clean(df)       # call clean to remove nans from shift
+        df["difflabel"] = self.create_binary_labels(df["difference"])
         df["label"] = self.create_binary_labels(df["shifted_diff"])
 
-        df.drop(["shifted_diff"], axis=1, inplace=True)
+        df = df.drop(["utc", "date", "time", "high", "low", "volume"], axis=1)
 
         self.simple_moving_average(df, 50)
         self.simple_moving_average(df, 100)
         self.simple_moving_average(df, 200)
         self.rsi(df)
-        self.df = df
+        # self.df = df
         
-        # Clean out X and realign y, then return both, we are done here.
+        # feature_cols = [col for col in self.features if col != "label"]
+        # X = df.loc[:, feature_cols].dropna().copy() # only drop the nas here
+        # y = df.loc[X.index, "label"].copy()         # all rows that are in X now
         X = self.clean(df)
         y = df.loc[X.index, "label"].copy()     # all rows that are in X now
-        y = y.dropna()
-        X = X.loc[y.index]
+
+        # print(X)
 
         return X, y 
+
+
+    # TODO: Add percent change
+    def calc_price_diff(self, df: pd.DataFrame) -> pd.DataFrame:
+        """ Calculates the intra-timeframe difference between 'open' and 'close'
+        features in the DataFrame 
+        """
+        df["difference"] = df["close"] - df["open"]
+        df["shifted_diff"] = df["close"].shift(-1) - df["open"].shift(-1)
+        self.features.append("difference")
+        self.features.append("shifted_diff")
+        return df
 
 
     def clean(self, df: pd.DataFrame, label:str="label") -> pd.DataFrame:
@@ -86,8 +89,8 @@ class Features:
         """
         Calculates the RSI for a given asset in a dataframe. 
         """
-        df["gain"] = df["diff"].where(df["diff"] >= 0, 0) 
-        df["loss"] = -df["diff"].where(df["diff"] <= 0, 0) 
+        df["gain"] = df["difference"].where(df["difference"] >= 0, 0) 
+        df["loss"] = -df["difference"].where(df["difference"] <= 0, 0) 
         df["avgGain"] = df["gain"].rolling(14).mean()
         df["avgLoss"] = df["loss"].rolling(14).mean()
         df["rs"] = df["avgGain"] / df["avgLoss"]
