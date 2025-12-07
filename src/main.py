@@ -30,7 +30,7 @@ def main():
     # update_all_tf()
 
     # Still hard coding Daily while building 
-    timeframe = "D"
+    timeframe = "15"
     fname: str = f"{bitcoin}-{timeframe}.csv"
     ex = exchange(bitcoin, timeframe)
     dbm = databaseManager(fname, timeframe,ex)
@@ -46,8 +46,8 @@ def main():
 
     # CREATE CLASS FOR BUILDING NN ARCHITECTURE AND DEPLOYING
     # Build the NN and feed it the features
-    layers = [[8, "relu"], [8, "relu"]]
-    model = nn(X_train, y_train, "binary", epochs = 10000, lr=0.001, layers=layers)
+    layers = [[4, "relu"], [8, "relu"]]
+    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
     model.fit()
 
     x_pred = mlt.latest_features()

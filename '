@@ -1,42 +1,67 @@
+# TODO: Once built, change to recieve cleaned df from external source, no csvread
+# TODO: We can now move from df to self.df within the class, when ready.
 import pandas as pd 
 import numpy as np
 
 class Features:
     def __init__(self, df: pd.DataFrame) -> None:
-        # Start the features list off with the ohlc + volume from the market
-        self.features: list[str] = ["open", "close", "high", "low", "volume"]
+        self.features: list[str] = []
         self.df: pd.DataFrame = df
 
 
     def run_features(self) -> tuple:
-        df = self.df.copy() 
+        df = self.df 
 
-        # Calculate the shifted price closes for generating training labels
-        self.shift_difference(df)
+        self.calc_price_diff(df)
+        df = self.clean(df)       # call clean to remove nans from shift
+        df["difflabel"] = self.create_binary_labels(df["difference"])
         df["label"] = self.create_binary_labels(df["shifted_diff"])
-        # Drop the shifted_difference to not leak future info in training
         df = df.drop(["shifted_diff"], axis=1)
-        
-        # Calculate all features 
-        self.difference(df)
+        print(df)
+        df = df.drop(["utc", "date", "time"], axis=1)
+
         self.simple_moving_average(df, 50)
         self.simple_moving_average(df, 100)
         self.simple_moving_average(df, 200)
         self.rsi(df)
-
-        # Clean, reshape and align the features and label dfs.
+        # self.df = df
+        
+        # feature_cols = [col for col in self.features if col != "label"]
+        # X = df.loc[:, feature_cols].dropna().copy() # only drop the nas here
+        # y = df.loc[X.index, "label"].copy()         # all rows that are in X now
         X = self.clean(df)
         y = df.loc[X.index, "label"].copy()     # all rows that are in X now
+
+        # print(X)
+
         return X, y 
 
 
-    #================================UTILS=====================================
-    def shift_difference(self, df: pd.DataFrame) -> None:
-        """ For timeseries data, shifts the labels off by one as to not peak 
-        at the current realtime data for training queues
+    # TODO: Add percent change
+    def calc_price_diff(self, df: pd.DataFrame) -> pd.DataFrame:
+        """ Calculates the intra-timeframe difference between 'open' and 'close'
+        features in the DataFrame 
         """
+        df["difference"] = df["close"] - df["open"]
         df["shifted_diff"] = df["close"].shift(-1) - df["open"].shift(-1)
-        df.dropna(subset=["shifted_diff"], inplace=True)
+        self.features.append("difference")
+        # self.features.append("shifted_diff")
+        return df
+
+
+    def clean(self, df: pd.DataFrame, label:str="label") -> pd.DataFrame:
+        """ Cleans a df of inf values, removes all nans, keeps labels aligned
+            for all columns in self.features.
+        """
+        # Copy the df so as to keep the original with all raw data for later
+        df = df.copy()
+
+        features = [col for col in df.columns if col in self.features]
+        # Any infinite values become NaNs 
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+        # Now drop all the NaNs from only the features we will use.
+        df.dropna(subset=self.features, inplace=True)
+        return df 
 
 
     # TODO: Create finer grained labels depending on % change magnitude
@@ -49,34 +74,7 @@ class Features:
         return (y > 0).astype(int).tolist()
 
 
-    def clean(self, df: pd.DataFrame, label:str="label") -> pd.DataFrame:
-        """ Cleans a df of inf values, removes all nans, keeps labels aligned
-            for all columns in self.features.
-        """
-        # Copy the df so as to keep the original with all raw data for later
-        df = df.copy()
-
-        # Strip the dataframe down to only the features we want to train on
-        features: list= [col for col in df.columns if col in self.features]
-        df = df.loc[:, features]
-
-        # Any infinite values become NaNs 
-        df.replace([np.inf, -np.inf], np.nan, inplace=True)
-        # Now drop all the NaNs from only the features we will use.
-        df.dropna(subset=self.features, inplace=True)
-        return df 
-
-
     # ==========================FEATURE CALCULATIONS==========================
-    # TODO: Add percent change
-    def difference(self, df: pd.DataFrame) -> None:
-        """ Calculates the intra-timeframe difference between 'open' and 'close'
-        features in the DataFrame 
-        """
-        df["difference"] = df["close"] - df["open"]
-        self.features.append("difference")
-
-
     def simple_moving_average(self, df: pd.DataFrame, period: int) -> None:
         """ 
         Calculates n period moving average 
@@ -87,10 +85,9 @@ class Features:
         sname: str = f"sma_{period}"
         df[sname] = df["close"].rolling(period).mean()
 
-        self.features.append(sname)  
+        self.features.append(sname)   # Add the new feature to the features list 
 
 
-    # TODO: This relies on alot of things, relook to see if I can simplfy it
     def rsi(self, df: pd.DataFrame) -> None:
         """
         Calculates the RSI for a given asset in a dataframe. 
@@ -101,13 +98,7 @@ class Features:
         df["avgLoss"] = df["loss"].rolling(14).mean()
         df["rs"] = df["avgGain"] / df["avgLoss"]
         df["rsi"] = 100 - 100/(1+ df["rs"])
-
         df.drop(["gain", "loss", "avgGain", "avgLoss", "rs"], axis = 1, inplace=True)
-
         self.features.append("rsi")
-
-
-    def volitility(self, df: pd.DataFrame) -> None:
-        pass
-
-
+ 
+        # TODO: RUN THROUGH CLEAN AFTER
