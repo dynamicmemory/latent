@@ -90,24 +90,34 @@ class Features:
         self.features.append(sname)  
 
 
-    # TODO: This relies on alot of things, relook to see if I can simplfy it
     def rsi(self, df: pd.DataFrame) -> None:
-        """
-        Calculates the RSI for a given asset in a dataframe. 
-        """
-        df["gain"] = df["difference"].where(df["difference"] >= 0, 0) 
-        df["loss"] = -df["difference"].where(df["difference"] <= 0, 0) 
-        df["avgGain"] = df["gain"].rolling(14).mean()
-        df["avgLoss"] = df["loss"].rolling(14).mean()
-        df["rs"] = df["avgGain"] / df["avgLoss"]
+        """Calculates the RSI for a given asset in a dataframe."""
+        diff = "difference"
+        if diff not in self.features:
+            e = f"'{diff}' is missing from self.features, cant calc rsi"
+            raise KeyError(e)
+
+        df["gain"] = df[diff].where(df[diff] >= 0, 0) 
+        df["loss"] = -df[diff].where(df[diff] <= 0, 0) 
+        df["avg_gain"] = df["gain"].rolling(14).mean()
+        df["avg_loss"] = df["loss"].rolling(14).mean()
+        df["rs"] = df["avg_gain"] / df["avg_loss"]
         df["rsi"] = 100 - 100/(1+ df["rs"])
 
-        df.drop(["gain", "loss", "avgGain", "avgLoss", "rs"], axis = 1, inplace=True)
+        df.drop(["gain", "loss", "avg_gain", "avg_loss", "rs"], axis = 1, inplace=True)
 
         self.features.append("rsi")
 
 
-    def volitility(self, df: pd.DataFrame) -> None:
-        pass
+    def volatility(self, df: pd.DataFrame, period: int) -> None:
+        """Calculates the volitility for the given asset"""
+        diff: str = "difference"
+        if diff not in self.features:
+            e = f"'{diff}' is missing from self.features, cant calc volitility"
+            raise KeyError(e)
+         
+        log_returns = np.log(df[diff] / df[diff].shift(1))
+        df["volatility"] = log_returns.rolling(period).std(ddof=1) 
 
+        self.features.append("volatility")
 

@@ -1,11 +1,7 @@
-
+import sys
 from src.exchange import Exchange as exchange
 from src.databaseManager import DatabaseManager as databaseManager 
-from src.features import Features as features
-from src.miniML.machLearnTools import MachLearnTools
-from src.neuralnetwork import NN as nn 
-import numpy as np
-import sys
+from src.agentManager import Agent
 
 base: str = "https://api.bybit.com"
 tickers: str = "/v5/market/tickers"
@@ -34,27 +30,9 @@ def main():
     fname: str = f"{bitcoin}-{timeframe}.csv"
     ex = exchange(bitcoin, timeframe)
     dbm = databaseManager(fname, timeframe,ex)
-    # dbm.update_db()
-
-    # Engineer the features
-    f = features(dbm.get_data())
-    X, y = f.run_features()
-    mlt = MachLearnTools(X, y)
-    X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
-    # print(X_train.shape, y_train.shape)
-    # print(X_test.shape, y_test.shape)
-
-    # CREATE CLASS FOR BUILDING NN ARCHITECTURE AND DEPLOYING
-    # Build the NN and feed it the features
-    layers = [[4, "relu"], [8, "relu"]]
-    model = nn(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
-    model.fit()
-
-    x_pred = mlt.latest_features()
-    x_pred = np.resize(x_pred, (1, model.X.shape[1]))  # force shape match if tiny diff
-    pred_val = model.predict(x_pred)
-    print("Buy" if pred_val > 0.5 else "sell")
-
+    # Passing dbm into agent for now but this is incorrect
+    agent = Agent()
+    agent.main(dbm)
 
 if __name__ == "__main__":
     main()
