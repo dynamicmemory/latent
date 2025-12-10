@@ -15,7 +15,6 @@ class Exchange:
         self.symbol: str = symbol 
         self.interval: str = interval
         self.base_url: str = "https://api.bybit.com"
-        # self.db: Database = Database(f"{self.symbol}-{self.interval}.csv") 
 
 
     def make_request(self, method: str, url: str, params: dict) -> dict:

@@ -1,11 +1,36 @@
+# TODO: Build strategy class 
+# TODO: Build riskmanagement class
+# TODO: Rebuild DatabaseManager (brittly at first, circle back once db rebuild)
+# TODO: Rebuild NN to ANN 
+# TODO: Build CNN 
+# TODO: Auth Exchange, Build trade apis
+# TODO: Rebuild Database
+# TODO: Build Simulator
+# TODO: Build logger
+# TODO: Build CLI command client
+# TODO: Async the whole thing
+# TODO: put it on the server to live
+
 from src.miniML.models.neuralNetwork import NeuralNetwork 
 from src.miniML.machLearnTools import MachLearnTools
+from src.exchange import Exchange
+from src.databaseManager import DatabaseManager
 from src.features import Features 
 import numpy as np
 
 
 class Agent:
-    def main(self, dbm):
+    # Build an init
+    def main(self):
+        time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
+        asset = "BTCUSDT"
+        self.update_all_tf(asset, time_list)
+        timeframe = "15"
+
+        fname: str = f"{asset}-{timeframe}.csv"
+        ex = Exchange(asset, timeframe)
+        dbm = DatabaseManager(fname, timeframe,ex)
+
         f = Features(dbm.get_data())
         X, y = f.run_features()
         mlt = MachLearnTools(X, y)
@@ -22,3 +47,31 @@ class Agent:
         
         pred_val = model.predict(x_pred)
         print("Buy" if pred_val > 0.5 else "sell")
+
+        # Run sentiment analysis to get an idea on which strategy to select 
+
+        # Main 
+        # Agentmanager 
+        # Queries exchange 
+        # Updates database 
+        # Feeds raw values into features 
+        # calculates features 
+        # miniML transform data for training 
+        # strategy calculates risk level, dictates: tf, asset, risk%, stopwidth, etc
+        # trains network
+        # makes prediction
+        # executes order on exchange
+        # goes idle waiting for next tf update.
+        # starts again.
+
+
+    def update_all_tf(self, asset:str, time_list:list) -> None:
+        # Updates all timeframes databases, probably move this to another class 
+
+        for time in time_list: 
+            fname: str = f"{asset}-{time}.csv"
+            ex = Exchange(asset, time)
+            dbm = DatabaseManager(fname, time, ex)
+            dbm.update_db()
+            print(f"{time} data updated")
+
