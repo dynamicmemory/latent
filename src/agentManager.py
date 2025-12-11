@@ -16,6 +16,7 @@ from src.miniML.machLearnTools import MachLearnTools
 from src.exchange import Exchange
 from src.databaseManager import DatabaseManager
 from src.features import Features 
+from src.strategy import Strategy
 import numpy as np
 
 
@@ -24,7 +25,7 @@ class Agent:
     def main(self):
         time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
         asset = "BTCUSDT"
-        self.update_all_tf(asset, time_list)
+        # self.update_all_tf(asset, time_list)
         timeframe = "15"
 
         fname: str = f"{asset}-{timeframe}.csv"
@@ -37,7 +38,7 @@ class Agent:
         X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
 
         layers = [[8, "relu"], [8, "relu"]]
-        model = NeuralNetwork(X_train, y_train, "binary", epochs = 5000, lr=0.02, layers=layers)
+        model = NeuralNetwork(X_train, y_train, "binary", epochs = 10000, lr=0.02, layers=layers)
         model.fit()
         
         x_pred = mlt.latest_features()
@@ -48,6 +49,8 @@ class Agent:
         pred_val = model.predict(x_pred)
         print("Buy" if pred_val > 0.5 else "sell")
 
+        strat = Strategy(X)
+        strat.main()
         # Run sentiment analysis to get an idea on which strategy to select 
 
         # Main 

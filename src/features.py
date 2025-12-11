@@ -23,10 +23,12 @@ class Features:
         self.simple_moving_average(df, 100)
         self.simple_moving_average(df, 200)
         self.rsi(df)
+        self.volatility(df)
+        print(df)
 
         # Clean, reshape and align the features and label dfs.
         X = self.clean(df)
-        y = df.loc[X.index, "label"].copy()     # all rows that are in X now
+        y = df.loc[X.index, "label"]     # all rows that are in X now
         return X, y 
 
 
@@ -90,34 +92,53 @@ class Features:
         self.features.append(sname)  
 
 
-    def rsi(self, df: pd.DataFrame) -> None:
+    def rsi(self, df: pd.DataFrame, period:int=14) -> None:
         """Calculates the RSI for a given asset in a dataframe."""
-        diff = "difference"
-        if diff not in self.features:
-            e = f"'{diff}' is missing from self.features, cant calc rsi"
-            raise KeyError(e)
+        delta = df["close"].diff()
 
-        df["gain"] = df[diff].where(df[diff] >= 0, 0) 
-        df["loss"] = -df[diff].where(df[diff] <= 0, 0) 
-        df["avg_gain"] = df["gain"].rolling(14).mean()
-        df["avg_loss"] = df["loss"].rolling(14).mean()
-        df["rs"] = df["avg_gain"] / df["avg_loss"]
-        df["rsi"] = 100 - 100/(1+ df["rs"])
+        gain = delta.clip(lower=0)
+        loss = -delta.clip(upper=0)
 
-        df.drop(["gain", "loss", "avg_gain", "avg_loss", "rs"], axis = 1, inplace=True)
+        avg_gain = gain.rolling(period).mean()
+        avg_loss = loss.rolling(period).mean()
+
+        rs = avg_gain / avg_loss
+        df["rsi"] = 100 - 100 / (1 + rs)
 
         self.features.append("rsi")
 
 
-    def volatility(self, df: pd.DataFrame, period: int) -> None:
+    def volatility(self, df: pd.DataFrame, period:int=30) -> None:
         """Calculates the volitility for the given asset"""
-        diff: str = "difference"
-        if diff not in self.features:
-            e = f"'{diff}' is missing from self.features, cant calc volitility"
-            raise KeyError(e)
          
-        log_returns = np.log(df[diff] / df[diff].shift(1))
-        df["volatility"] = log_returns.rolling(period).std(ddof=1) 
+        log_returns = np.log(df["close"] / df["close"].shift(1))
+        df["volatility"] = log_returns.rolling(period).std()  * 100
+
+        # z store for standard volatilty calcs
+        df["volatility_z"] = (df["volatility"] - df["volatility"].rolling(30).mean()) / df["volatility"].rolling(30).std()
+
+        conditions = [df["volatility_z"] < -1, df["volatility_z"].between(-1, 1),
+                      df["volatility_z"].between(1, 2),
+                      df["volatility_z"] > 2 
+                      ]
+        # I dont have an encoder built yet so i have to convert these to nums 
+        choices = ["low", "normal", "high", "extreme"]
+        choices = [1, 2, 3, 4]
+        df["risk_regime"] = np.select(conditions, choices, default=2)
+
+        # 0-33=low 34-66=normal 67-90=high 91-100=extremee
+        df["volatility_pctile"] = df["volatility"].rank(pct=True)
+
+        high_low = df["high"] - df["low"]
+        high_close = (df["high"] - df["close"].shift(1)).abs()
+        low_close = (df["low"] - df["close"].shift(1)).abs()
+        tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+        df["atr_14"] = tr.rolling(14).mean()
+
 
         self.features.append("volatility")
+        self.features.append("volatility_z")
+        self.features.append("risk_regime")
+        self.features.append("volatility_pctile")
+        self.features.append("atr_14")
 
