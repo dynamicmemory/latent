@@ -38,7 +38,7 @@ class Agent:
         X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
 
         layers = [[8, "relu"], [8, "relu"]]
-        model = NeuralNetwork(X_train, y_train, "binary", epochs = 10000, lr=0.02, layers=layers)
+        model = NeuralNetwork(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
         model.fit()
         
         x_pred = mlt.latest_features()

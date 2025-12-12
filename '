@@ -1,0 +1,61 @@
+import numpy as np
+import pandas as pd
+class Strategy:
+    def __init__(self, df: pd.DataFrame):
+        self.data = df
+
+    def main(self):
+        self.data.drop(["sma_50", "sma_100", "sma_200", "difference", "rsi", "volume"], axis=1, inplace=True)
+        # print(self.data.tail(50))
+
+        kmeans = Kmeans(self.data["volatility"].to_numpy())
+        kmeans.initialization()
+        
+
+# We build K means here
+class Kmeans:
+    def __init__(self, data):
+        self.k = 3
+        self.cluster_means = []
+        self.data = data
+        self.assignments = []
+
+
+
+    def initialization(self):
+        """ initializes K means of values between the low and high of a given 
+            data range 
+        """
+        low = self.data.min()
+        high = self.data.max()
+
+        for _ in range(self.k):
+            rng = np.random.default_rng().random()
+            self.cluster_means.append(low + rng * (high - low))
+
+        print(self.cluster_means)
+
+
+    def assignment(self): 
+        for sample in self.data:
+            
+            for mean in self.cluster_means:
+                temp = abs(sample - mean)
+
+
+        pass
+
+    def update(self):
+        pass
+
+    def mainloop(self):
+        pass
+
+
+# Randomize k means 
+# for each data point, assign them to the mean they are closest too 
+# recalc the means using the mean of the newly assigned points 
+# clear the lists and repeat till two cycles give identical mean or within epsilson
+
+
+

@@ -24,7 +24,6 @@ class Features:
         self.simple_moving_average(df, 200)
         self.rsi(df)
         self.volatility(df)
-        print(df)
 
         # Clean, reshape and align the features and label dfs.
         X = self.clean(df)
