@@ -121,7 +121,8 @@ class NeuralNetwork:
             loss = self.loss(self.y, y_pred)
             self.backprop()
             if epoch % 50 == 0 or epoch == self.epochs - 1:
-                print(f"Epoch {epoch+1} / {self.epochs}, loss: {loss:.4f}")
+                # print(f"Epoch {epoch+1} / {self.epochs}, loss: {loss:.4f}")
+                pass
 
 
     def loss(self, y_true, y_pred):

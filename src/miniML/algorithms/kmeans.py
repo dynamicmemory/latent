@@ -42,14 +42,17 @@ class Kmeans:
             self.cluster_means[key] = np.mean(self.assignments[key])          
 
 
-    def mainloop(self):
+    def mainloop(self, plot:bool=False):
+        """Currently uses the Kmeans algo to figure out k clusters in the data
+            returns a list containing all the clusters"""
         self.initialization()
 
-        plt.ion()
-        fig, ax = plt.subplots()
-        ax.scatter(self.data,np.zeros_like(self.data), c='grey', s=1)
-        centroid = ax.scatter(self.cluster_means, np.zeros_like(self.cluster_means), c="red", s=200, marker="x")
-        ax.set_ylim(-1, 1)
+        if plot:
+            plt.ion()
+            fig, ax = plt.subplots()
+            ax.scatter(self.data,np.zeros_like(self.data), c='grey', s=1)
+            centroid = ax.scatter(self.cluster_means, np.zeros_like(self.cluster_means), c="red", s=200, marker="x")
+            ax.set_ylim(-1, 1)
 
         not_finished = True
         counter = 0
@@ -58,9 +61,10 @@ class Kmeans:
             self.assignment()
             self.update()
 
-            new_offset = np.column_stack((self.cluster_means, np.zeros_like(self.cluster_means)))
-            centroid.set_offsets(new_offset)
-            plt.pause(0.5)
+            if plot:
+                new_offset = np.column_stack((self.cluster_means, np.zeros_like(self.cluster_means)))
+                centroid.set_offsets(new_offset)
+                plt.pause(0.5)
 
             for mean in range(len(self.cluster_means)):
                 if (self.cluster_means[mean] - old_means[mean]) < 1e-4:
@@ -77,9 +81,10 @@ class Kmeans:
             old_means = self.cluster_means.copy()
             self.assignments = defaultdict(list)
             counter += 1
-            print(counter, self.cluster_means)
-        plt.ioff()
-        plt.show()
+            # print(counter, self.cluster_means)
+        if plot:
+            plt.ioff()
+            plt.show()
         return self.cluster_means
        
        
