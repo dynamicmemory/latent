@@ -17,15 +17,16 @@ from src.exchange import Exchange
 from src.databaseManager import DatabaseManager
 from src.features import Features 
 from src.strategy import Strategy
+from src.riskCalculator import RiskCalculator
 import numpy as np
 
 
 class Agent:
     # Build an init
     def main(self):
-        # time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
-        # asset = "BTCUSDT"
-        # # self.update_all_tf(asset, time_list)
+        time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
+        asset = "BTCUSDT"
+        # self.update_all_tf(asset, time_list)
         # timeframe = "15"
         #
         # fname: str = f"{asset}-{timeframe}.csv"
@@ -56,10 +57,15 @@ class Agent:
         self.new_zeff_flow()
 
 
+
+
     def new_zeff_flow(self):
         time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
         risk_list: list = []
         dir_list: list = []
+        entry_list: list = []
+        stop_list: list = []
+        size_list: list = []
         asset = "BTCUSDT"
 
         for timeframe in time_list:
@@ -83,8 +89,26 @@ class Agent:
             direction = "Buy" if pred_val > 0.5 else "Sell"
 
             strat = Strategy(X)
-            risk_list.append(strat.main())
+            risk = strat.main()
+            risk_list.append(risk)
             dir_list.append(direction)
+
+            # Hardcoding for time being
+            entry: int = int(float(ex.get_ohlc()[-1][1]))
+            entry_list.append(entry)
+
+            # Hard coded arbitrary stop for the time being 
+            if direction == "Buy":
+                stop: int = int(float(ex.get_ohlc()[-2][3]))
+            else: 
+                stop: int = int(float(ex.get_ohlc()[-2][2]))
+            stop_list.append(stop)
+
+            # print(ex.get_ohlc()[-1])
+                
+            c = RiskCalculator()
+            size: int = c.main(entry, stop, risk)
+            size_list.append(size)
 
         print(asset)
         print("Time Frame\t", end="")
@@ -96,6 +120,15 @@ class Agent:
         print("\nDirection\t", end="")
         for d in dir_list:
             print(f"{d}\t", end="")
+        print("\nEntry Level\t", end="")
+        for e in entry_list:
+            print(f"{e}\t", end="")
+        print("\nStop Level\t", end="")
+        for s in stop_list:
+            print(f"{s}\t", end="")
+        print("\nSize of Pos\t", end="")
+        for p in size_list:
+            print(f"{p}\t", end="")
         print("\n")
 
         # Run sentiment analysis to get an idea on which strategy to select 
