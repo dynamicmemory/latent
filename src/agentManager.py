@@ -1,17 +1,3 @@
-# TODO: Build strategy class 
-# TODO: Build riskmanagement class
-# TODO: Rebuild DatabaseManager (brittly at first, circle back once db rebuild)
-# TODO: Rebuild NN to ANN 
-# TODO: Build CNN 
-# TODO: Auth Exchange, Build trade apis
-# TODO: Rebuild Database
-# TODO: Build Simulator
-# TODO: Build logger
-# TODO: Build CLI command client
-# TODO: Async the whole thing
-# TODO: put it on the server to live
-# TODO: Figure out sensible stop levels, lookback, learnt from data, swings, etc
-
 from src.miniML.models.neuralNetwork import NeuralNetwork 
 from src.miniML.machLearnTools import MachLearnTools
 from src.exchange import Exchange
@@ -23,18 +9,45 @@ import numpy as np
 
 
 class Agent:
+    def __init__(self):
+        self.exchange = None
+        self.dbm = None
+        self.features = None
+        self.miniML = None
+        self.model = None
+        self.strategy = None
+        self.riskcalculator = None
+        self.setup_agent()
+
+
+    def setup_agent(self):
+        """ Idea is you create the agent in main and then get all the input 
+            here either from the user or hahncoded and then setup all the 
+            objects/classes you need to manager the trading flow 
+        """
+        time_list: list = ["15", "60", "240", "D", "W"] 
+        asset: str = "BTCUSDT"
+        timeframe: str = "0"
+        fname: str = f"{asset}-{timeframe}.csv"
+
+        self.exchange = Exchange(asset, timeframe)
+        self.dbm = DatabaseManager(fname, timeframe, self.exchange)
+        self.features = Features(self.dbm.get_data())
+        X, y = self.features.run_features()
+        self.miniML = MachLearnTools(X, y)
+
+
     # Build an init
     def main(self):
-        time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
+        time_list: list = ["15", "60", "240", "D", "W"] 
         asset = "BTCUSDT"
-        # TODO: Smart build this update so that it only queries if the times are off
-        # self.update_all_tf(asset, time_list)
+        self.update_all_tf(asset, time_list)
         self.new_zeff_flow()
 
 
     def new_zeff_flow(self):
         # Creating lists of all the info we want
-        time_list: list = ["15", "60", "240", "D", "W"] # Add daily back in once tests done
+        time_list: list = ["15", "60", "240", "D", "W"]
         risk_list: list = []
         dir_list: list = []
         entry_list: list = []
@@ -55,6 +68,7 @@ class Agent:
             mlt = MachLearnTools(X, y)
             X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
 
+            # Looks like NN needs a manager or something 
             layers = [[8, "relu"], [8, "relu"]]
             model = NeuralNetwork(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
             model.fit()
@@ -118,7 +132,6 @@ class Agent:
         print("\n")
 
 
-    # TODO: Possibly move this to databasemanager
     def update_all_tf(self, asset:str, time_list:list) -> None:
         # Updates all timeframes databases, probably move this to another class 
 
@@ -131,17 +144,20 @@ class Agent:
 
 
     # one market update cycle (trade)
-    def tick():
+    def tick(self):
         pass
 
-    def update_position():
+    def update_position(self):
         pass 
 
-    def train_model():
+    def train_model(self):
         pass 
 
-    def log_metrics():
+    def log_metrics(self):
         pass
+
+
+    def get_risk(self):
 
 
 
