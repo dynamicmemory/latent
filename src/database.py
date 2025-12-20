@@ -1,4 +1,4 @@
-# TODO: Move helper files to dbms class
+# TODO: Move helper functions to databasemanagement class
 # TODO: Pivot to SQLite db once software works end to end.
 import os as os 
 import datetime as dt

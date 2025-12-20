@@ -1,3 +1,6 @@
+""" 
+This class should be an orchestration class that brings everything together 
+"""
 from src.miniML.models.neuralNetwork import NeuralNetwork 
 from src.miniML.machLearnTools import MachLearnTools
 from src.exchange import Exchange
@@ -21,13 +24,14 @@ class Agent:
 
 
     def setup_agent(self):
-        """ Idea is you create the agent in main and then get all the input 
-            here either from the user or hahncoded and then setup all the 
-            objects/classes you need to manager the trading flow 
+        """ 
+        Idea is you create the agent in main and then get all the input 
+        here either from the user or hahncoded and then setup all the 
+        objects/classes you need to manager the trading flow 
         """
         time_list: list = ["15", "60", "240", "D", "W"] 
         asset: str = "BTCUSDT"
-        timeframe: str = "0"
+        timeframe: str = "60"
         fname: str = f"{asset}-{timeframe}.csv"
 
         self.exchange = Exchange(asset, timeframe)
@@ -35,17 +39,87 @@ class Agent:
         self.features = Features(self.dbm.get_data())
         X, y = self.features.run_features()
         self.miniML = MachLearnTools(X, y)
+        
+        self.train_model()
+        direction = self.get_prediction()
 
+        # TODO: Seems horrid to have to give this the dataframe from exchange
+        self.strategy = Strategy(X)
+        risk_level: str = self.strategy.main()
+        self.riskcalculator = RiskCalculator()
+        self.get_trade_details(asset, timeframe, risk_level, direction)
 
-    # Build an init
     def main(self):
+        # self.update_all_tf()
+        pass 
+
+   
+    def update_all_tf(self) -> None:
+        # Updates all timeframes databases, probably move this to another class 
         time_list: list = ["15", "60", "240", "D", "W"] 
         asset = "BTCUSDT"
-        self.update_all_tf(asset, time_list)
-        self.new_zeff_flow()
+
+        for time in time_list: 
+            fname: str = f"{asset}-{time}.csv"
+            ex = Exchange(asset, time)
+            dbm = DatabaseManager(fname, time, ex)
+            dbm.update_db()
+            print(f"{time} data updated")
 
 
-    def new_zeff_flow(self):
+    # TODO: Agent should not be doing this, move to miniML or modelManager 
+    def train_model(self):
+        X_train, X_test, y_train, y_test = self.miniML.timeseries_pipeline()
+
+        layers = [[8, "relu"], [8, "relu"]]
+        self.model = NeuralNetwork(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
+        self.model.fit()
+     
+
+    # TODO: Move this to miniML->predictor class
+    def get_prediction(self) -> str:
+        x_pred = self.miniML.latest_features()
+        x_pred = np.resize(x_pred, (1, self.model.X.shape[1]))  # force shape match if tiny diff
+        
+        pred_val = self.model.predict(x_pred)
+        direction = "Buy" if pred_val > 0.5 else "Sell"
+        return direction
+
+
+    def get_trade_details(self, asset, timeframe, risk, direction):
+        # Hardcoding for time being
+        entry: float = int(float(self.exchange.get_ohlc()[-1][1]))
+        # Hard coded arbitrary stop for the time being 
+        stop, target = 0, 0
+        if direction == "Buy":
+            stop: int = int(float(self.exchange.get_ohlc()[-2][3]))
+            target: int = (entry - stop) * 2 + entry
+        else: 
+            stop: int = int(float(self.exchange.get_ohlc()[-2][2]))
+            target: int = entry - (stop - entry) * 2
+                
+        size, risk_percentage = self.riskcalculator.main(entry, stop, risk)
+
+        # Printing info instead of sending to the exchange to execute trade 
+        print(asset)
+        print(f"Time Frame:\t{timeframe}")
+        print(f"Risk Level:\t{risk}")
+        print(f"Direction:\t{direction}")
+        print(f"Entry Level:\t${entry}")
+        print(f"Stop Level:\t${stop}")
+        print(f"Target pri:\t${target}")
+        print(f"Size of Pos:\t${size}")
+
+
+    def update_position(self):
+        pass 
+
+
+    def log_metrics(self):
+        pass
+
+
+    def print_all_timeframe_stats(self):
         # Creating lists of all the info we want
         time_list: list = ["15", "60", "240", "D", "W"]
         risk_list: list = []
@@ -130,36 +204,5 @@ class Agent:
         for p in size_list:
             print(f"${p:,} ", end="")
         print("\n")
-
-
-    def update_all_tf(self, asset:str, time_list:list) -> None:
-        # Updates all timeframes databases, probably move this to another class 
-
-        for time in time_list: 
-            fname: str = f"{asset}-{time}.csv"
-            ex = Exchange(asset, time)
-            dbm = DatabaseManager(fname, time, ex)
-            dbm.update_db()
-            print(f"{time} data updated")
-
-
-    # one market update cycle (trade)
-    def tick(self):
-        pass
-
-    def update_position(self):
-        pass 
-
-    def train_model(self):
-        pass 
-
-    def log_metrics(self):
-        pass
-
-
-    def get_risk(self):
-
-
-
 
 

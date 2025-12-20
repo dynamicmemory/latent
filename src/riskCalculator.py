@@ -3,7 +3,7 @@
 class RiskCalculator:
 
     def main(self, entry_price, stop_price, risk):
-        account_size: float = 10000.00
+        account_size: float = 1000.00
         # entry_price: int = 10000 
         # stop_price: int = 9995
         risk_percentage: float = 0.01 
