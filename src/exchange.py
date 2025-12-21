@@ -49,6 +49,36 @@ class Exchange:
         return results
 
 
+    # Temp for sql testing
+    def get_ohlc_sql(self, limit=1000) -> list:
+        """
+        Retrieves the open, high, low and close of the given asset
+        """
+        limit = 1000 if limit > 1000 else limit
+        kline: str = "/v5/market/kline"
+        params: dict = {"category": "linear",
+                        "symbol": self.symbol,
+                        "interval": self.interval,
+                        "limit": limit,
+                        }
+        json: dict = self.make_request("GET", self.base_url+kline, params=params)
+
+        self.handle_error(json)
+
+        temp = json["result"]["list"]
+        temp.reverse()
+        results = []
+        for line in temp:
+            results.append(
+                [int(line[0]), 
+                 float(line[1]), 
+                 float(line[2]),
+                 float(line[3]),
+                 float(line[4]),
+                 float(line[6])])
+        return results
+
+
     def get_price(self) -> dict:
         """ 
         Returns the current market price for the symbol provided to the exchange

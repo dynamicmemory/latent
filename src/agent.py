@@ -50,7 +50,7 @@ class Agent:
         self.get_trade_details(asset, timeframe, risk_level, direction)
 
     def main(self):
-        # self.update_all_tf()
+        self.update_all_tf()
         pass 
 
    
