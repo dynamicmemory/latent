@@ -5,17 +5,13 @@ from src.exchange import Exchange
 from src.sqlitedb import DatabaseManager
 
 def main():
+    for tf in ["15", "60", "240", "D", "W"]:
+        dbm = DatabaseManager("BTCUSDT", tf) 
+        dbm.update_table()
     # syntra = Agent()
     # syntra.main()
-    # e = Exchange("BTCUSDT", "D")
-    # print(e.get_ohlc_sql(2))
          
-    dbm = DatabaseManager("BTCUSDT", "15")
-    dbm.update_rows()
-    
 
-    # import time 
-    # print(int(time.time()*1000))
 
 if __name__ == "__main__":
     main()

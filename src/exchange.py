@@ -29,7 +29,7 @@ class Exchange:
         else:
             return {"code": code}
 
-
+    # TODO: Needs type conversion before returning, NOT TO BE DONE TILL DB MIGRATION
     def get_ohlc(self, limit=1000) -> list:
         """
         Retrieves the open, high, low and close of the given asset
@@ -50,11 +50,18 @@ class Exchange:
 
 
     # Temp for sql testing
-    def get_ohlc_sql(self, limit=1000) -> list:
+    def get_closed_candles(self, limit=1000) -> list:
         """
-        Retrieves the open, high, low and close of the given asset
+        Retrieves the open, high, low and close of close candles only for a 
+        given asset.
+
+        Args:
+            limit: the number of candles to retrieve from the exchange.
+        Returns:
+            results: List n candles utcTimestamp + ohlc + volume as int|float.
         """
-        limit = 1000 if limit > 1000 else limit
+        # we are removing the last candle which is open, +1 ensures correct number 
+        limit = 1000 if limit > 1000 else limit + 1  
         kline: str = "/v5/market/kline"
         params: dict = {"category": "linear",
                         "symbol": self.symbol,
@@ -76,7 +83,7 @@ class Exchange:
                  float(line[3]),
                  float(line[4]),
                  float(line[6])])
-        return results
+        return results[:-1]
 
 
     def get_price(self) -> dict:

@@ -1,7 +1,6 @@
+# TODO: Write tests for every function and update doc strings with error returns
+# TODO: Connection is never closed
 import sqlite3
-import os as os 
-from src.exchange import Exchange
-
 
 class Database:
     def __init__(self, db_name:str, table:str) -> None:
@@ -12,7 +11,7 @@ class Database:
             db_name: name of the database being queried.
             table: the name of the table being queried.
         """
-        self.conn: sqlite3.Connection = sqlite3.connect(f"{db_name}.db")
+        self.conn: sqlite3.Connection = sqlite3.connect(f"{db_name}")
         self.table_name = table
 
 
@@ -30,23 +29,32 @@ class Database:
                     low NUMERIC NOT NULL, 
                     close NUMERIC NOT NULL, 
                     volume NUMERIC NOT NULL
-                )"""
-            )
+                )""")
 
 
-    def read(self):
+    def fetch_all_rows(self):
+        """
+        Retrieves all rows from the specified table in the database. 
+
+        Returns:
+            A list containing all rows from the table or None if the table 
+            doesn't exist.
+        """
+        with self.conn:
+            return self.conn.execute(f"""
+                       SELECT * FROM {self.table_name}""").fetchall()
+
+
+    # Currently not needed
+    def insert_row(self):
         pass 
-
-
-    def insert(self):
-        pass 
-
-
-    def delete(self):
-        pass
 
 
     def insert_rows(self, rows):
+        """ 
+        Inserts all elements from the passed in list 'rows' variable into the 
+        database. 
+        """
         with self.conn:
             self.conn.executemany(f"""
                 INSERT OR IGNORE INTO {self.table_name}
@@ -55,6 +63,13 @@ class Database:
 
 
     def get_latest_row(self):
+        """ 
+        Gets the last row in the database sorted by the primary key of timestamp 
+
+        Returns:
+            row: the last row or most recent row in the database or None if the 
+            table doesnt exist.
+        """
         with self.conn:
             row = self.conn.execute(f"""
                   SELECT * FROM {self.table_name}
@@ -62,6 +77,10 @@ class Database:
                   LIMIT 1""").fetchone()
         return row
 
+
+from src.exchange import Exchange
+import pandas as pd
+import time
 
 class DatabaseManager:
     def __init__(self, asset:str, timeframe:str) -> None:
@@ -81,16 +100,38 @@ class DatabaseManager:
         self.database.create_table() 
 
 
-    def update_rows(self):
+    def update_table(self):
         """ 
         Updates the database by n number of rows depending on the time 
         difference between the current unix time vs the last record in the db.
         """
+        print(f"Updating table - {self.table_name}")
         e = Exchange(self.asset, self.timeframe)
 
-        # Possibly move to time utils for other classes to use later on
-        # Move this to time util class or clac exhcange
-        import time 
+        # Check for an empty table before querying latest row, add as test 
+        latest_row = self.database.get_latest_row()
+        if latest_row is None:
+            print(f"Table-{self.table_name} is empty, fetching max candles")
+            rows = e.get_closed_candles()
+        else: 
+            nrows = self.calculate_missing_rows(latest_row)
+            if not nrows: return                       # Exit if no rows needed
+
+            rows = e.get_closed_candles(nrows)
+
+        self.database.insert_rows(rows)
+        
+
+    # TODO: Consider pulling the time map out to a global file if used elsewhere
+    def calculate_missing_rows(self, latest_row: list) -> int: 
+        """ 
+        Calculates how many rows the database is missing from being up to date.
+
+        Args: 
+            latest_row: the last row from the data
+        Returns:
+            nrows: the number of rows to retrieve from the exchange 
+        """
         utc: int = int(time.time()*1000)
         time_map: dict[str, int] = {
                 "15": 900000,
@@ -99,43 +140,29 @@ class DatabaseManager:
                 "D": 86400000,
                 "W": 604800000
         }
-
-
-        # Check for an empty table before querying latest row, add as test 
-        latest_row = self.database.get_latest_row()
-        if latest_row is None:
-            # Normally just fetch max rows 1000 if now rows 
-            print(f"Table {self.table_name} is empty, fetching row from exchange")
-            # but for current testing just get three so we can display and see
-            latest_row = e.get_ohlc_sql(3)
-            print(f"Exchange last rows: ")
-            for r in latest_row:
-                print(r)
-            # Set theorectical last row of db to 3rd row back in time from exchange
-            latest_row = latest_row[0]
-
-        print(f"Latest row: {latest_row}")
-        last_timestamp = latest_row[0]
-        print(f"Last timestamp: {last_timestamp}")
-
+        last_timestamp: int = latest_row[0]
         time_step_length: int = time_map[self.timeframe]
-        number_of_rows: int = int((utc - last_timestamp) / time_step_length) + 1
-        print(f"Number of rows:{number_of_rows}")
-        temprows = e.get_ohlc_sql(number_of_rows)
-        rows = []
 
-        for r in temprows:
-            if r[0] + time_map[self.timeframe] > utc:
-                continue 
-            rows.append(r)
+        # minus the last timestamp in the database and 1 time step to ensure 
+        # we are looking at closed candle time steps only
+        adjusted_utc: int = utc - last_timestamp - time_step_length
+        nrows: int = int(adjusted_utc / time_step_length)
+        print(f"Number of candles to retreive:{nrows}")
+        return nrows
 
-        # self.database.insert_rows(rows)
-        print(rows)
 
+    def get_dataframe(self):
+        """
+        Converts all rows in a database table to a pandas dataframe with the 
+        timestamps as the indexes.
+
+        Returns:
+            df: a pandas dataframe
+
+        """
+        rows: list[tuple] = self.database.fetch_all_rows()
+        columns = ["timestamp", "open", "high", "low", "close", "volume"]
+        df = pd.DataFrame(rows, columns=columns)
+        df.set_index("timestamp", inplace=True)
         
-
-
-
-
-
-
+        return df

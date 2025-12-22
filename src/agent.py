@@ -5,6 +5,7 @@ from src.miniML.models.neuralNetwork import NeuralNetwork
 from src.miniML.machLearnTools import MachLearnTools
 from src.exchange import Exchange
 from src.databaseManager import DatabaseManager
+from src.sqlitedb import DatabaseManager
 from src.features import Features 
 from src.strategy import Strategy
 from src.riskCalculator import RiskCalculator
@@ -20,8 +21,9 @@ class Agent:
         self.model = None
         self.strategy = None
         self.riskcalculator = None
-        self.setup_agent()
-
+        self.print_all_timeframe_stats()
+        # self.setup_agent()
+        #
 
     def setup_agent(self):
         """ 
@@ -35,8 +37,10 @@ class Agent:
         fname: str = f"{asset}-{timeframe}.csv"
 
         self.exchange = Exchange(asset, timeframe)
-        self.dbm = DatabaseManager(fname, timeframe, self.exchange)
-        self.features = Features(self.dbm.get_data())
+        self.dbm = DatabaseManager(asset, timeframe)
+        # self.dbm = DatabaseManager(fname, timeframe, self.exchange)
+        print(self.dbm.get_dataframe())
+        self.features = Features(self.dbm.get_dataframe())
         X, y = self.features.run_features()
         self.miniML = MachLearnTools(X, y)
         
@@ -50,21 +54,21 @@ class Agent:
         self.get_trade_details(asset, timeframe, risk_level, direction)
 
     def main(self):
-        self.update_all_tf()
+        # self.update_all_tf()
         pass 
 
    
-    def update_all_tf(self) -> None:
-        # Updates all timeframes databases, probably move this to another class 
-        time_list: list = ["15", "60", "240", "D", "W"] 
-        asset = "BTCUSDT"
-
-        for time in time_list: 
-            fname: str = f"{asset}-{time}.csv"
-            ex = Exchange(asset, time)
-            dbm = DatabaseManager(fname, time, ex)
-            dbm.update_db()
-            print(f"{time} data updated")
+    # def update_all_tf(self) -> None:
+    #     # Updates all timeframes databases, probably move this to another class 
+    #     time_list: list = ["15", "60", "240", "D", "W"] 
+    #     asset = "BTCUSDT"
+    #
+    #     for time in time_list: 
+    #         fname: str = f"{asset}-{time}.csv"
+    #         ex = Exchange(asset, time)
+    #         dbm = DatabaseManager(fname, time, ex)
+    #         dbm.update_db()
+    #         print(f"{time} data updated")
 
 
     # TODO: Agent should not be doing this, move to miniML or modelManager 
@@ -135,9 +139,9 @@ class Agent:
             # Running model flow and getting prediction
             fname: str = f"{asset}-{timeframe}.csv"
             ex = Exchange(asset, timeframe)
-            dbm = DatabaseManager(fname, timeframe,ex)
+            dbm = DatabaseManager(asset, timeframe)
 
-            f = Features(dbm.get_data())
+            f = Features(dbm.get_dataframe())
             X, y = f.run_features()
             mlt = MachLearnTools(X, y)
             X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
@@ -146,10 +150,10 @@ class Agent:
             layers = [[8, "relu"], [8, "relu"]]
             model = NeuralNetwork(X_train, y_train, "binary", epochs = 1000, lr=0.02, layers=layers)
             model.fit()
-        
+
             x_pred = mlt.latest_features()
             x_pred = np.resize(x_pred, (1, model.X.shape[1]))  # force shape match if tiny diff
-        
+
             pred_val = model.predict(x_pred)
             direction = "Buy" if pred_val > 0.5 else "Sell"
 
@@ -175,7 +179,7 @@ class Agent:
             target_list.append(target)
 
             # print(ex.get_ohlc()[-1])
-                
+
             c = RiskCalculator()
             size, risk_percentage = c.main(entry, stop, risk)
             size_list.append(size)
