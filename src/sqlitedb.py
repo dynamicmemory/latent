@@ -1,5 +1,5 @@
-# TODO: Write tests for every function and update doc strings with error returns
-# TODO: Connection is never closed
+# TODO: Connection is never closed, make self.db_name and open db in every func
+# TODO: Sanitize all injectable queries (I know its only me, yadda yadda yadda)
 import sqlite3
 
 class Database:
@@ -42,7 +42,8 @@ class Database:
         """
         with self.conn:
             return self.conn.execute(f"""
-                       SELECT * FROM {self.table_name}""").fetchall()
+                       SELECT * FROM {self.table_name} 
+                           ORDER BY timestamp ASC""").fetchall()
 
 
     # Currently not needed
@@ -122,7 +123,7 @@ class DatabaseManager:
         self.database.insert_rows(rows)
         
 
-    # TODO: Consider pulling the time map out to a global file if used elsewhere
+    # TODO: It smells, but it works for now, circle back when models built.
     def calculate_missing_rows(self, latest_row: list) -> int: 
         """ 
         Calculates how many rows the database is missing from being up to date.

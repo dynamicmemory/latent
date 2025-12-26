@@ -1,9 +1,7 @@
-# TODO: Auth, Personal account ops
+# TODO: Auth, Personal account ops, fix the ohlc functions since migration
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 import requests as r
-from src.database import Database 
 
 if TYPE_CHECKING:
     from requests import Response

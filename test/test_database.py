@@ -61,9 +61,6 @@ def test_latest_rows():
     assert row[0] == 2000, "Lastest timestamp is not 2000"
 
 
-# DATABASEMANAGER TESTS 
-def init_databaseManager():
-    pass
 
 def test_calculate_missing_rows():
     pass 
