@@ -2,31 +2,49 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
+# Determines how wide or narrow we assign training labels from returns
+QUANTILE = 0.25
+# Minumum return needed to beat fees and slippage (not applied currently) due to 
+# 0.1% for the 15m is huge, but tiny for a daily candle, dynamic adjusting needed
+MIN_RETURN = 0.1
+
 class Features: 
     def __init__(self, df: pd.DataFrame) -> None: 
         self.df = df 
-        self.run_features()
 
 
     def run_features(self) -> tuple:
-        # Generate labels
-        self.df["shifted_diff"] = self.df["close"].shift(-1) - self.df["close"]
-        threshold = (self.df["close"].shift(-1) / self.df["close"] - 1) *100
-        self.df["threshold"] = threshold
-        self.df["label"] = (self.df["close"].shift(-1) > self.df["close"]).astype(int)
-        self.df["label3"] = np.where(threshold > 0.15, 1, np.where(threshold < -0.15, 0, 2))
-        print(self.df.tail(10))
+        # Calculate the return 
+        self.df["returns"] = (self.df["close"].shift(-1) / self.df["close"] - 1) * 100
 
-        label_counts = self.df["label3"].value_counts().sort_index()
-        print(len(label_counts), label_counts)
-        for l in label_counts:
-            print(l / len(self.df["label3"]))
+        # Filter for top quantile
+        upper_qrt = self.df["returns"].quantile(1 - QUANTILE)
+        lower_qrt = self.df["returns"].quantile(QUANTILE)
 
+        # Assign the labels (important we adjust returns for min return value eventually)
+        self.df["label"] = np.where(self.df["returns"] >= upper_qrt, 1, 
+                           np.where(self.df["returns"] <= lower_qrt, 0, 2))
+
+        # Prep the dfs for return 
         X = self.df[["open", "high", "low", "close", "volume"]]
         y = self.df["label"]
-        X = X.iloc[:-1]
-        y = y.iloc[:-1]
-        return X, y
+        return X.iloc[:-1], y.iloc[:-1]
+
+
+    def plot_print_labels(self, lower, upper) -> None:
+        # Plot return distributions
+        plt.figure()
+        plt.hist(self.df["returns"], bins=100)
+        plt.axvline(x=lower, color="black")
+        plt.axvline(x=upper, color="black")
+        plt.savefig("returns_hist.png")
+
+        # Explore the results
+        print(self.df.tail(10))
+        label_counts = self.df["label"].value_counts().sort_index()
+        print(len(label_counts), label_counts)
+        for l in label_counts:
+            print(l / len(self.df["label"]))
 
 
 # import pandas as pd 

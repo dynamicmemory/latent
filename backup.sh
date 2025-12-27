@@ -1,0 +1,1 @@
+cp ./BTCUSDT.db ./BTCUSDT_BACKUP.db

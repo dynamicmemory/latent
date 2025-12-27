@@ -2,7 +2,7 @@
 This class should be an orchestration class that brings everything together 
 """
 from src.miniML.models.neuralNetwork import NeuralNetwork 
-# from src.miniML.machLearnTools import MachLearnTools
+from src.miniML.machLearnTools import MachLearnTools
 # from src.exchange import Exchange
 from src.sqlitedb import DatabaseManager
 from src.features import Features 
@@ -15,20 +15,20 @@ timeframe = "D"
 
 class Agent:
     def __init__(self):
-        # self.exchange = None
         self.dbm = None
         self.features = None
-        # self.miniML = None
-        # self.model = None
-        # self.strategy = None
-        # self.riskcalculator = None
-        # self.print_all_timeframe_stats()
-        # self.setup_agent()
         self.new_clean_frfr_flow_this_time_i_promise(asset, timeframe)
 
     def new_clean_frfr_flow_this_time_i_promise(self, asset:str, timeframe:str):
         self.dbm = DatabaseManager(asset, timeframe)
         self.features = Features(self.dbm.get_dataframe())
+        # x,y = self.features.run_features()
+        # mlt = MachLearnTools(x, y)
+
+        
+
+
+
 
     # def setup_agent(self):
     #     """ 
