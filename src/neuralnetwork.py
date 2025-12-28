@@ -111,7 +111,7 @@ class NN:
             if l != 0:
                 dA = np.dot(dZ, W.T)
                 match act[l-1]:
-                    case "relu":    dZ = dA * self.relu_derivative(Z[-1])
+                    case "relu":    dZ = dA * self.relu_derivative(Z[l-1])
                     case "sigmoid": dZ = dA * self.sigmoid_derivative(Z[-1])
                     case _:         dZ = dA * self.linear_derivative(Z[-1])
 

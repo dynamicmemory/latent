@@ -4,3 +4,4 @@ plotly
 dash
 matplotlib
 pytest
+torch

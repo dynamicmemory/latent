@@ -31,9 +31,10 @@ class MachLearnTools:
         y = self.y.to_numpy(dtype=np.float32)
 
         X_win, y_win = self.sliding_window(X, y, window) 
-        X_flat = self.flatten_window(X_win)      # Remove when finished cnn
+        # X_flat = self.flatten_window(X_win)      # Remove when finished cnn
 
-        return self.split_data(X_flat, y_win, shuffle=False)
+        # return self.split_data(X_flat, y_win, shuffle=False)
+        return self.split_data(X_win, y_win, shuffle=False)
 
 
     def split_data(self, X, y, t_size=0.2, seed=None, shuffle=True) -> tuple:
@@ -76,7 +77,7 @@ class MachLearnTools:
             y_out.append(y[i])
 
         # Turns the lists into arrays
-        return np.array(X), np.array(y).reshape(-1, 1)
+        return np.array(X_out), np.array(y_out).reshape(-1, 1)
 
 
     # TODO: DELETE ONCE CNN BUILT 
