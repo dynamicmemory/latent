@@ -1,6 +1,5 @@
 from src.sqlitedb import DatabaseManager,  Database
 
-
 def init_database():
     db = Database(":memory:", "test_table")
     db.create_table()
@@ -61,7 +60,6 @@ def test_latest_rows():
     assert row[0] == 2000, "Lastest timestamp is not 2000"
 
 
-
 def test_calculate_missing_rows():
     pass 
 
@@ -69,6 +67,7 @@ def test_calculate_missing_rows():
 def update_table_test():
     db = init_database()
     pass 
+
 
 def get_dataframe_test():
     db = init_database()

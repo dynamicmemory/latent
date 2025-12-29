@@ -1,10 +1,8 @@
 # TODO: Ensure asset name and timeframe are checked for safety b4 db access
-from os import utime
 from src.agent import Agent
-from src.exchange import Exchange
 from src.sqlitedb import DatabaseManager
 import sys
-import time
+
 
 def main():
     if len(sys.argv) == 2 and sys.argv[1] == "update":
