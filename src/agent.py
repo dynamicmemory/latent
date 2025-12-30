@@ -6,7 +6,7 @@ from src.exchange import Exchange
 from src.sqlitedb import DatabaseManager
 from src.features import Features 
 from src.torchnn import Torchnn
-# from src.strategy import Strategy
+from src.strategy import Strategy
 from src.riskCalculator import RiskCalculator
 
 # Hard coded for testing, will be passed in or initiated via user.
@@ -19,9 +19,10 @@ class Agent:
         self.features = None
         self.mlt = None
         self.torchnn = None
+        self.strategy = None
         # auto running for testing purposes
         self.run_agent()
-        self.run_all_tf()
+        # self.run_all_tf()
 
 
     def run_agent(self):
@@ -43,10 +44,12 @@ class Agent:
         self.torchnn.evaluation()
         decision = self.torchnn.predict()
 
-        # Calculate trade details 
-            # Define risk 
-        # Execute trade 
-        # Start again
+        self.strategy = Strategy(X)
+        curr_mkt_risk: str = self.strategy.main()
+
+        # For the time being, this is the equiv of executing a market order
+        self.get_trade_details(asset, timeframe, curr_mkt_risk, decision)
+
 
     # Testing purposes only
     def run_all_tf(self):
@@ -63,6 +66,7 @@ class Agent:
             self.torchnn.predict()
 
 
+    # We would execute a trade instead of all these calcs just to print it.
     def get_trade_details(self, asset, timeframe, risk, direction):
         self.exchange = Exchange(asset, timeframe)
         # Hardcoding for time being
@@ -77,7 +81,8 @@ class Agent:
             target: int = entry - (stop - entry) * 2
         else:
             # no trade decision, tell users
-            return  
+            print(f"Agent doesn't see a good trade currently")
+            return
 
         rc = RiskCalculator()
         size, risk_percentage = rc.main(entry, stop, risk)

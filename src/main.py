@@ -9,12 +9,8 @@ def main():
         for tf in ["15", "60", "240", "D", "W"]:
             dbm = DatabaseManager("BTCUSDT", tf) 
             dbm.update_table()
-            # print(time.time()*1000)
-            # print(dbm.database.get_latest_row()[0])
     else:
         syntra = Agent()
-        # dbm = DatabaseManager("BTCUSDT", "15") 
-        # dbm.update_table()
 
 
 if __name__ == "__main__":

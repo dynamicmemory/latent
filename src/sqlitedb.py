@@ -1,6 +1,10 @@
-# TODO: Connection is never closed, make self.db_name and open db in every func
-# TODO: Sanitize all injectable queries (I know its only me, yadda yadda yadda)
+# Intentionally creating a new connection each time to avoid leaving the db open
+# less efficent but we are only making two calls max each usage and only one 
+# usage per time frame which could be 15 mins to a week, so managable for now.
+# Better solution could be open_connection() and close_connection() functions 
+# that the dbm could call, only save one call on the db each time really.
 import sqlite3
+import re
 
 class Database:
     def __init__(self, db_name:str, table:str) -> None:
@@ -11,8 +15,10 @@ class Database:
             db_name: name of the database being queried.
             table: the name of the table being queried.
         """
-        self.conn: sqlite3.Connection = sqlite3.connect(f"{db_name}")
-        self.table_name = table
+        self.db_name: str = db_name
+        if not re.fullmatch(r'\w+', table):
+             raise ValueError(f"Invalid table name: {table}") 
+        self.table_name: str = table
 
 
     def create_table(self) -> None:
@@ -20,8 +26,10 @@ class Database:
         Creates a table using the table name passed into the database 
         constructor if that table does not exist.
         """
-        with self.conn:
-            self.conn.execute(f"""
+
+        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with conn:
+            conn.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self.table_name} (
                     timestamp INTEGER NOT NULL PRIMARY KEY,
                     open NUMERIC NOT NULL,
@@ -32,7 +40,7 @@ class Database:
                 )""")
 
 
-    def fetch_all_rows(self):
+    def fetch_all_rows(self) -> list:
         """
         Retrieves all rows from the specified table in the database. 
 
@@ -40,30 +48,39 @@ class Database:
             A list containing all rows from the table or None if the table 
             doesn't exist.
         """
-        with self.conn:
-            return self.conn.execute(f"""
+        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with conn:
+            return conn.execute(f"""
                        SELECT * FROM {self.table_name} 
                            ORDER BY timestamp ASC""").fetchall()
 
 
-    # Currently not needed
-    def insert_row(self):
-        pass 
+    def insert_row(self, row) -> None:
+        """
+        Inserts a single row into the database. 
+        """
+        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with conn: 
+            conn.execute(f"""
+                INSERT OR IGNORE INTO {self.table_name}
+                (timestamp, open, high, low, close, volume) 
+                VALUES (?, ?, ?, ?, ?, ?)""", row)
 
 
-    def insert_rows(self, rows):
+    def insert_rows(self, rows) -> None:
         """ 
         Inserts all elements from the passed in list 'rows' variable into the 
         database. 
         """
-        with self.conn:
-            self.conn.executemany(f"""
+        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with conn:
+            conn.executemany(f"""
                 INSERT OR IGNORE INTO {self.table_name}
                 (timestamp, open, high, low, close, volume)
                 VALUES (?, ?, ?, ?, ?, ?)""",rows)
 
 
-    def get_latest_row(self):
+    def get_latest_row(self) -> list:
         """ 
         Gets the last row in the database sorted by the primary key of timestamp 
 
@@ -71,8 +88,9 @@ class Database:
             row: the last row or most recent row in the database or None if the 
             table doesnt exist.
         """
-        with self.conn:
-            row = self.conn.execute(f"""
+        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with conn:
+            row = conn.execute(f"""
                   SELECT * FROM {self.table_name}
                   ORDER BY timestamp DESC
                   LIMIT 1""").fetchone()

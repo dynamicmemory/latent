@@ -76,8 +76,6 @@ class Kmeans:
             for mean in range(len(self.cluster_means)):
                 old_means[mean] = self.cluster_means[mean]
 
-            
-
             old_means = self.cluster_means.copy()
             self.assignments = defaultdict(list)
             counter += 1
