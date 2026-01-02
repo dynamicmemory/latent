@@ -6,6 +6,24 @@ def init_database():
     return db
 
 
+def test_open():
+    db = init_database()
+
+    db.close()
+    assert db.conn is None, "Connection should be closed"
+
+    db.open()
+    assert db.conn is not None, "Connection should be open"
+
+
+def test_close():
+    db = init_database()
+    db.close()
+    assert db.conn is None, "Connection should be closed"
+    db.close()
+    assert db.conn is None, "Connection should be closed"
+
+
 def test_create_table():
     db = init_database()
     tables = db.conn.execute(

@@ -16,9 +16,18 @@ class Database:
             table: the name of the table being queried.
         """
         self.db_name: str = db_name
+        self.conn: sqlite3.Connection = sqlite3.connect(self.db_name)
+
+
         if not re.fullmatch(r'\w+', table):
              raise ValueError(f"Invalid table name: {table}") 
         self.table_name: str = table
+
+
+    def open(self):
+        """Opens a new database connection if one does not exist"""
+        if self.conn is None:
+            self.conn = sqlite3.connect(f"{self.db_name}")
 
 
     def create_table(self) -> None:
@@ -27,9 +36,9 @@ class Database:
         constructor if that table does not exist.
         """
 
-        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
-        with conn:
-            conn.execute(f"""
+        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with self.conn:
+           self.conn.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self.table_name} (
                     timestamp INTEGER NOT NULL PRIMARY KEY,
                     open NUMERIC NOT NULL,
@@ -48,9 +57,9 @@ class Database:
             A list containing all rows from the table or None if the table 
             doesn't exist.
         """
-        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
-        with conn:
-            return conn.execute(f"""
+        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with self.conn:
+            return self.conn.execute(f"""
                        SELECT * FROM {self.table_name} 
                            ORDER BY timestamp ASC""").fetchall()
 
@@ -59,9 +68,9 @@ class Database:
         """
         Inserts a single row into the database. 
         """
-        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
-        with conn: 
-            conn.execute(f"""
+        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with self.conn: 
+            self.conn.execute(f"""
                 INSERT OR IGNORE INTO {self.table_name}
                 (timestamp, open, high, low, close, volume) 
                 VALUES (?, ?, ?, ?, ?, ?)""", row)
@@ -72,9 +81,9 @@ class Database:
         Inserts all elements from the passed in list 'rows' variable into the 
         database. 
         """
-        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
-        with conn:
-            conn.executemany(f"""
+        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with self.conn:
+            self.conn.executemany(f"""
                 INSERT OR IGNORE INTO {self.table_name}
                 (timestamp, open, high, low, close, volume)
                 VALUES (?, ?, ?, ?, ?, ?)""",rows)
@@ -88,18 +97,34 @@ class Database:
             row: the last row or most recent row in the database or None if the 
             table doesnt exist.
         """
-        conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
-        with conn:
-            row = conn.execute(f"""
+        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
+        with self.conn:
+            row = self.conn.execute(f"""
                   SELECT * FROM {self.table_name}
                   ORDER BY timestamp DESC
                   LIMIT 1""").fetchone()
         return row
 
 
+    def close(self) -> None:
+        """Closes an open database connection if one exists"""
+        if self.conn:
+            self.conn.close()
+            self.conn = None 
+
+
 from src.exchange import Exchange
 import pandas as pd
 import time
+
+UTC: int = int(time.time()*1000)
+TIME_MAP: dict[str, int] = {
+    "15": 900000,
+    "60": 3600000,
+    "240": 14400000,
+    "D": 86400000,
+    "W": 604800000
+}
 
 class DatabaseManager:
     def __init__(self, asset:str, timeframe:str) -> None:
@@ -124,6 +149,7 @@ class DatabaseManager:
         Updates the database by n number of rows depending on the time 
         difference between the current unix time vs the last record in the db.
         """
+        self.database.open()
         print(f"Updating table - {self.table_name}")
         e = Exchange(self.asset, self.timeframe)
 
@@ -139,6 +165,7 @@ class DatabaseManager:
             rows = e.get_closed_candles(nrows)
 
         self.database.insert_rows(rows)
+        self.database.close()
         
 
     # TODO: It smells, but it works for now, circle back when models built.
@@ -151,20 +178,12 @@ class DatabaseManager:
         Returns:
             nrows: the number of rows to retrieve from the exchange 
         """
-        utc: int = int(time.time()*1000)
-        time_map: dict[str, int] = {
-                "15": 900000,
-                "60": 3600000,
-                "240": 14400000,
-                "D": 86400000,
-                "W": 604800000
-        }
         last_timestamp: int = latest_row[0]
-        time_step_length: int = time_map[self.timeframe]
+        time_step_length: int = TIME_MAP[self.timeframe]
 
         # minus the last timestamp in the database and 1 time step to ensure 
         # we are looking at closed candle time steps only
-        adjusted_utc: int = utc - last_timestamp - time_step_length
+        adjusted_utc: int = UTC - last_timestamp - time_step_length
         nrows: int = int(adjusted_utc / time_step_length)
         print(f"Number of candles to retreive:{nrows}")
         return nrows
@@ -179,7 +198,9 @@ class DatabaseManager:
             df: a pandas dataframe
 
         """
+        self.database.open()
         rows: list[tuple] = self.database.fetch_all_rows()
+        self.database.close()
         columns = ["timestamp", "open", "high", "low", "close", "volume"]
         df = pd.DataFrame(rows, columns=columns)
         df.set_index("timestamp", inplace=True)
