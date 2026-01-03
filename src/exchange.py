@@ -1,5 +1,6 @@
 # TODO: Auth, Personal account ops, fix the ohlc functions since migration
 from __future__ import annotations
+from sys import exception
 from typing import TYPE_CHECKING
 import requests as r
 
@@ -20,14 +21,14 @@ class Exchange:
         Builds requests to query the exchanges api
         Returns dict - the response as the results or an error code 
         """
-        res: Response = r.request(method, url, params=params)
-        code: int = res.status_code
-        if code == 200:
+        try:
+            res: Response = r.request(method, url, params=params)
             return res.json()
-        else:
-            return {"code": code}
+        except exception as e:
+            print(f"function: make_request in class exchange has failed {e}")
+            return None
 
-    # TODO: Needs type conversion before returning, NOT TO BE DONE TILL DB MIGRATION
+
     def get_ohlc(self, limit=1000) -> list:
         """
         Retrieves the open, high, low and close of the given asset
@@ -38,17 +39,17 @@ class Exchange:
                         "interval": self.interval,
                         "limit": limit,
                         }
-        json: dict = self.make_request("GET", self.base_url+kline, params=params)
+        json: dict|None = self.make_request("GET", self.base_url+kline, params=params)
+        if not json:
+            return None
 
-        self.handle_error(json)
+        # self.handle_error(json)
 
         results = json["result"]["list"]
         results.reverse()
         return results
 
-
-    # Temp for sql testing
-    def get_closed_candles(self, limit=1000) -> list:
+    def get_closed_candles(self, limit=1000) -> list|None:
         """
         Retrieves the open, high, low and close of close candles only for a 
         given asset.
@@ -68,23 +69,21 @@ class Exchange:
                         }
         json: dict = self.make_request("GET", self.base_url+kline, params=params)
 
-        self.handle_error(json)
+        if not json:
+            return None
 
         temp = json["result"]["list"]
         temp.reverse()
         results = []
         for line in temp:
-            results.append(
-                [int(line[0]), 
-                 float(line[1]), 
-                 float(line[2]),
-                 float(line[3]),
-                 float(line[4]),
-                 float(line[6])])
+            results.append([ int(line[0]), float(line[1]), float(line[2]), 
+                             float(line[3]), float(line[4]), float(line[6]) ])
+
+        # Do not return the last candle as it has not closed yet 
         return results[:-1]
 
 
-    def get_price(self) -> dict:
+    def get_price(self) -> float|None:
         """ 
         Returns the current market price for the symbol provided to the exchange
         """
@@ -94,29 +93,11 @@ class Exchange:
                         }
         json: dict = self.make_request("GET", self.base_url+ticker, params=params)
 
-        self.handle_error(json)
-        results = json["result"]["list"][0]["bid1Price"]
-        print(results)
-        return results
-
-
-    # TODO: Fully explore the full range of errors and come up with robust system
-    def handle_error(self, json: dict):
-        """
-        Takes care of any responses that return error codes
-        Returns: Unsure yet 
-        """
-        # TODO: Handle the non 200 error return correctly, currently returning None
-        if json.get("code") != 200:
+        if not json:
             return None
 
-        # Check to make sure the request worked
-        if json.get("retCode") != 0:
-            print(f"ERROR - retCode: {json['retCode']} - {json['retMsg']}")
-            code, msg = json.get("retCode"), json.get("retMsg")
-            raise Exception(f"ERROR - retCode: {code} - {msg}")
-
-        return None
+        results: float = float(json["result"]["list"][0]["bid1Price"])
+        return results
 
 
 # ---- TRADE OPERATIONS ----

@@ -10,7 +10,7 @@ def main():
             dbm = DatabaseManager("BTCUSDT", tf) 
             dbm.update_table()
     else:
-        syntra = Agent()
+        Agent()
 
 
 if __name__ == "__main__":

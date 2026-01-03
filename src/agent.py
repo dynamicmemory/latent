@@ -24,6 +24,10 @@ class Agent:
         self.run_agent()
         # self.run_all_tf()
 
+    def test(self):
+        e = Exchange(asset, timeframe)
+        print(e.get_price())
+
 
     def run_agent(self):
         # Get data

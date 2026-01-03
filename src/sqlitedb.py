@@ -1,8 +1,7 @@
-# Intentionally creating a new connection each time to avoid leaving the db open
-# less efficent but we are only making two calls max each usage and only one 
-# usage per time frame which could be 15 mins to a week, so managable for now.
-# Better solution could be open_connection() and close_connection() functions 
-# that the dbm could call, only save one call on the db each time really.
+""" Database class for the trading system. Only key point to remember when 
+interfacing with the database, is you must call open first before any other 
+operations on the database, and call closed once you are finish.
+"""
 import sqlite3
 import re
 
@@ -17,7 +16,6 @@ class Database:
         """
         self.db_name: str = db_name
         self.conn: sqlite3.Connection = sqlite3.connect(self.db_name)
-
 
         if not re.fullmatch(r'\w+', table):
              raise ValueError(f"Invalid table name: {table}") 
@@ -36,7 +34,6 @@ class Database:
         constructor if that table does not exist.
         """
 
-        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
         with self.conn:
            self.conn.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self.table_name} (
@@ -57,7 +54,6 @@ class Database:
             A list containing all rows from the table or None if the table 
             doesn't exist.
         """
-        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
         with self.conn:
             return self.conn.execute(f"""
                        SELECT * FROM {self.table_name} 
@@ -68,7 +64,6 @@ class Database:
         """
         Inserts a single row into the database. 
         """
-        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
         with self.conn: 
             self.conn.execute(f"""
                 INSERT OR IGNORE INTO {self.table_name}
@@ -81,7 +76,6 @@ class Database:
         Inserts all elements from the passed in list 'rows' variable into the 
         database. 
         """
-        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
         with self.conn:
             self.conn.executemany(f"""
                 INSERT OR IGNORE INTO {self.table_name}
@@ -97,7 +91,6 @@ class Database:
             row: the last row or most recent row in the database or None if the 
             table doesnt exist.
         """
-        # conn: sqlite3.Connection = sqlite3.connect(f"{self.db_name}")
         with self.conn:
             row = self.conn.execute(f"""
                   SELECT * FROM {self.table_name}
@@ -163,6 +156,9 @@ class DatabaseManager:
             if not nrows: return                       # Exit if no rows needed
 
             rows = e.get_closed_candles(nrows)
+            if rows is None:
+                print("Exchange returned None for get_closed_candles, try again soon")
+                return 
 
         self.database.insert_rows(rows)
         self.database.close()

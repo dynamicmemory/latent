@@ -15,6 +15,7 @@ class Features:
 
 
     def run_features(self) -> tuple:
+        features = self.features
         df = self.df.copy()
         # Calculate the return 
         df["returns"] = (df["close"].shift(-1) / df["close"] - 1) * 100
@@ -37,6 +38,7 @@ class Features:
         # Clean, reshape and align the features and label dfs.
         X = self.clean(df)
         y = df.loc[X.index, "label"]     # all rows that are in X now
+        self.features = features         # Reset features for the next call
         return X, y 
 
 
@@ -93,19 +95,7 @@ class Features:
         """Calculates the volitility for the given asset"""
 
         log_returns = np.log(df["close"] / df["close"].shift(1))
-        df["volatility"] = log_returns.rolling(period).std()  * 100
-
-        # z store for standard volatilty calcs
-        df["volatility_z"] = (df["volatility"] - df["volatility"].rolling(30).mean()) / df["volatility"].rolling(30).std()
-
-        conditions = [df["volatility_z"] < -1, df["volatility_z"].between(-1, 1),
-                      df["volatility_z"].between(1, 2),
-                      df["volatility_z"] > 2 
-                      ]
-        # I dont have an encoder built yet so i have to convert these to nums 
-        choices = ["low", "normal", "high", "extreme"]
-        choices = [1, 2, 3, 4]
-        df["risk_regime"] = np.select(conditions, choices, default=2)
+        df["volatility"] = log_returns.rolling(period).std() * 100
 
         # 0-33=low 34-66=normal 67-90=high 91-100=extremee
         df["volatility_pctile"] = df["volatility"].rank(pct=True)
@@ -116,10 +106,7 @@ class Features:
         tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
         df["atr_14"] = tr.rolling(14).mean()
 
-
         self.features.append("volatility")
-        self.features.append("volatility_z")
-        self.features.append("risk_regime")
         self.features.append("volatility_pctile")
         self.features.append("atr_14")
 

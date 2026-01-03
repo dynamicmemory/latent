@@ -31,9 +31,6 @@ class MachLearnTools:
         y = self.y.to_numpy(dtype=np.float32)
 
         X_win, y_win = self.sliding_window(X, y, window) 
-        # X_flat = self.flatten_window(X_win)      # Remove when finished cnn
-
-        # return self.split_data(X_flat, y_win, shuffle=False)
         return self.split_data(X_win, y_win, shuffle=False)
 
 
@@ -79,13 +76,6 @@ class MachLearnTools:
         # Turns the lists into arrays
         return np.array(X_out), np.array(y_out).reshape(-1, 1)
 
-
-    # TODO: DELETE ONCE CNN BUILT 
-    def flatten_window(self, X: pd.DataFrame) -> pd.DataFrame:
-        """ Temporary until I build a CNN for timeseries"""
-        # Flattens windows for dense NN
-        return X.reshape(X.shape[0], -1)  # (samples, window * features)
-    
 
     def latest_features(self, window:int=10) -> np.ndarray:
         """
