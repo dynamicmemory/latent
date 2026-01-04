@@ -22,12 +22,11 @@ class Kmeans:
             self.cluster_means.append(low + rng * (high - low))
 
 
-
     def assignment(self): 
         for sample in self.data:
             least_distance = float("inf")
             selected_k = None
-            
+
             for mean in range(len(self.cluster_means)):
                 temp_distance = np.sqrt((sample - self.cluster_means[mean])**2)
                 if temp_distance < least_distance:
@@ -35,7 +34,7 @@ class Kmeans:
                     selected_k = mean 
 
             self.assignments[selected_k].append(sample)
-                
+
 
     def update(self):
         for key, val in self.assignments.items():
@@ -67,12 +66,12 @@ class Kmeans:
                 plt.pause(0.5)
 
             for mean in range(len(self.cluster_means)):
-                if (self.cluster_means[mean] - old_means[mean]) < 1e-4:
+                if (self.cluster_means[mean] - old_means[mean]) < 1e-6:
                     not_finished = False 
                 else:
                     not_finished = True
                     break
-            
+
             for mean in range(len(self.cluster_means)):
                 old_means[mean] = self.cluster_means[mean]
 
@@ -84,7 +83,3 @@ class Kmeans:
             plt.ioff()
             plt.show()
         return self.cluster_means
-       
-       
-       
-       
