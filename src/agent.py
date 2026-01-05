@@ -14,7 +14,9 @@ asset = "BTCUSDT"
 timeframe = "15"
 
 class Agent:
-    def __init__(self):
+    def __init__(self, asset:str="BTCUSDT", timeframe:str="15"):
+        self.asset = asset
+        self.timeframe = timeframe
         self.dbm = None
         self.features = None
         self.mlt = None
@@ -25,13 +27,14 @@ class Agent:
         # self.run_all_tf()
 
     def test(self):
-        e = Exchange(asset, timeframe)
+        e = Exchange(self.asset, self.timeframe)
         print(e.get_price())
 
 
     def run_agent(self):
+        print(f"Training on {self.asset} - {self.timeframe}") 
         # Get data
-        self.dbm = DatabaseManager(asset, timeframe)
+        self.dbm = DatabaseManager(self.asset, self.timeframe)
 
         # Engineer features
         self.features = Features(self.dbm.get_dataframe())
@@ -52,7 +55,7 @@ class Agent:
         curr_mkt_risk: str = self.strategy.main()
 
         # For the time being, this is the equiv of executing a market order
-        self.get_trade_details(asset, timeframe, curr_mkt_risk, decision)
+        self.get_trade_details(self.asset, self.timeframe, curr_mkt_risk, decision)
 
 
     # Testing purposes only
@@ -70,6 +73,7 @@ class Agent:
             self.torchnn.predict()
 
 
+    # We dont need to pass asset and tf now, we can just use self.
     # We would execute a trade instead of all these calcs just to print it.
     def get_trade_details(self, asset, timeframe, risk, direction):
         self.exchange = Exchange(asset, timeframe)

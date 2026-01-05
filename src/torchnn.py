@@ -23,7 +23,7 @@ class TimeSeriesNN(nn.Module):
 
 # --- Temp: Wrapper class to scalpel cut in torches workflow to ours ---
 class Torchnn:
-    def __init__(self, mlt, X_train, X_test, y_train, y_test, epochs=20, lr=0.001, window=10):
+    def __init__(self, mlt, X_train, X_test, y_train, y_test, epochs=200, lr=0.001, window=10):
         self.mlt = mlt
         self.window = window
         # --- Convert to PyTorch tensors ---
