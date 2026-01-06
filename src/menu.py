@@ -2,6 +2,7 @@ from src.agent import Agent
 from src.sqlitedb import DatabaseManager
 import pyfiglet
 
+USERNAME:str = "HUMAN OVERLORD"   # Temp
 TIME_MAP: dict[int, str] = {
     1: "15",
     2: "60",
@@ -14,8 +15,6 @@ ASSET_MAP: dict[int, str] = {
     1: "BTCUSDT",
 }
 
-
-USERNAME:str = "HUMAN OVERLORD"   # Temp
 
 def print_banner(banner_text:str="SYNTRA SYSTEMS") -> None:
     """
@@ -40,13 +39,18 @@ def print_main_menu() -> int:
     print_banner()
     print(f"Welcome back {USERNAME}, what would you like to do?")
     print("1. Manage account")
-    print("2. Settings") 
-    print("3. Exit")
+    print("2. Predict (manual)")
+    print("3. Start engine")
+    print("4. Stop engine")
+    print("5. View Dashboard")
+    print("6. Maintenance")
+    print("7. Settings")
+    print("8. Exit")
     print("---------------------------------------------------------------")
     while True:
         try:
             choice = int(input(">> "))
-            if choice > 0 and choice < 4:
+            if choice > 0 and choice < 9:
                break 
             print("Enter a number between 1 - 3")
         except Exception as e:
@@ -54,8 +58,34 @@ def print_main_menu() -> int:
     return choice 
 
 
-def print_account_menu() -> int:
+def print_manage_account() -> int:
+    # Print all account details
+    # 1. Close all trades
     return 1;
+
+
+def print_predict_menu(asset:str="BTCUSDT", timeframe:str="15minute") -> int:
+    print_banner("PREDICTION")
+    print("Predict")
+    print(f"Current Asset: {asset} Current Timeframe {timeframe}")
+    print("1. Choose asset")
+    print("2. Choose timeframe")
+    print("3. Make a prediction")
+    print("4. Return to main menu")
+    print("----------------------------------------")
+    while True:
+        try:
+            choice = int(input(">> "))
+            if choice > 0 and choice < 5:
+                break
+            print("Enter a number between 1-4")
+        except Exception as e:
+            print("Enter a number between 1-4")
+    return choice
+    
+
+def run_predict(choice:int) -> None:
+    pass
 
 
 def print_settings_menu() -> int:
@@ -82,11 +112,83 @@ def print_settings_menu() -> int:
     return choice 
 
 
-def run_account() -> None:
-    pass
+def run_main_menu() -> None:
+    """
+    Runs the main menu for the application, delegates duties depending 
+    on what the user selects to do, current choices are:
+      - 1. Check user accounts for managing and trading  
+      - 2. Enter the settings menu 
+      - 3. Exiting the application
+    """
+    print_banner()
+    choice: int = print_main_menu()
+    if int(choice) == 1:                               # Manage account
+        print("Feature currently under construction")
+        input("\nHit enter to continue")
+
+    elif int(choice) == 2:                              # Predict
+        # while (True):
+        #     choice = print_predict_menu()
+            # if choice == 4: break
+            # run_predict(choice)
+            # input("\nHit enter to continue")
+        Agent()
+        input("\nHit enter to return to main menu")
+
+    elif int(choice) == 3:                              # Start auto 
+        print("Feature currently under construction")
+        input("\nHit enter to continue")
+
+    elif int(choice) == 4:                              # Stop auto 
+        print("Feature currently under construction")
+        input("\nHit enter to continue")
+
+    elif int(choice) == 5:                              # View dashoard 
+        print("Feature currently under construction")
+        input("\nHit enter to continue")
+
+    elif int(choice) == 6:                              # Maintenance 
+        # Maintenance menu loop
+        while (True):
+            choice = print_maintenance_menu()
+            if choice == 3: break
+            run_maintenance(choice)
+            input("\nHit enter to continue")
+
+    elif int(choice) == 7:                              # Settings 
+        print("Feature currently under construction")
+        input("\nHit enter to continue")
+
+    elif int(choice) == 8:
+        print("\033c", end="")
+        exit()
 
 
-def run_settings(choice:int) -> None:
+def print_maintenance_menu() -> int:
+    """
+    Prints the settings menu for the app
+
+    Returns:
+        choice: the number of the choice the user has chosen
+    """
+    print_banner("MAINTENANCE")
+    print("Maintenance")
+    print("1. Update database")
+    print("2. Retrain Model")
+    print("3. Return to main menu")
+    print("----------------------------------------")
+    while True:
+        try:
+            choice = int(input(">> "))
+            if choice > 0 and choice < 4:
+               break 
+            print("Enter a number between 1 - 3")
+        except Exception as e:
+            print("Enter a number between 1 - 3")
+    return choice 
+
+
+def run_maintenance(choice:int) -> None:
     """
     Runs the settings menu for the application, delegates duties depending 
     on what the user selects to do, current choices are:
@@ -112,7 +214,6 @@ def run_settings(choice:int) -> None:
             except Exception as e:
                 print(f"Only number input will be excepted {e}")
 
-
         while True:
             try:
                 print("Which timeframe:")
@@ -133,33 +234,5 @@ def run_settings(choice:int) -> None:
         return;
 
 
-def run_menu() -> None:
-    """
-    Runs the main menu for the application, delegates duties depending 
-    on what the user selects to do, current choices are:
-      - 1. Check user accounts for managing and trading  
-      - 2. Enter the settings menu 
-      - 3. Exiting the application
-    """
-    print_banner()
-    choice: int = print_main_menu()
-    if int(choice) == 1:
-        Agent()
-        input("\nHit enter to return to main menu")
-
-    elif int(choice) == 2:
-        # Settings menu loop
-        while (True):
-            choice = print_settings_menu()
-            if choice == 3: break
-            run_settings(choice)
-            input("\nHit enter to continue")
-
-    elif int(choice) == 3:
-        print("\033c", end="")
-        exit()
-
-
 if __name__ == "__main__":
-    pass    
-
+    pass
