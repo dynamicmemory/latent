@@ -3,17 +3,8 @@ from src.sqlitedb import DatabaseManager
 import pyfiglet
 
 USERNAME:str = "HUMAN OVERLORD"   # Temp
-TIME_MAP: dict[int, str] = {
-    1: "15",
-    2: "60",
-    3: "240",
-    4: "D",
-    5: "W"
-}
-
-ASSET_MAP: dict[int, str] = {
-    1: "BTCUSDT",
-}
+TIME_MAP: dict[int, str] = { 1: "15", 2: "60", 3: "240", 4: "D", 5: "W", }
+ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", }
 
 
 def print_banner(banner_text:str="SYNTRA SYSTEMS") -> None:
@@ -64,28 +55,75 @@ def print_manage_account() -> int:
     return 1;
 
 
-def print_predict_menu(asset:str="BTCUSDT", timeframe:str="15minute") -> int:
+def print_predict_menu(asset:int|None=None, timeframe:int|None=None):
+    disp_asset = None if asset == None else ASSET_MAP[asset]
+    disp_tf = None if timeframe == None else TIME_MAP[timeframe]
+    
     print_banner("PREDICTION")
     print("Predict")
-    print(f"Current Asset: {asset} Current Timeframe {timeframe}")
+    print(f"Current Asset: {disp_asset} | Current Timeframe: {disp_tf}")
     print("1. Choose asset")
     print("2. Choose timeframe")
     print("3. Make a prediction")
     print("4. Return to main menu")
     print("----------------------------------------")
-    while True:
-        try:
-            choice = int(input(">> "))
-            if choice > 0 and choice < 5:
-                break
-            print("Enter a number between 1-4")
-        except Exception as e:
-            print("Enter a number between 1-4")
-    return choice
     
 
-def run_predict(choice:int) -> None:
-    pass
+def run_predict() -> None:
+    options:int = 4                            # Number of menu options
+    asset:int|None = None
+    timeframe:int|None = None
+    while True:
+        print_predict_menu(asset, timeframe)
+        # Try get a correct response
+        try:
+            choice = int(input(">> "))
+            if choice <= 0 or choice > options:
+                print(f"Enter a number between 1-{options}")
+                continue
+        except Exception as e:
+            print(f"Enter a number between 1-{options}")
+            continue
+
+        if choice == 1:
+            while True:
+                try:
+                    print("Which asset:")
+                    print("1. Bitcoin")
+                    asset = int(input(">> "))
+                    if asset > 0 and asset <= len(ASSET_MAP):
+                        break
+                    print("\nEnter a number from the provided options.")
+                except Exception as e:
+                    print(f"Only number input will be excepted {e}")
+
+        elif choice == 2:
+            while True:
+                try:
+                    print("Which timeframe:")
+                    print("1. 15 minutes")
+                    print("2. 1 hour")
+                    print("3. 4 hour")
+                    print("4. Daily")
+                    print("5. Weekly")
+                    timeframe = int(input(">> "))
+                    if timeframe > 0 and timeframe <= len(TIME_MAP):
+                        break
+                    print("\nEnter a number from the provided options")
+                except Exception as e:
+                    print(f"Only number input will be excepted {e}")
+
+        elif choice == 3:
+            if asset is None or timeframe is None:
+                print("\nSelect an asset and timeframe to predict on first")
+                input("\n>> Hit enter to continue")
+                continue
+            else:
+                Agent(ASSET_MAP[asset], TIME_MAP[timeframe])
+                input("Hit enter to continue")
+
+        elif choice == 4:
+            break
 
 
 def print_settings_menu() -> int:
@@ -127,13 +165,7 @@ def run_main_menu() -> None:
         input("\nHit enter to continue")
 
     elif int(choice) == 2:                              # Predict
-        # while (True):
-        #     choice = print_predict_menu()
-            # if choice == 4: break
-            # run_predict(choice)
-            # input("\nHit enter to continue")
-        Agent()
-        input("\nHit enter to return to main menu")
+        run_predict()
 
     elif int(choice) == 3:                              # Start auto 
         print("Feature currently under construction")
