@@ -3,8 +3,7 @@ from src.menu import run_main_menu
 
 
 def main():
-    while True:
-        run_main_menu()
+    run_main_menu()
 
 
 if __name__ == "__main__":

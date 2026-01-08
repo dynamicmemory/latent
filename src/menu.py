@@ -1,11 +1,11 @@
+# BEFORE I GET CARRIED AWAY.... YES WE WILL MAKE A MENU MANAGER, JUST FINISH THIS AS IS FOR NOW.
 from src.agent import Agent
 from src.sqlitedb import DatabaseManager
 import pyfiglet
 
 USERNAME:str = "HUMAN OVERLORD"   # Temp
-TIME_MAP: dict[int, str] = { 1: "15", 2: "60", 3: "240", 4: "D", 5: "W", }
-ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", }
-
+TIME_MAP: dict[int, str] = { 1: "15", 2: "60", 3: "240", 4: "D", 5: "W", 0: "None"}
+ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", 0: "None"}
 
 def print_banner(banner_text:str="SYNTRA SYSTEMS") -> None:
     """
@@ -17,254 +17,190 @@ def print_banner(banner_text:str="SYNTRA SYSTEMS") -> None:
     print("\033c", end="")
     text = pyfiglet.figlet_format(banner_text, font="slant")
     print(text)
-    print("---------------------------------------------------------------")
+    print("-"*60)
 
 
-def print_main_menu() -> int:
-    """
-    Prints the main menu for the app
+def dynamic_fprint(template:str, *args):
+    print(template.format(*args))
 
-    Returns:
-        choice: the number of the choice the user has chosen
-    """
-    print_banner()
-    print(f"Welcome back {USERNAME}, what would you like to do?")
-    print("1. Manage account")
-    print("2. Predict (manual)")
-    print("3. Start engine")
-    print("4. Stop engine")
-    print("5. View Dashboard")
-    print("6. Maintenance")
-    print("7. Settings")
-    print("8. Exit")
-    print("---------------------------------------------------------------")
+    
+def get_menu_selection(options:int) -> int:
+    """ Returns the selected menu item """
+    print("-"*60)
     while True:
         try:
-            choice = int(input(">> "))
-            if choice > 0 and choice < 9:
-               break 
-            print("Enter a number between 1 - 3")
-        except Exception as e:
-            print("Enter a number between 1 - 3")
-    return choice 
-
-
-def print_manage_account() -> int:
-    # Print all account details
-    # 1. Close all trades
-    return 1;
-
-
-def print_predict_menu(asset:int|None=None, timeframe:int|None=None):
-    disp_asset = None if asset == None else ASSET_MAP[asset]
-    disp_tf = None if timeframe == None else TIME_MAP[timeframe]
-    
-    print_banner("PREDICTION")
-    print("Predict")
-    print(f"Current Asset: {disp_asset} | Current Timeframe: {disp_tf}")
-    print("1. Choose asset")
-    print("2. Choose timeframe")
-    print("3. Make a prediction")
-    print("4. Return to main menu")
-    print("----------------------------------------")
-    
-
-def run_predict() -> None:
-    options:int = 4                            # Number of menu options
-    asset:int|None = None
-    timeframe:int|None = None
-    while True:
-        print_predict_menu(asset, timeframe)
-        # Try get a correct response
-        try:
-            choice = int(input(">> "))
-            if choice <= 0 or choice > options:
-                print(f"Enter a number between 1-{options}")
-                continue
-        except Exception as e:
-            print(f"Enter a number between 1-{options}")
+            choice = int(input("\n>> "))
+        except (ValueError, TypeError):
+            print("Enter a number from the provided options")
             continue
 
+        if choice > 0 and choice < options+1:
+            return choice 
+        print("Enter a number from the provided options")
+
+
+def run_main_menu() -> None:
+    """ Runs the main menu for the application """
+    options:int = 8
+    while True:
+        print_banner()
+        dynamic_fprint(main_menu, USERNAME)
+        choice = get_menu_selection(options)
+
+        # TODO: Change to a dict and run choice from the dict
+        if   choice == 1: manage_accout()
+        elif choice == 2: run_predict()
+        elif choice == 3: start_engine() 
+        elif choice == 4: stop_engine() 
+        elif choice == 5: view_dashboard() 
+        elif choice == 6: run_maintenance()
+        elif choice == 7: run_settings()  
+        elif choice == 8: break
+
+    print("\033c", end="")
+    exit()
+
+
+def manage_accout() -> None:
+    print("Feature currently under construction")
+    input("\nHit enter to continue")
+    pass
+
+
+def run_predict() -> None:
+    options:int = 4 
+    asset:int = 0
+    timeframe:int = 0
+    while True:
+        print_banner("PREDICTION")
+        dynamic_fprint(pred_menu, ASSET_MAP[asset], TIME_MAP[timeframe])
+
+        choice = get_menu_selection(options)
         if choice == 1:
-            while True:
-                try:
-                    print("Which asset:")
-                    print("1. Bitcoin")
-                    asset = int(input(">> "))
-                    if asset > 0 and asset <= len(ASSET_MAP):
-                        break
-                    print("\nEnter a number from the provided options.")
-                except Exception as e:
-                    print(f"Only number input will be excepted {e}")
+            dynamic_fprint(pred_asset)
+            asset = get_menu_selection(len(ASSET_MAP))
 
         elif choice == 2:
-            while True:
-                try:
-                    print("Which timeframe:")
-                    print("1. 15 minutes")
-                    print("2. 1 hour")
-                    print("3. 4 hour")
-                    print("4. Daily")
-                    print("5. Weekly")
-                    timeframe = int(input(">> "))
-                    if timeframe > 0 and timeframe <= len(TIME_MAP):
-                        break
-                    print("\nEnter a number from the provided options")
-                except Exception as e:
-                    print(f"Only number input will be excepted {e}")
+            dynamic_fprint(pred_timeframe)
+            timeframe = get_menu_selection(len(TIME_MAP))
 
         elif choice == 3:
-            if asset is None or timeframe is None:
-                print("\nSelect an asset and timeframe to predict on first")
+            if asset is 0 or timeframe is 0:
+                print("\nError: Select an asset and timeframe to predict on first")
                 input("\n>> Hit enter to continue")
                 continue
             else:
                 Agent(ASSET_MAP[asset], TIME_MAP[timeframe])
-                input("Hit enter to continue")
+                input("\n>> Hit enter to continue")
 
         elif choice == 4:
             break
 
 
-def print_settings_menu() -> int:
-    """
-    Prints the settings menu for the app
+def start_engine() -> None:
+    print("Feature currently under construction")
+    input("\nHit enter to continue")
+    pass
+def stop_engine() -> None:
+    print("Feature currently under construction")
+    input("\nHit enter to continue")
+    pass
+def view_dashboard() -> None:
+    print("Feature currently under construction")
+    input("\nHit enter to continue")
+    pass
 
-    Returns:
-        choice: the number of the choice the user has chosen
-    """
+
+def run_maintenance() -> None:
+    """ Runs the maintenance menu for the application """
+    options:int = 3
+    while True:
+        print_banner("MAINTENANCE")
+        dynamic_fprint(maintenance_menu)
+        choice = get_menu_selection(options)
+
+        if choice == 1:
+            for tf in ["15", "60", "240", "D", "W"]:
+                dbm = DatabaseManager("BTCUSDT", tf) 
+                dbm.update_table()
+            input("\n>> Hit enter to continue")
+        elif choice == 2:
+            # Print out a list of all models and the last time they were updated
+            # Allow retraining on any or model
+            print("Feature currently under construction")
+            input("\n>> Hit enter to continue")
+        else:
+            return;
+
+
+# Global settings for the program, make these persistance with a config file
+def print_settings_menu() -> None:
+    """ Prints the settings menu for the app """
     print_banner("SETTINGS")
-    print("Settings")
-    print("1. Update database")
-    print("2. Retrain Model")
-    print("3. Return to main menu")
-    print("----------------------------------------")
-    while True:
-        try:
-            choice = int(input(">> "))
-            if choice > 0 and choice < 4:
-               break 
-            print("Enter a number between 1 - 3")
-        except Exception as e:
-            print("Enter a number between 1 - 3")
-    return choice 
+    print("1. Change account name")
+    print("2. Manage API keys")
+    print("3. Scheduler")
+    print("4. Preferences")
+    print("5. Return to main menu")
 
 
-def run_main_menu() -> None:
-    """
-    Runs the main menu for the application, delegates duties depending 
-    on what the user selects to do, current choices are:
-      - 1. Check user accounts for managing and trading  
-      - 2. Enter the settings menu 
-      - 3. Exiting the application
-    """
-    print_banner()
-    choice: int = print_main_menu()
-    if int(choice) == 1:                               # Manage account
-        print("Feature currently under construction")
-        input("\nHit enter to continue")
-
-    elif int(choice) == 2:                              # Predict
-        run_predict()
-
-    elif int(choice) == 3:                              # Start auto 
-        print("Feature currently under construction")
-        input("\nHit enter to continue")
-
-    elif int(choice) == 4:                              # Stop auto 
-        print("Feature currently under construction")
-        input("\nHit enter to continue")
-
-    elif int(choice) == 5:                              # View dashoard 
-        print("Feature currently under construction")
-        input("\nHit enter to continue")
-
-    elif int(choice) == 6:                              # Maintenance 
-        # Maintenance menu loop
-        while (True):
-            choice = print_maintenance_menu()
-            if choice == 3: break
-            run_maintenance(choice)
-            input("\nHit enter to continue")
-
-    elif int(choice) == 7:                              # Settings 
-        print("Feature currently under construction")
-        input("\nHit enter to continue")
-
-    elif int(choice) == 8:
-        print("\033c", end="")
-        exit()
-
-
-def print_maintenance_menu() -> int:
-    """
-    Prints the settings menu for the app
-
-    Returns:
-        choice: the number of the choice the user has chosen
-    """
-    print_banner("MAINTENANCE")
-    print("Maintenance")
-    print("1. Update database")
-    print("2. Retrain Model")
-    print("3. Return to main menu")
-    print("----------------------------------------")
-    while True:
-        try:
-            choice = int(input(">> "))
-            if choice > 0 and choice < 4:
-               break 
-            print("Enter a number between 1 - 3")
-        except Exception as e:
-            print("Enter a number between 1 - 3")
-    return choice 
-
-
-def run_maintenance(choice:int) -> None:
-    """
-    Runs the settings menu for the application, delegates duties depending 
-    on what the user selects to do, current choices are:
-      - 1. Updating the database 
-      - 2. Retraining the current Model
-      - 3. Exiting to the main menu
-    """
-    if choice == 1:
-        for tf in ["15", "60", "240", "D", "W"]:
-            dbm = DatabaseManager("BTCUSDT", tf) 
-            dbm.update_table()
-    elif choice == 2:
-        asset:int = 1 
-        timeframe:int = 1
-        while True:
-            try:
-                print("Which asset:")
-                print("1. Bitcoin")
-                asset = int(input(">> "))
-                if asset > 0 and asset < 2:
-                    break
-                print("Enter a number from the provided options.")
-            except Exception as e:
-                print(f"Only number input will be excepted {e}")
-
-        while True:
-            try:
-                print("Which timeframe:")
-                print("1. 15 minutes")
-                print("2. 1 hour")
-                print("3. 4 hour")
-                print("4. Daily")
-                print("5. Weekly")
-                timeframe = int(input(">> "))
-                if timeframe > 0 and timeframe < 6:
-                    break
-                print("Enter a number from the provided options")
-            except Exception as e:
-                print(f"Only number input will be excepted {e}")
-
-        Agent(ASSET_MAP[asset], TIME_MAP[timeframe])
-    else:
-        return;
+def run_settings() -> None:
+    print("Feature currently under construction")
+    input("\nHit enter to continue")
+    pass
 
 
 if __name__ == "__main__":
     pass
+
+
+# Menu strings
+main_menu: str = \
+"""Welcome back {0}, what would you like to do?\n
+1. Manage account
+2. Predict (manual)
+3. Start engine
+4. Stop engine
+5. View Dashboard
+6. Maintenance
+7. Settings
+8. Exit"""
+
+account_menu: str = """"""
+
+pred_menu: str = \
+"""Current Asset: {0} | Current Timeframe: {1}\n
+1. Choose asset
+2. Choose timeframe
+3. Make a prediction
+4. Return to main menu"""
+
+pred_asset: str = """
+Which asset:
+1. Bitcoin"""
+
+pred_timeframe: str = """
+Which timeframe:
+1. 15 minutes
+2. 1 hour
+3. 4 hour
+4. Daily
+5. Weekly"""
+
+start_menu: str = """
+"""
+
+stop_menu: str = """
+"""
+
+dashboard_menu: str = """
+"""
+
+maintenance_menu: str = \
+"""Maintenance menu\n
+1. Update database
+2. Retrain models
+3. Return to main menu"""
+
+settings_menu: str = """
+"""
