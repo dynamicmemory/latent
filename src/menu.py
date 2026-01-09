@@ -85,12 +85,14 @@ def run_predict() -> None:
             timeframe = get_menu_selection(len(TIME_MAP))
 
         elif choice == 3:
-            if asset is 0 or timeframe is 0:
+            if asset == 0 or timeframe == 0:
                 print("\nError: Select an asset and timeframe to predict on first")
                 input("\n>> Hit enter to continue")
                 continue
             else:
-                Agent(ASSET_MAP[asset], TIME_MAP[timeframe])
+                agent = Agent(ASSET_MAP[asset], TIME_MAP[timeframe])
+                agent.run_agent(f"./models/{ASSET_MAP[asset]}/{TIME_MAP[timeframe]}/latest.pth")
+
                 input("\n>> Hit enter to continue")
 
         elif choice == 4:
@@ -125,29 +127,28 @@ def run_maintenance() -> None:
                 dbm.update_table()
             input("\n>> Hit enter to continue")
         elif choice == 2:
+
             # Print out a list of all models and the last time they were updated
             # Allow retraining on any or model
-            print("Feature currently under construction")
+            print("The engineer is currently cooking this feature up!")
             input("\n>> Hit enter to continue")
         else:
             return;
 
 
 # Global settings for the program, make these persistance with a config file
-def print_settings_menu() -> None:
-    """ Prints the settings menu for the app """
-    print_banner("SETTINGS")
-    print("1. Change account name")
-    print("2. Manage API keys")
-    print("3. Scheduler")
-    print("4. Preferences")
-    print("5. Return to main menu")
-
-
 def run_settings() -> None:
-    print("Feature currently under construction")
-    input("\nHit enter to continue")
-    pass
+    options:int = 5
+    while True:
+        print_banner("SETTINGS")
+        dynamic_fprint(settings_menu)
+        choice = get_menu_selection(options)
+
+        if choice != 5:
+            print("Feature currently under construction")
+            input("\nHit enter to continue")
+        else:
+            return;
 
 
 if __name__ == "__main__":
@@ -203,4 +204,9 @@ maintenance_menu: str = \
 3. Return to main menu"""
 
 settings_menu: str = """
+1. Change account name
+2. Manage API keys
+3. Scheduler
+4. Preferences
+5. Return to main menu
 """

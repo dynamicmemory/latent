@@ -23,7 +23,7 @@ class TimeSeriesNN(nn.Module):
 
 # --- Temp: Wrapper class to scalpel cut in torches workflow to ours ---
 class Torchnn:
-    def __init__(self, mlt, X_train, X_test, y_train, y_test, epochs=200, lr=0.001, window=10):
+    def __init__(self, mlt, X_train, X_test, y_train, y_test, epochs=200, lr=0.001, window=10, training=False):
         self.mlt = mlt
         self.window = window
         # --- Convert to PyTorch tensors ---
@@ -39,8 +39,8 @@ class Torchnn:
         output_size = 3  # multi-class labels
         self.model = TimeSeriesNN(input_size, hidden_size=64, output_size=output_size)
 
-        # Just straight auto train for now
-        self.training_loop()
+        if training:
+            self.training_loop()
 
 
     def training_loop(self):
@@ -82,3 +82,28 @@ class Torchnn:
         print(f"Next candle prediction: {pred_next}")
         return pred_next
     
+
+    def save_checkpoint(self, path:str) -> None:
+        checkpoint = {
+            "model_state": self.model.state_dict(),
+            "input_size": self.X_train.shape[2],
+            "window": self.window,
+            "epochs": self.epochs,
+            "lr": self.lr, 
+        }
+        torch.save(checkpoint, path)
+
+
+    def load_checkpoint(self, path:str) -> None:
+        checkpoint = torch.load(path)
+        self.model.load_state_dict(checkpoint["model_state"])
+        self.window = checkpoint["window"]
+        self.model.eval()
+
+
+
+
+
+
+
+

@@ -9,6 +9,7 @@ from src.torchnn import Torchnn
 from src.strategy import Strategy
 from src.riskCalculator import RiskCalculator
 
+import os
 # Hard coded for testing, will be passed in or initiated via user.
 asset = "BTCUSDT"
 timeframe = "15"
@@ -23,7 +24,7 @@ class Agent:
         self.torchnn = None
         self.strategy = None
         # auto running for testing purposes
-        self.run_agent()
+        # self.run_agent()
         # self.run_all_tf()
 
     def test(self):
@@ -31,8 +32,7 @@ class Agent:
         print(e.get_price())
 
 
-    def run_agent(self):
-        print(f"Training on {self.asset} - {self.timeframe}") 
+    def run_agent(self, model_path:str):
         # Get data
         self.dbm = DatabaseManager(self.asset, self.timeframe)
 
@@ -44,8 +44,16 @@ class Agent:
         self.mlt = MachLearnTools(X, y)
         X_train, X_test, y_train, y_test = self.mlt.timeseries_pipeline()
 
-        # Auto train the model
-        self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test)
+        # Train a model if one doesnt exist otherwise load model
+        os.makedirs(os.path.dirname(model_path), exist_ok=True)
+        if os.path.exists(model_path):
+            print("Loading pretrained model")
+            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test)
+            self.torchnn.load_checkpoint(model_path)
+        else:
+            print(f"Training new model on {self.asset} - {self.timeframe}") 
+            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, training=True)
+            self.torchnn.save_checkpoint(model_path)
 
         # Eval and predict
         self.torchnn.evaluation()
