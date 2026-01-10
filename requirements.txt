@@ -5,3 +5,4 @@ dash
 matplotlib
 pytest
 torch
+pyfiglet

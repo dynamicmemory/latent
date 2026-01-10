@@ -10,6 +10,7 @@ from src.strategy import Strategy
 from src.riskCalculator import RiskCalculator
 
 import os
+from datetime import datetime
 # Hard coded for testing, will be passed in or initiated via user.
 asset = "BTCUSDT"
 timeframe = "15"
@@ -112,3 +113,44 @@ class Agent:
         print(f"Stop Level:\t${stop}")
         print(f"Target pri:\t${target}")
         print(f"Size of Pos:\t${size}")
+
+
+    def list_models(self, model_path: str) -> list:
+        models = []
+
+        if not os.path.exists(model_path):
+            return models 
+
+        for fname in os.listdir(model_path):
+            if not fname.endswith(".pth"):
+                continue 
+
+            path = os.path.join(model_path, fname)
+            mtime = os.path.getmtime(path)
+            last_modified = datetime.fromtimestamp(mtime)
+
+            models.append({
+                "name": fname,
+                "path": path, 
+                "last_modified": last_modified,
+            })
+
+        models.sort(key=lambda x: x["last_modified"], reverse=True)
+        return models
+
+
+    def print_models(self, models) -> None:
+        if not models:
+            print("No models found.")
+            return 
+
+        for i, m in enumerate(models):
+            print(f"{i+1}. {m['name']}\t"
+                  f"Last updated: {m['last_modified'].strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+        
+
+    
+
+

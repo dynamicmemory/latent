@@ -127,12 +127,10 @@ def run_maintenance() -> None:
             input("\n>> Hit enter to continue")
         elif choice == 2:
             agent = Agent()
-            mod = agent.list_models("./models")
-            agent.print_models(mod)
             
             # Print out a list of all models and the last time they were updated
             # Allow retraining on any or model
-            print("\nThe engineer is currently cooking this feature up!")
+            print("The engineer is currently cooking this feature up!")
             input("\n>> Hit enter to continue")
         else:
             return;
