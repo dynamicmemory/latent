@@ -144,13 +144,33 @@ class Agent:
             print("No models found.")
             return 
 
-        for i, m in enumerate(models):
-            print(f"{i+1}. {m['name']}\t"
+        i:int = 1
+        for m in models:
+            print(f"{i}. {m['name']}\t"
                   f"Last updated: {m['last_modified'].strftime('%Y-%m-%d %H:%M:%S')}")
-
+            i +=1
+        print(f"{i}. Return to maintenance menu.\n")
 
         
 
+    def retrain(self, model_path):
+        # Get data
+        self.dbm = DatabaseManager(self.asset, self.timeframe)
+
+        # Engineer features
+        self.features = Features(self.dbm.get_dataframe())
+        X, y = self.features.run_features()
+
+        # Prep data for the model
+        self.mlt = MachLearnTools(X, y)
+        X_train, X_test, y_train, y_test = self.mlt.timeseries_pipeline()
+
+        print(f"Retraining model {self.asset} - {self.timeframe}") 
+
+        self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, training=True)
+        self.torchnn.save_checkpoint(model_path)
+
+        print(f"\nModel has been retrained successfull.\n")
     
 
 

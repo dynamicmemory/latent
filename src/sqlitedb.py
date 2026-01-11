@@ -196,6 +196,8 @@ class DatabaseManager:
         """
         self.database.open()
         rows: list[tuple] = self.database.fetch_all_rows()
+        for row in rows:
+            print(row)
         self.database.close()
         columns = ["timestamp", "open", "high", "low", "close", "volume"]
         df = pd.DataFrame(rows, columns=columns)

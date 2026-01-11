@@ -129,10 +129,23 @@ def run_maintenance() -> None:
             agent = Agent()
             mod = agent.list_models("./models")
             agent.print_models(mod)
-            
-            # Print out a list of all models and the last time they were updated
-            # Allow retraining on any or model
-            print("\nThe engineer is currently cooking this feature up!")
+
+            print(len(mod))
+            if len(mod) == 0:
+                print("\nThere are no models to retrain, go create one... blah blah.")
+                return;
+
+            print("\nWhich model would you like to retrain\n")
+            model = get_menu_selection(len(mod)+1)
+            if model == len(mod)+1:
+                break
+
+            choosen_model = mod[model-1]['name']
+            a = choosen_model.split("-")[0]
+            t = choosen_model.split("-")[1]
+            agent = Agent(a, t)
+            agent.retrain(f"./models/{a}-{t}-model.pth")
+                
             input("\n>> Hit enter to continue")
         else:
             return;
