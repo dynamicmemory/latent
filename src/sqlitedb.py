@@ -185,7 +185,7 @@ class DatabaseManager:
         return nrows
 
 
-    def get_dataframe(self):
+    def get_dataframe(self, show:bool=False):
         """
         Converts all rows in a database table to a pandas dataframe with the 
         timestamps as the indexes.
@@ -196,8 +196,12 @@ class DatabaseManager:
         """
         self.database.open()
         rows: list[tuple] = self.database.fetch_all_rows()
-        for row in rows:
-            print(row)
+
+        # Print the df is asked too
+        if show:
+            for row in rows:
+                print(row)
+
         self.database.close()
         columns = ["timestamp", "open", "high", "low", "close", "volume"]
         df = pd.DataFrame(rows, columns=columns)

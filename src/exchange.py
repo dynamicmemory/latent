@@ -1,8 +1,12 @@
-# TODO: Auth, Personal account ops, fix the ohlc functions since migration
 from __future__ import annotations
 from sys import exception
 from typing import TYPE_CHECKING
 import requests as r
+import time 
+import hashlib
+import hmac 
+import json 
+
 
 if TYPE_CHECKING:
     from requests import Response
@@ -10,10 +14,34 @@ if TYPE_CHECKING:
 
 class Exchange:
 
-    def __init__(self, symbol: str, interval: str):
-        self.symbol: str = symbol 
-        self.interval: str = interval
-        self.base_url: str = "https://api.bybit.com"
+    # Dont assign none, have a default symbol, and interval. Figure out the best 
+    # way once auth is built out
+    def __init__(self, symbol:str|None=None, interval:str|None=None, 
+                 api_key:str|None=None, api_secret:str|None=None, 
+                 testnet:bool=False):
+
+        self.symbol: str|None = symbol 
+        self.interval: str|None = interval
+        self.api_key: str|None = api_key
+        self.api_secret: str|None = api_secret
+        self.base_url: str = self.set_base_url(testnet)
+
+        # Maybe abstract to function 
+        self.timestamp: str = str(int(time.time() *1000))
+        self.recieve_window: str = str(5000)
+        
+
+    def set_base_url(self, testnet:bool) -> str:
+        """ Sets the base url for the class
+
+        Args:
+            testnet - if True, base url will point to the testnet website, 
+                      otherwise the normal exchange will be set
+        """
+        if testnet:
+            return "https://api-testnet.bybit.com"
+        else:
+            return "https://api.bybit.com"
 
 
     def make_request(self, method: str, url: str, params: dict) -> dict:
@@ -48,6 +76,7 @@ class Exchange:
         results = json["result"]["list"]
         results.reverse()
         return results
+
 
     def get_closed_candles(self, limit=1000) -> list|None:
         """
@@ -100,12 +129,66 @@ class Exchange:
         return results
 
 
-# ---- TRADE OPERATIONS ----
-# ---- ACCOUNT OPERATIONS ----
+# ----------------------- AUTH RELATED FUNCTIONS & APIS -----------------------
+    
 
-    # Auth
-    # get account details
-    # get order details 
-    # get position details 
-    # make a trade 
+    def auth_connection(self):
+        """ 
+        Called to pass in and api key and secret after an exchange object 
+        has already been created, may not be usful to the newer design
+        """
+        pass 
 
+    def generate_auth_signature(self, params:str) :
+        """
+        Generates a hash signature of your secret key to send to the exchange
+
+        Args:
+            params - the body of your request for the exchange, needed to be 
+                     encoded into the hash.
+        Returns:
+            signature - your secret key and requests hashed for the exchange
+        """
+        if self.api_secret is None or self.api_key is None: 
+            return -1
+
+        m: str = self.timestamp + self.api_key + self.recieve_window + params
+        sig = hmac.new(bytes(self.api_secret, "utf-8"), 
+                       m.encode("utf-8"),
+                       hashlib.sha256).hexdigest()
+        return sig
+
+
+    def make_auth_request(self, params:str):
+        """
+        May fuse with make_request above, just change to pass in auth treu or false
+        """
+        if not isinstance(self.generate_auth_signature(params), str):
+            #handle no api set 
+            pass 
+
+        pass
+    
+    def get_balance(self):
+        pass
+
+    def get_position(self):
+        pass 
+
+    def get_orders(self):
+        pass 
+
+    def get_last_pnl(self):
+        pass 
+
+    def limit_order(self):
+        pass 
+
+    def market_order(self):
+        pass 
+
+    def cancel_order(self):
+        pass 
+
+    def cancel_all_orders(self):
+        pass 
