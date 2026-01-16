@@ -147,10 +147,12 @@ class Exchange:
             params - the body of your request for the exchange, needed to be 
                      encoded into the hash.
         Returns:
-            signature - your secret key and requests hashed for the exchange
+            signature - your secret key and requests hashed for the exchange on 
+                        success and -1 as an int on failure.
         """
         if self.api_secret is None or self.api_key is None: 
-            return -1
+            print("Api key or secret has not been set")
+            return 0
 
         m: str = self.timestamp + self.api_key + self.recieve_window + params
         sig = hmac.new(bytes(self.api_secret, "utf-8"), 
@@ -159,18 +161,51 @@ class Exchange:
         return sig
 
 
-    def make_auth_request(self, params:str):
+    def make_auth_request(self, method:str, url:str, params:str):
         """
         May fuse with make_request above, just change to pass in auth treu or false
         """
-        if not isinstance(self.generate_auth_signature(params), str):
+        signature: str|int = self.generate_auth_signature(params)
+        # print(signature)
+        # -1 returned on failure, failure if api key not set.
+        if not isinstance(signature, str):
             #handle no api set 
-            pass 
+            return 0
 
-        pass
+        self.timestamp = str(int(time.time() * 1000))
+
+        headers = {
+            "X-BAPI-API-KEY": self.api_key,
+            "X-BAPI-SIGN": signature,
+            "X-BAPI-SIGN-TYPE": '2',
+            "X-BAPI-TIMESTAMP": self.timestamp,
+            "X-BAPI-RECV-WINDOW": self.recieve_window,
+            "Content-Type": "application/json"
+        }
+
+        if method == "GET":
+            response = r.get(self.base_url + url + "?" + params, headers=headers).json()
+        elif method == "POST":
+            response = r.post(self.base_url + url, headers=headers, data=params).json()
+        else: 
+            response = 0 
+
+        return response
+
     
-    def get_balance(self):
-        pass
+    def get_balance(self, account_type:str="UNIFIED", coin:str="USDT") -> int:
+        """ Gets the wallet balance of the account """
+        # params = f"accountType={account_type}&coin={coin}"
+        params = f"accountType={account_type}"
+        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params) 
+        if req["retCode"] != 0:
+            print(f"Exchange error\ncode: {req["retCode"]}\nmessage: {req["retMsg"]}")
+            return -1
+
+        res = req#["result"]["list"][0]["coin"][0]["walletBalance"]
+
+        return res
+
 
     def get_position(self):
         pass 

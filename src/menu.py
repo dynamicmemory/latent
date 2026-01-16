@@ -1,4 +1,5 @@
 # BEFORE I GET CARRIED AWAY.... YES WE WILL MAKE A MENU MANAGER, JUST FINISH THIS AS IS FOR NOW.
+from src.exchange import Exchange
 from src.agent import Agent
 from src.sqlitedb import DatabaseManager
 import pyfiglet
@@ -62,9 +63,25 @@ def run_main_menu() -> None:
 
 
 def manage_accout() -> None:
-    print("Feature currently under construction")
-    input("\nHit enter to continue")
-    pass
+    """ """
+    options:int = 2 
+    while True:
+        print_banner("ACCOUNT")
+        dynamic_fprint(account_menu)
+        choice = get_menu_selection(options)
+
+        # Temporary Testnet only api keys for development, test net access only
+        # Swap to env var once testing complete
+        if choice == 1: 
+            e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
+                         api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
+                         testnet=True)
+            res = e.get_balance()
+            print(res)
+        elif choice == 2:
+            break 
+        
+        input("\n>> Hit enter to continue")
 
 
 def run_predict() -> None:
@@ -130,7 +147,7 @@ def run_maintenance() -> None:
             mod = agent.list_models("./models")
             agent.print_models(mod)
 
-            print(len(mod))
+            # print(len(mod))
             if len(mod) == 0:
                 print("\nThere are no models to retrain, go create one... blah blah.")
                 return;
@@ -182,7 +199,9 @@ main_menu: str = \
 7. Settings
 8. Exit"""
 
-account_menu: str = """"""
+account_menu: str = """
+1. Get balance
+2. Return to main menu"""
 
 pred_menu: str = \
 """Current Asset: {0} | Current Timeframe: {1}\n

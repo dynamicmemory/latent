@@ -146,7 +146,7 @@ class Agent:
 
         i:int = 1
         for m in models:
-            print(f"{i}. {m['name']}\t"
+            print(f"{i}. {m['name']}\t\t"
                   f"Last updated: {m['last_modified'].strftime('%Y-%m-%d %H:%M:%S')}")
             i +=1
         print(f"{i}. Return to maintenance menu.\n")
