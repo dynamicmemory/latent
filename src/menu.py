@@ -64,7 +64,8 @@ def run_main_menu() -> None:
 
 def manage_accout() -> None:
     """ """
-    options:int = 2 
+    options:int = 3 
+
     while True:
         print_banner("ACCOUNT")
         dynamic_fprint(account_menu)
@@ -74,11 +75,16 @@ def manage_accout() -> None:
         # Swap to env var once testing complete
         if choice == 1: 
             e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
-                         api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
-                         testnet=True)
-            res = e.get_balance()
-            print(res)
+                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
+                 testnet=True)
+            
+            e.get_all_balances()
         elif choice == 2:
+            e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
+                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
+                 testnet=True)
+            print(e.get_position())
+        elif choice == 3:
             break 
         
         input("\n>> Hit enter to continue")
@@ -200,8 +206,9 @@ main_menu: str = \
 8. Exit"""
 
 account_menu: str = """
-1. Get balance
-2. Return to main menu"""
+1. Show account balance 
+2. Show open positions
+3. Return to main menu"""
 
 pred_menu: str = \
 """Current Asset: {0} | Current Timeframe: {1}\n

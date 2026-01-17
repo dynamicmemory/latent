@@ -192,8 +192,8 @@ class Exchange:
 
         return response
 
-    
-    def get_balance(self, account_type:str="UNIFIED", coin:str="USDT") -> int:
+
+    def get_balance(self, account_type:str="UNIFIED", coin:str="USDT") -> float|int:
         """ Gets the wallet balance of the account """
         # params = f"accountType={account_type}&coin={coin}"
         params = f"accountType={account_type}"
@@ -202,13 +202,15 @@ class Exchange:
             print(f"Exchange error\ncode: {req["retCode"]}\nmessage: {req["retMsg"]}")
             return -1
 
-        res = req#["result"]["list"][0]["coin"][0]["walletBalance"]
+        res = req["result"]["list"][0]["coin"][0]["walletBalance"]
+        return round(float(res),4)
 
+
+    def get_position(self, category:str="linear", symbol:str="BTCUSDT"):
+        params:str=f"category={category}&symbol={symbol}"
+        res = self.make_auth_request("GET", "/v5/position/list", params)
         return res
 
-
-    def get_position(self):
-        pass 
 
     def get_orders(self):
         pass 
@@ -227,3 +229,31 @@ class Exchange:
 
     def cancel_all_orders(self):
         pass 
+
+
+    def get_all_balances(self, account_type:str="UNIFIED") -> int|None:
+        """ Prints the total account balance as well as each coins total balance"""
+        params: str = f"accountType={account_type}"
+        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params)
+        if req["retCode"] != 0:
+            print(f"Exchange error\ncode: {req["retCode"]}\nmessage: {req["retMsg"]}")
+            return -1
+
+        # return req["result"]["list"][0]
+        self.print_all_balances(req["result"]["list"][0])
+
+
+    def print_all_balances(self, res) -> None:
+        coins = res["coin"]
+        print(f"\n{"Coin":<6}{"Amount":>14}{"USD Val":>14}")
+        print("-"*34)
+        for coin in coins:
+            name:str = coin["coin"]
+            amount:float = float(coin["walletBalance"])
+            usdtot:float = float(coin["usdValue"])
+            if name != "USDT":
+                print(f"{name:<6}{amount:>14,.4f}{usdtot:>14,.2f}")
+            else:
+                print(f"{name:<6}{amount:>14,.2f}{usdtot:>14,.2f}")
+        print("-"*34)
+        print(f"{'Total':<6}{'-':>14}{float(res['totalEquity']):>14,.2f}")
