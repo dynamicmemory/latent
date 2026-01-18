@@ -7,7 +7,6 @@ import hashlib
 import hmac 
 import json 
 
-
 if TYPE_CHECKING:
     from requests import Response
 
@@ -154,6 +153,9 @@ class Exchange:
             print("Api key or secret has not been set")
             return 0
 
+        # Recalc timestamp so that each request falls within recieve window
+        self.timestamp = str(int(time.time() * 1000))
+
         m: str = self.timestamp + self.api_key + self.recieve_window + params
         sig = hmac.new(bytes(self.api_secret, "utf-8"), 
                        m.encode("utf-8"),
@@ -195,15 +197,9 @@ class Exchange:
 
     def get_balance(self, account_type:str="UNIFIED", coin:str="USDT") -> float|int:
         """ Gets the wallet balance of the account """
-        # params = f"accountType={account_type}&coin={coin}"
-        params = f"accountType={account_type}"
-        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params) 
-        if req["retCode"] != 0:
-            print(f"Exchange error\ncode: {req["retCode"]}\nmessage: {req["retMsg"]}")
-            return -1
-
-        res = req["result"]["list"][0]["coin"][0]["walletBalance"]
-        return round(float(res),4)
+        params = f"accountType={account_type}&coin={coin}"
+        res = self.make_auth_request("GET", "/v5/account/wallet-balance", params) 
+        return res
 
 
     def get_position(self, category:str="linear", symbol:str="BTCUSDT"):
@@ -213,47 +209,85 @@ class Exchange:
 
 
     def get_orders(self):
+
         pass 
+
 
     def get_last_pnl(self):
         pass 
 
-    def limit_order(self):
-        pass 
 
-    def market_order(self):
-        pass 
+    def limit_order(self, category:str, symbol:str, side:str, qty:str, price:str):
+        """ Sends a limit order to the exchange 
+
+        Args:
+            category - market type ('linear', 'inverse', 'spot', etc)
+            symbol - Trading pair, 'BTCUSDT', etc
+            side - Direction of trade 'Buy' or 'Sell'
+            qty - Order quanity in numerator value
+            price - Order price
+        """
+        params = json.dumps({"category":category,
+                            "symbol":symbol,
+                            "side":side,
+                            "orderType":"Limit",
+                            "qty":qty,
+                            "price":price,
+                            "timeInForce":"PostOnly", 
+                             })
+        req = self.make_auth_request("POST", "/v5/order/create", params)
+        return req
+         
+
+    # Not tested, test when ready to market buy or sell
+    def market_order(self, category:str, symbol:str, side:str, qty:str):
+        """ Sends a limit order to the exchange 
+
+        Args:
+            category - market type ('linear', 'inverse', 'spot', etc)
+            symbol - Trading pair, 'BTCUSDT', etc
+            side - Direction of trade 'Buy' or 'Sell'
+            qty - Order quanity in numerator value
+        """
+        params = json.dumps({"category":category,
+                            "symbol":symbol,
+                            "side":side,
+                            "orderType":"Market",
+                            "qty":qty,
+                             })
+        req = self.make_auth_request("POST", "/v5/order/create", params)
+        return req
+
+
+    def fetch_orders(self, category:str, symbol:str):
+        params = json.dumps({"category":category,
+                            "symbol":symbol,
+                             "openOnly":"0"
+                             })
+        req = self.make_auth_request("GET", "/v5/order/realtime", params)
+        return req
+        
 
     def cancel_order(self):
+
         pass 
 
-    def cancel_all_orders(self):
-        pass 
+        
+    def cancel_all_orders(self, category:str, symbol:str):
+        """ Cancels all orders the account has open
+        
+        Args:
+            category - market type ('linear', 'inverse', 'spot', etc)
+            symbol - Trading pair, 'BTCUSDT', etc
+        """
+        params = json.dumps({"category": category,
+                             "symbol":symbol,})
+        req = self.make_auth_request("POST", "/v5/order/cancel-all", params)
+        return req
 
 
     def get_all_balances(self, account_type:str="UNIFIED") -> int|None:
         """ Prints the total account balance as well as each coins total balance"""
         params: str = f"accountType={account_type}"
         req = self.make_auth_request("GET", "/v5/account/wallet-balance", params)
-        if req["retCode"] != 0:
-            print(f"Exchange error\ncode: {req["retCode"]}\nmessage: {req["retMsg"]}")
-            return -1
-
-        # return req["result"]["list"][0]
-        self.print_all_balances(req["result"]["list"][0])
-
-
-    def print_all_balances(self, res) -> None:
-        coins = res["coin"]
-        print(f"\n{"Coin":<6}{"Amount":>14}{"USD Val":>14}")
-        print("-"*34)
-        for coin in coins:
-            name:str = coin["coin"]
-            amount:float = float(coin["walletBalance"])
-            usdtot:float = float(coin["usdValue"])
-            if name != "USDT":
-                print(f"{name:<6}{amount:>14,.4f}{usdtot:>14,.2f}")
-            else:
-                print(f"{name:<6}{amount:>14,.2f}{usdtot:>14,.2f}")
-        print("-"*34)
-        print(f"{'Total':<6}{'-':>14}{float(res['totalEquity']):>14,.2f}")
+        return req

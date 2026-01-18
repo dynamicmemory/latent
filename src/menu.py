@@ -2,6 +2,7 @@
 from src.exchange import Exchange
 from src.agent import Agent
 from src.sqlitedb import DatabaseManager
+from src.accountManager import AccountManager
 import pyfiglet
 
 USERNAME:str = "HUMAN OVERLORD"   # Temp
@@ -49,7 +50,7 @@ def run_main_menu() -> None:
         choice = get_menu_selection(options)
 
         # TODO: Change to a dict and run choice from the dict
-        if   choice == 1: manage_accout()
+        if   choice == 1: manage_account()
         elif choice == 2: run_predict()
         elif choice == 3: start_engine() 
         elif choice == 4: stop_engine() 
@@ -62,9 +63,15 @@ def run_main_menu() -> None:
     exit()
 
 
-def manage_accout() -> None:
+def manage_account() -> None:
     """ """
-    options:int = 3 
+    options:int = 6 
+    account = AccountManager(api_key="KCsB4A1InMGHlCVkoH",
+                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
+                 testnet=True)
+    e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
+                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
+                 testnet=True)
 
     while True:
         print_banner("ACCOUNT")
@@ -74,17 +81,17 @@ def manage_accout() -> None:
         # Temporary Testnet only api keys for development, test net access only
         # Swap to env var once testing complete
         if choice == 1: 
-            e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
-                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
-                 testnet=True)
-            
-            e.get_all_balances()
+            account.print_all_balances()
         elif choice == 2:
-            e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
-                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
-                 testnet=True)
-            print(e.get_position())
+            e.limit_order("linear", "BTCUSDT", "Buy", "0.01", "75000")
         elif choice == 3:
+            print(e.fetch_orders("linear", "BTCUSDT"))
+            e.cancel_order()
+        elif choice == 4:
+            e.cancel_all_orders("linear", "BTCUSDT")
+        elif choice == 5:
+            e.get_position()
+        elif choice == 6:
             break 
         
         input("\n>> Hit enter to continue")
@@ -207,8 +214,11 @@ main_menu: str = \
 
 account_menu: str = """
 1. Show account balance 
-2. Show open positions
-3. Return to main menu"""
+2. Make limit order 
+3. Cancel order 
+4. Cancel all orders
+5. Check position
+6. Return to main menu"""
 
 pred_menu: str = \
 """Current Asset: {0} | Current Timeframe: {1}\n
