@@ -195,29 +195,50 @@ class Exchange:
         return response
 
 
-    def get_balance(self, account_type:str="UNIFIED", coin:str="USDT") -> float|int:
+    # May be redundant, unsure on how use will go with all or specific coin only
+    def fetch_balance(self, account_type:str="UNIFIED", coin:str="USDT") -> float|int:
         """ Gets the wallet balance of the account """
         params = f"accountType={account_type}&coin={coin}"
-        res = self.make_auth_request("GET", "/v5/account/wallet-balance", params) 
-        return res
+        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params) 
+        return req
 
 
-    def get_position(self, category:str="linear", symbol:str="BTCUSDT"):
+    def fetch_all_balances(self, account_type:str="UNIFIED") -> int|None:
+        """ Prints the total account balance as well as each coins total balance"""
+        params: str = f"accountType={account_type}"
+        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params)
+        return req
+
+
+    def fetch_position(self, category:str="linear", symbol:str="BTCUSDT"):
         params:str=f"category={category}&symbol={symbol}"
-        res = self.make_auth_request("GET", "/v5/position/list", params)
-        return res
+        req = self.make_auth_request("GET", "/v5/position/list", params)
+        return req
 
 
-    def get_orders(self):
+    def fetch_all_positions(self, category:str="linear", settleCoin:str="USDT"):
+        params:str=f"category={category}&settleCoin={settleCoin}"
+        req = self.make_auth_request("GET", "/v5/position/list", params)
+        return req
 
+
+    def fetch_orders(self, category:str, symbol:str):
+        """ Returns all orders for the given symbol on the given contract
+
+        Args:
+            category - market type ('linear', 'inverse', 'spot', etc)
+            symbol - Trading pair, 'BTCUSDT', etc
+        """
+        params = f"category={category}&symbol={symbol}&openOnly={0}"
+        req = self.make_auth_request("GET", "/v5/order/realtime", params)
+        return req
+
+
+    def fetch_last_pnl(self):
         pass 
 
 
-    def get_last_pnl(self):
-        pass 
-
-
-    def limit_order(self, category:str, symbol:str, side:str, qty:str, price:str):
+    def create_limit_order(self, category:str, symbol:str, side:str, qty:str, price:str):
         """ Sends a limit order to the exchange 
 
         Args:
@@ -240,7 +261,7 @@ class Exchange:
          
 
     # Not tested, test when ready to market buy or sell
-    def market_order(self, category:str, symbol:str, side:str, qty:str):
+    def create_market_order(self, category:str, symbol:str, side:str, qty:str):
         """ Sends a limit order to the exchange 
 
         Args:
@@ -259,16 +280,7 @@ class Exchange:
         return req
 
 
-    def fetch_orders(self, category:str, symbol:str):
-        params = json.dumps({"category":category,
-                            "symbol":symbol,
-                             "openOnly":"0"
-                             })
-        req = self.make_auth_request("GET", "/v5/order/realtime", params)
-        return req
-        
-
-    def cancel_order(self):
+    def cancel_order(self, orderId:str):
 
         pass 
 
@@ -286,8 +298,4 @@ class Exchange:
         return req
 
 
-    def get_all_balances(self, account_type:str="UNIFIED") -> int|None:
-        """ Prints the total account balance as well as each coins total balance"""
-        params: str = f"accountType={account_type}"
-        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params)
-        return req
+

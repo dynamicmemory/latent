@@ -66,6 +66,8 @@ def run_main_menu() -> None:
 def manage_account() -> None:
     """ """
     options:int = 6 
+    # Temporary Testnet only api keys for development, test net access only
+    # Swap to env var once testing complete
     account = AccountManager(api_key="KCsB4A1InMGHlCVkoH",
                  api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
                  testnet=True)
@@ -78,19 +80,18 @@ def manage_account() -> None:
         dynamic_fprint(account_menu)
         choice = get_menu_selection(options)
 
-        # Temporary Testnet only api keys for development, test net access only
-        # Swap to env var once testing complete
         if choice == 1: 
             account.print_all_balances()
+            account.print_all_positions()
+            account.print_orders("linear", "BTCUSDT")
         elif choice == 2:
-            e.limit_order("linear", "BTCUSDT", "Buy", "0.01", "75000")
+            e.create_limit_order("linear", "BTCUSDT", "Buy", "0.01", "75000")
         elif choice == 3:
-            print(e.fetch_orders("linear", "BTCUSDT"))
-            e.cancel_order()
+            pass
         elif choice == 4:
             e.cancel_all_orders("linear", "BTCUSDT")
         elif choice == 5:
-            e.get_position()
+            e.fetch_position()
         elif choice == 6:
             break 
         
@@ -213,9 +214,9 @@ main_menu: str = \
 8. Exit"""
 
 account_menu: str = """
-1. Show account balance 
-2. Make limit order 
-3. Cancel order 
+1. Account overview 
+2. Place limit order 
+3. Show positions 
 4. Cancel all orders
 5. Check position
 6. Return to main menu"""
