@@ -81,17 +81,18 @@ def manage_account() -> None:
         choice = get_menu_selection(options)
 
         if choice == 1: 
+            # Refine this into a single call to account
             account.print_all_balances()
-            account.print_all_positions()
+            account.print_all_usdt_positions()
             account.print_orders("linear", "BTCUSDT")
         elif choice == 2:
-            e.create_limit_order("linear", "BTCUSDT", "Buy", "0.01", "75000")
+            account.create_limit_order()
         elif choice == 3:
-            pass
+            account.create_market_order()
         elif choice == 4:
-            e.cancel_all_orders("linear", "BTCUSDT")
+            account.cancel_order()
         elif choice == 5:
-            e.fetch_position()
+            e.cancel_all_orders("linear", "BTCUSDT")
         elif choice == 6:
             break 
         
@@ -216,9 +217,9 @@ main_menu: str = \
 account_menu: str = """
 1. Account overview 
 2. Place limit order 
-3. Show positions 
-4. Cancel all orders
-5. Check position
+3. Place market order 
+4. Cancel order 
+5. Cancel all orders
 6. Return to main menu"""
 
 pred_menu: str = \

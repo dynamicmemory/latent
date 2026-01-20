@@ -204,20 +204,27 @@ class Exchange:
 
 
     def fetch_all_balances(self, account_type:str="UNIFIED") -> int|None:
-        """ Prints the total account balance as well as each coins total balance"""
+        """Returns json blob of all balances for the account"""
         params: str = f"accountType={account_type}"
         req = self.make_auth_request("GET", "/v5/account/wallet-balance", params)
         return req
 
 
     def fetch_position(self, category:str="linear", symbol:str="BTCUSDT"):
+        """ Returns the position(s) for the provide symbol
+
+        Args:
+            category - market type ('linear', 'inverse', 'spot', etc)
+            symbol - Trading pair, 'BTCUSDT', etc
+        """
         params:str=f"category={category}&symbol={symbol}"
         req = self.make_auth_request("GET", "/v5/position/list", params)
         return req
 
 
-    def fetch_all_positions(self, category:str="linear", settleCoin:str="USDT"):
-        params:str=f"category={category}&settleCoin={settleCoin}"
+    def fetch_all_usdt_positions(self, category:str="linear"):
+        """ Returns json blob with all usdt based positions"""
+        params:str=f"category={category}&settleCoin=USDT"
         req = self.make_auth_request("GET", "/v5/position/list", params)
         return req
 
@@ -238,7 +245,7 @@ class Exchange:
         pass 
 
 
-    def create_limit_order(self, category:str, symbol:str, side:str, qty:str, price:str):
+    def send_limit_order(self, category:str, symbol:str, side:str, qty:str, price:str):
         """ Sends a limit order to the exchange 
 
         Args:
@@ -261,7 +268,7 @@ class Exchange:
          
 
     # Not tested, test when ready to market buy or sell
-    def create_market_order(self, category:str, symbol:str, side:str, qty:str):
+    def send_market_order(self, category:str, symbol:str, side:str, qty:str):
         """ Sends a limit order to the exchange 
 
         Args:
@@ -280,9 +287,13 @@ class Exchange:
         return req
 
 
-    def cancel_order(self, orderId:str):
-
-        pass 
+    def cancel_order(self, category:str, orderId:str, symbol:str):
+        params = json.dumps({"category":category,
+                             "symbol":symbol,
+                             "orderId":orderId,
+                             })
+        req = self.make_auth_request("POST", "/v5/order/cancel-all", params)
+        return req
 
         
     def cancel_all_orders(self, category:str, symbol:str):
