@@ -9,7 +9,7 @@ USERNAME:str = "HUMAN OVERLORD"   # Temp
 TIME_MAP: dict[int, str] = { 1: "15", 2: "60", 3: "240", 4: "D", 5: "W", 0: "None"}
 ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", 0: "None"}
 
-def print_banner(banner_text:str="SYNTRA SYSTEMS") -> None:
+def print_banner(banner_text:str="MEMORYVOID") -> None:
     """
     Clears the terminal display and prints a banner for the current menu
            

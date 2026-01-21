@@ -138,6 +138,7 @@ class Exchange:
         """
         pass 
 
+
     def generate_auth_signature(self, params:str) :
         """
         Generates a hash signature of your secret key to send to the exchange
@@ -163,9 +164,10 @@ class Exchange:
         return sig
 
 
-    def make_auth_request(self, method:str, url:str, params:str):
+    def make_auth_request(self, method:str, url:str, params:str) -> dict:
         """
-        May fuse with make_request above, just change to pass in auth treu or false
+        May fuse with make_request above, just change to pass in auth true 
+        or false
         """
         signature: str|int = self.generate_auth_signature(params)
         # print(signature)
@@ -185,59 +187,69 @@ class Exchange:
             "Content-Type": "application/json"
         }
 
-        if method == "GET":
-            response = r.get(self.base_url + url + "?" + params, headers=headers).json()
-        elif method == "POST":
-            response = r.post(self.base_url + url, headers=headers, data=params).json()
-        else: 
-            response = 0 
+        try:
+            if method == "GET":
+                response: dict = r.get(self.base_url + url + "?" + params, headers=headers).json()
+            elif method == "POST":
+                response: dict = r.post(self.base_url + url, headers=headers, data=params).json()
+            else: 
+                print("Invalid method")
+                return {"retCode": -1, "retMsg": "Invalid Method"}
+        except r.exceptions.ConnectionError as e:
+            # Create a logs class to store these errors in 
+            return {"retCode": -1, "retMsg": "Could not connect to exchange"}
 
         return response
 
 
     # May be redundant, unsure on how use will go with all or specific coin only
-    def fetch_balance(self, account_type:str="UNIFIED", coin:str="USDT") -> float|int:
-        """ Gets the wallet balance of the account """
-        params = f"accountType={account_type}&coin={coin}"
-        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params) 
+    def fetch_balance(self, account_type:str="UNIFIED", asset:str="USDT") -> dict:
+        """ 
+        Gets the wallet balance for the passed in asset. 
+
+        Args:
+            asset - Name of the asset to retrieve a balance for.
+        """
+        params: str = f"accountType={account_type}&coin={asset}"
+        req: dict = self.make_auth_request("GET", "/v5/account/wallet-balance", params) 
         return req
 
 
-    def fetch_all_balances(self, account_type:str="UNIFIED") -> int|None:
+    def fetch_all_balances(self, account_type:str="UNIFIED") -> dict:
         """Returns json blob of all balances for the account"""
         params: str = f"accountType={account_type}"
-        req = self.make_auth_request("GET", "/v5/account/wallet-balance", params)
+        req: dict = self.make_auth_request("GET", "/v5/account/wallet-balance", params)
         return req
 
 
-    def fetch_position(self, category:str="linear", symbol:str="BTCUSDT"):
+    def fetch_position(self, category:str="linear", symbol:str="BTCUSDT") -> dict:
         """ Returns the position(s) for the provide symbol
 
         Args:
             category - market type ('linear', 'inverse', 'spot', etc)
             symbol - Trading pair, 'BTCUSDT', etc
         """
-        params:str=f"category={category}&symbol={symbol}"
-        req = self.make_auth_request("GET", "/v5/position/list", params)
+        params: str = f"category={category}&symbol={symbol}"
+        req: dict = self.make_auth_request("GET", "/v5/position/list", params)
         return req
 
 
-    def fetch_all_usdt_positions(self, category:str="linear"):
-        """ Returns json blob with all usdt based positions"""
-        params:str=f"category={category}&settleCoin=USDT"
-        req = self.make_auth_request("GET", "/v5/position/list", params)
+    def fetch_all_usdt_positions(self, category:str="linear") -> dict:
+        """ Returns json blob with all USDT based positions"""
+        params: str = f"category={category}&settleCoin=USDT"
+        req: dict = self.make_auth_request("GET", "/v5/position/list", params)
         return req
 
 
-    def fetch_orders(self, category:str, symbol:str):
-        """ Returns all orders for the given symbol on the given contract
+    def fetch_orders(self, category:str, symbol:str) -> dict:
+        """ Returns all open orders for the given symbol.
 
         Args:
             category - market type ('linear', 'inverse', 'spot', etc)
             symbol - Trading pair, 'BTCUSDT', etc
         """
-        params = f"category={category}&symbol={symbol}&openOnly={0}"
-        req = self.make_auth_request("GET", "/v5/order/realtime", params)
+        params: str = f"category={category}&symbol={symbol}&openOnly={0}"
+        req: dict = self.make_auth_request("GET", "/v5/order/realtime", params)
         return req
 
 
@@ -245,7 +257,7 @@ class Exchange:
         pass 
 
 
-    def send_limit_order(self, category:str, symbol:str, side:str, qty:str, price:str):
+    def send_limit_order(self, category:str, symbol:str, side:str, qty:str, price:str) -> dict:
         """ Sends a limit order to the exchange 
 
         Args:
@@ -263,12 +275,12 @@ class Exchange:
                             "price":price,
                             "timeInForce":"PostOnly", 
                              })
-        req = self.make_auth_request("POST", "/v5/order/create", params)
+        req: dict = self.make_auth_request("POST", "/v5/order/create", params)
         return req
          
 
     # Not tested, test when ready to market buy or sell
-    def send_market_order(self, category:str, symbol:str, side:str, qty:str):
+    def send_market_order(self, category:str, symbol:str, side:str, qty:str) -> dict:
         """ Sends a limit order to the exchange 
 
         Args:
@@ -283,20 +295,20 @@ class Exchange:
                             "orderType":"Market",
                             "qty":qty,
                              })
-        req = self.make_auth_request("POST", "/v5/order/create", params)
+        req: dict = self.make_auth_request("POST", "/v5/order/create", params)
         return req
 
 
-    def cancel_order(self, category:str, orderId:str, symbol:str):
+    def cancel_order(self, category:str, orderId:str, symbol:str) -> dict:
         params = json.dumps({"category":category,
                              "symbol":symbol,
                              "orderId":orderId,
                              })
-        req = self.make_auth_request("POST", "/v5/order/cancel-all", params)
+        req: dict = self.make_auth_request("POST", "/v5/order/cancel", params)
         return req
 
         
-    def cancel_all_orders(self, category:str, symbol:str):
+    def cancel_all_orders(self, category:str, symbol:str) -> dict:
         """ Cancels all orders the account has open
         
         Args:
@@ -305,7 +317,7 @@ class Exchange:
         """
         params = json.dumps({"category": category,
                              "symbol":symbol,})
-        req = self.make_auth_request("POST", "/v5/order/cancel-all", params)
+        req: dict = self.make_auth_request("POST", "/v5/order/cancel-all", params)
         return req
 
 

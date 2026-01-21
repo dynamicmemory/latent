@@ -3,6 +3,8 @@
 # the outputs.
 from src.exchange import Exchange
 
+ASSETS: dict = {1: "BTCUSDT"}
+
 class AccountManager:
     def __init__(self, api_key:str, api_secret:str, testnet:bool=False):
         self.api_key:str = api_key
@@ -13,26 +15,26 @@ class AccountManager:
 
 
     def check_retcode(self, response:dict) -> int:
+        """ Checks the retCode response from a query to the exchange """
         if response["retCode"] != 0:
             print(f"Exchange error\ncode: {response["retCode"]}\n\
                     message: {response["retMsg"]}")
-            return 0
-        else:
-            return 1
-
-
-    def print_all_balances(self) -> None:
-        res = self.exchange.fetch_all_balances()
-        if res["retCode"] != 0:
-            print(f"Exchange error\ncode: {res["retCode"]}\nmessage: {res["retMsg"]}")
             return -1
+        else:
+            return 0
+
+
+    def print_all_balances(self) -> None|int:
+        """ Pretty Prints all balances for an account"""
+        res = self.exchange.fetch_all_balances()
+        if self.check_retcode(res) != 0: return -1
         
         coins = res["result"]["list"][0]["coin"]
         total = res["result"]["list"][0]
-        print("-"*70)
+        print("*"*75)
         print("BALANCES")
         print(f"\n{"Coin":<6}{"Amount":>14}{"USD Val":>14}")
-        print("-"*70)
+        print("-"*75)
         for coin in coins:
             name:str = coin["coin"]
             amount:float = float(coin["walletBalance"])
@@ -41,44 +43,21 @@ class AccountManager:
                 print(f"{name:<6}{amount:>14,.4f}{usdtot:>14,.2f}")
             else:
                 print(f"{name:<6}{amount:>14,.2f}{usdtot:>14,.2f}")
-        print("-"*70)
+        print("-"*75)
         print(f"{'Total':<6}{'-':>14}{float(total['totalEquity']):>14,.2f}")
-
-
-    def print_orders(self, category:str, symbol:str) -> None|int|list:
-        res = self.exchange.fetch_orders(category, symbol)
-        if res["retCode"] != 0:
-            print(f"Exchange error\ncode: {res["retCode"]}\nmessage: {res["retMsg"]}")
-            return -1
-
-        orders:list = res["result"]["list"]
-        print("-"*70)
-        print("\nORDERS")
-        print(f"\n{"No":<4}{"Market":<10}{"Type":<10}{"Direction":<12}{"Price":>12}{"Size":>12}{"USD value":>12}")
-        print("-"*70)
-        for n, order in enumerate(orders):
-            s:str = order["symbol"]
-            t:str = order["orderType"]
-            d:str = order["side"]
-            p:float = float(order["price"])
-            q:float = float(order["qty"]) 
-            print(f"{n+1:<4}{s:<10}{t:<10}{d:<12}{p:>12,.2f}{q:>12,.4f}{p*q:>12,.2f}")
-        return orders
+        print()
 
 
     def print_all_usdt_positions(self) -> None|int:
-        """ """
+        """ Pretty Prints all usdt based positions for an account"""
         res = self.exchange.fetch_all_usdt_positions()
-        if res["retCode"]:
-            print(f"Exchange error\ncode: {res["retCode"]}\nmessage: {res["retMsg"]}")
-            return -1
+        if self.check_retcode(res) != 0: return -1
 
-        
         positions:list = res["result"]["list"]
-        print("-"*70)
+        print("*"*75)
         print("\nUSDT POSITIONS")
         print(f"\n{"Market":<9}{"Entry":>10}{"Mark Price":>12}{"Size":>9}{"USD val":>11}{"RPnL":>11}{"UPnL":>11}")
-        print("-"*70)
+        print("-"*75)
         for position in positions:
             s:str = position["symbol"]
             e:float = float(position["avgPrice"])
@@ -87,6 +66,27 @@ class AccountManager:
             r:float = float(position["curRealisedPnl"])
             u:float = float(position["unrealisedPnl"])
             print(f"{s:<9}{e:>10,.2f}{m:>12}{q:>9}{e*q:>11,.2f}{r:>11,.2f}{u:>11,.2f}")
+        print()
+
+
+    def print_orders(self, category:str, symbol:str) -> list|int:
+        """ Pretty Prints all orders for a symbol for an account"""
+        res = self.exchange.fetch_orders(category, symbol)
+        if self.check_retcode(res) != 0: return -1
+
+        orders:list = res["result"]["list"]
+        print("*"*75)
+        print("\nORDERS")
+        print(f"\n{"No":<4}{"Market":<10}{"Type":<10}{"Direction":<12}{"Price":>12}{"Size":>12}{"USD value":>12}")
+        print("-"*75)
+        for n, order in enumerate(orders):
+            s:str = order["symbol"]
+            t:str = order["orderType"]
+            d:str = order["side"]
+            p:float = float(order["price"])
+            q:float = float(order["qty"]) 
+            print(f"{n+1:<4}{s:<10}{t:<10}{d:<12}{p:>12,.2f}{q:>12,.4f}{p*q:>12,.2f}")
+        return orders
 
 
     def get_balance(self, asset="BTCUSDT") -> float: 
@@ -100,25 +100,22 @@ class AccountManager:
             res - float value of account balance for the asset of -1 on failure
         """
         res = self.exchange.fetch_balance(asset)
-        if req["retCode"] != 0:
-            print(f"Exchange error\ncode: {req["retCode"]}\nmessage: {req["retMsg"]}")
-            return -1
+        if self.check_retcode(res) != 0: return -1
 
-        res = req["result"]["list"][0]["coin"][0]["walletBalance"]
+        res = res["result"]["list"][0]["coin"][0]["walletBalance"]
         return round(float(res),4)
 
 
     # This function shouldnt be doing this, it is too much, this class shouldnt 
     # be passing user input, it should only be output info from exchange.
-    def create_limit_order(self) -> None:
+    def create_limit_order(self) -> int:
         """ Asks user for order details and places order with the exchange """
-        assets: dict = {1:"BTCUSDT"}
-        options:int = len(assets)
+        options:int = len(ASSETS)
         choice:int = 0
         while choice < 1 or choice > options:
             print("Select the asset: ")
-            for key in assets.keys():
-                print(f"{key}. {assets[key]}")
+            for key in ASSETS.keys():
+                print(f"{key}. {ASSETS[key]}")
             try:
                 choice = int(input(">> "))
             except TypeError as e: 
@@ -145,22 +142,20 @@ class AccountManager:
         print("Enter the amount: ")
         size = input(">> ")
 
-        res = self.exchange.send_limit_order("linear", assets[choice], side, size, price)
-        if res["retCode"] == 0:
-            print("Order Successfully set")
-        else:
-            print(f"Exchange error\ncode: {req["retCode"]}\nmessage: {req["retMsg"]}")
+        res = self.exchange.send_limit_order("linear", ASSETS[choice], side, size, price)
+        if self.check_retcode(res) != 0: return -1
+        print("Order Successfully set")
+        return 0
 
 
     # Copy paste of limit order and should not go here.
-    def create_market_order(self) -> None:
-        assets: dict = {1:"BTCUSDT"}
-        options:int = len(assets)
+    def create_market_order(self) -> int:
+        options:int = len(ASSETS)
         choice:int = 0
         while choice < 1 or choice > options:
             print("Select the asset for market order: ")
-            for key in assets.keys():
-                print(f"{key}. {assets[key]}")
+            for key in ASSETS.keys():
+                print(f"{key}. {ASSETS[key]}")
             try:
                 choice = int(input(">> "))
             except TypeError as e: 
@@ -184,29 +179,28 @@ class AccountManager:
         print("Enter the amount: ")
         size = input(">> ")
 
-        res = self.exchange.send_market_order("linear", assets[choice], side, size)
-        if res["retCode"] == 0:
-            print("Order Successfully set")
-        else:
-            print(f"Exchange error\ncode: {res["retCode"]}\nmessage: {res["retMsg"]}")
+        res = self.exchange.send_market_order("linear", ASSETS[choice], side, size)
+        if self.check_retcode(res) != 0: return -1
+        print("Order Successfully set")
+        return 0
     
     # This is written so poorly as well
-    def cancel_order(self, category:str="linear") -> None:
-
-        assets: dict = {1:"BTCUSDT"}
-        options:int = len(assets)
+    def cancel_order(self, category:str="linear") -> int:
+        options:int = len(ASSETS)
         choice:int = 0
         while choice < 1 or choice > options:
             print("Select the asset: ")
-            for key in assets.keys():
-                print(f"{key}. {assets[key]}")
+            for key in ASSETS.keys():
+                print(f"{key}. {ASSETS[key]}")
             try:
                 choice = int(input(">> "))
             except TypeError as e: 
                 print("Pick a number from the list of options")
-        orders:list = self.print_orders(category, assets[choice])
+        orders:list|int = self.print_orders(category, ASSETS[choice])
 
         n = 0
+        if not isinstance(orders, list):
+            return -1
         if len(orders) == 0:
             print("There are no orders to cancel")
             return -1
@@ -220,8 +214,9 @@ class AccountManager:
             except TypeError as e:
                 print("Enter a number only")
 
-        res = self.exchange.cancel_order(category, orders[n-1]["orderId"], assets[choice])
-        if res["retCode"] == 0:
-            print("Successfully cancelled order")
-        else:
-            print(f"Exchange error\ncode: {res["retCode"]}\nmessage: {res["retMsg"]}")
+        res = self.exchange.cancel_order(category, orders[n-1]["orderId"], ASSETS[choice])
+        if self.check_retcode(res) != 0: 
+            return -1
+
+        print("Successfully cancelled order")
+        return 0
