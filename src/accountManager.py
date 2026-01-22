@@ -1,9 +1,7 @@
-# This class is doing too much and mixing too many concerns, it should be 
-# managing responses from the exchange only and either printing or handling 
-# the outputs.
+# TODO: Change how we are pretty printing, perhaps dictionaries or move out of class
+# TODO: If an account manager menu class is made, move all pretty printing out 
+#       of this class and only returned processed exchange reponses.
 from src.exchange import Exchange
-
-ASSETS: dict = {1: "BTCUSDT"}
 
 class AccountManager:
     def __init__(self, api_key:str, api_secret:str, testnet:bool=False):
@@ -24,6 +22,76 @@ class AccountManager:
             return 0
 
 
+    def get_balance(self, asset="BTCUSDT") -> float: 
+        """ 
+        Returns the float value balance of the passed in symbol 
+
+        Args: 
+            asset - the asset querying balance for
+
+        Returns:
+            res - float value of account balance for the asset of -1 on failure
+        """
+        res = self.exchange.fetch_balance(asset)
+        if self.check_retcode(res) != 0: return -1
+
+        res = res["result"]["list"][0]["coin"][0]["walletBalance"]
+        return round(float(res),4)
+
+
+    def create_limit_order(self, asset, side, size, price) -> int:
+        """ 
+        Sends a limit order to the exchange for execution
+
+        Args: 
+            asset - The asset to place an order for, 'BTCUSDT' for example
+            side - Buy or Sell
+            size - The size of the order in terms of the trading assest
+            price - The price to set the order at 
+
+        Returns:
+            -1 on failure and 0 on success
+        """
+        res = self.exchange.send_limit_order("linear", asset, side, size, price)
+        if self.check_retcode(res) != 0: return -1
+        print("Order Successfully set")
+        return 0
+
+
+    def create_market_order(self, asset, side, size) -> int:
+        """
+        Sends a market order to the exchange for execution 
+
+        Args: 
+            asset - The asset to place an order for, 'BTCUSDT' for example
+            side - Buy or Sell
+            size - the size of the order in terms of the trading assest
+
+        Returns:
+            -1 on failure and 0 on success
+        """
+        res = self.exchange.send_market_order("linear", asset, side, size)
+        if self.check_retcode(res) != 0: return -1
+        print("Order Successfully set")
+        return 0
+    
+
+    def cancel_order(self, category:str, asset, order_id) -> int:
+        """
+        Cancels an order that has the passed in order_id
+
+        Args: 
+            category - Type of contract 'linear', 'spot', 'options'
+            asset - The asset the order is for 
+            order_id - The exchange generated id number of the cancelled order
+        """
+        res = self.exchange.cancel_order(category, order_id["orderId"], asset)
+        if self.check_retcode(res) != 0: return -1
+        print("Successfully cancelled order")
+        return 0
+
+
+##################### PRETTY PRINTING OF EXCHANGE DATA #########################
     def print_all_balances(self) -> None|int:
         """ Pretty Prints all balances for an account"""
         res = self.exchange.fetch_all_balances()
@@ -87,136 +155,3 @@ class AccountManager:
             q:float = float(order["qty"]) 
             print(f"{n+1:<4}{s:<10}{t:<10}{d:<12}{p:>12,.2f}{q:>12,.4f}{p*q:>12,.2f}")
         return orders
-
-
-    def get_balance(self, asset="BTCUSDT") -> float: 
-        """ 
-        Returns the float value balance of the passed in symbol 
-
-        Args: 
-            asset - the asset querying balance for
-
-        Returns:
-            res - float value of account balance for the asset of -1 on failure
-        """
-        res = self.exchange.fetch_balance(asset)
-        if self.check_retcode(res) != 0: return -1
-
-        res = res["result"]["list"][0]["coin"][0]["walletBalance"]
-        return round(float(res),4)
-
-
-    # This function shouldnt be doing this, it is too much, this class shouldnt 
-    # be passing user input, it should only be output info from exchange.
-    def create_limit_order(self) -> int:
-        """ Asks user for order details and places order with the exchange """
-        options:int = len(ASSETS)
-        choice:int = 0
-        while choice < 1 or choice > options:
-            print("Select the asset: ")
-            for key in ASSETS.keys():
-                print(f"{key}. {ASSETS[key]}")
-            try:
-                choice = int(input(">> "))
-            except TypeError as e: 
-                print("Pick a number from the list of options")
-
-        while True:
-            print("Select either Buy or Sell\n1. Buy\n2. Sell")
-            try:
-                side_choice = int(input(">> "))
-                if side_choice == 1:
-                    side = "Buy"
-                    break
-                elif side_choice == 2:
-                    side = "Sell"
-                    break 
-                else: 
-                    print("Enter either 1 or 2 for your choice")
-            except TypeError as e:
-                print("Enter either 1 or 2 for your choice")
-
-        print("Enter the price: ")
-        price = input(">> ")
-
-        print("Enter the amount: ")
-        size = input(">> ")
-
-        res = self.exchange.send_limit_order("linear", ASSETS[choice], side, size, price)
-        if self.check_retcode(res) != 0: return -1
-        print("Order Successfully set")
-        return 0
-
-
-    # Copy paste of limit order and should not go here.
-    def create_market_order(self) -> int:
-        options:int = len(ASSETS)
-        choice:int = 0
-        while choice < 1 or choice > options:
-            print("Select the asset for market order: ")
-            for key in ASSETS.keys():
-                print(f"{key}. {ASSETS[key]}")
-            try:
-                choice = int(input(">> "))
-            except TypeError as e: 
-                print("Pick a number from the list of options")
-
-        while True:
-            print("Select either Buy or Sell\n1. Buy\n2. Sell")
-            try:
-                side_choice = int(input(">> "))
-                if side_choice == 1:
-                    side = "Buy"
-                    break
-                elif side_choice == 2:
-                    side = "Sell"
-                    break 
-                else: 
-                    print("Enter either 1 or 2 for your choice")
-            except TypeError as e:
-                print("Enter either 1 or 2 for your choice")
-
-        print("Enter the amount: ")
-        size = input(">> ")
-
-        res = self.exchange.send_market_order("linear", ASSETS[choice], side, size)
-        if self.check_retcode(res) != 0: return -1
-        print("Order Successfully set")
-        return 0
-    
-    # This is written so poorly as well
-    def cancel_order(self, category:str="linear") -> int:
-        options:int = len(ASSETS)
-        choice:int = 0
-        while choice < 1 or choice > options:
-            print("Select the asset: ")
-            for key in ASSETS.keys():
-                print(f"{key}. {ASSETS[key]}")
-            try:
-                choice = int(input(">> "))
-            except TypeError as e: 
-                print("Pick a number from the list of options")
-        orders:list|int = self.print_orders(category, ASSETS[choice])
-
-        n = 0
-        if not isinstance(orders, list):
-            return -1
-        if len(orders) == 0:
-            print("There are no orders to cancel")
-            return -1
-
-        while True:
-            print("Select the 'No' of the order you want to cancel")
-            try:
-                n = int(input(">> "))
-                if n > 0 and n <= len(orders):
-                    break
-            except TypeError as e:
-                print("Enter a number only")
-
-        res = self.exchange.cancel_order(category, orders[n-1]["orderId"], ASSETS[choice])
-        if self.check_retcode(res) != 0: 
-            return -1
-
-        print("Successfully cancelled order")
-        return 0

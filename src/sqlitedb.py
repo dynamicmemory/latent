@@ -4,6 +4,7 @@ operations on the database, and call closed once you are finish.
 """
 import sqlite3
 import re
+import csv
 
 class Database:
     def __init__(self, db_name:str, table:str) -> None:
@@ -208,3 +209,18 @@ class DatabaseManager:
         df.set_index("timestamp", inplace=True)
         
         return df
+
+
+    def export_csv(self) -> None:
+        """Exports the contents of the current table to a csv file"""
+        self.database.open()
+        rows: list = self.database.fetch_all_rows()
+        columns: list = ["timestamp","open","high","low","close","volume"]
+
+        with open(f"./data/{self.table_name}.csv", "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(columns)
+            writer.writerows(rows)
+
+        self.database.close()
+        print(f"Successfully exported {self.table_name} table to csv")

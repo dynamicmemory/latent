@@ -1,4 +1,5 @@
 # BEFORE I GET CARRIED AWAY.... YES WE WILL MAKE A MENU MANAGER, JUST FINISH THIS AS IS FOR NOW.
+# The menu class is growing at a rapid rate....
 from src.exchange import Exchange
 from src.agent import Agent
 from src.sqlitedb import DatabaseManager
@@ -63,6 +64,7 @@ def run_main_menu() -> None:
     exit()
 
 
+# TODO: Abstract to separate class to handle account specific printing and input
 def manage_account() -> None:
     """ """
     options:int = 6 
@@ -86,11 +88,29 @@ def manage_account() -> None:
             account.print_all_usdt_positions()
             account.print_orders("linear", "BTCUSDT")
         elif choice == 2:
-            account.create_limit_order()
+            dynamic_fprint(choose_asset)
+            asset = ASSET_MAP[get_menu_selection(1)]
+            dynamic_fprint(side_menu)
+            side = "Buy" if get_menu_selection(2) == 1 else "Sell"
+            size = input("Enter amount: >> ")
+            price = input("Enter price: >> ")
+            account.create_limit_order(asset, side, size, price)
         elif choice == 3:
-            account.create_market_order()
+            dynamic_fprint(choose_asset)
+            asset = ASSET_MAP[get_menu_selection(1)]
+            dynamic_fprint(side_menu)
+            side = "Buy" if get_menu_selection(2) == 1 else "Sell"
+            size = input("Enter amount: >> ")
+            account.create_market_order(asset, side, size)
         elif choice == 4:
-            account.cancel_order()
+            dynamic_fprint(choose_asset)
+            asset: str = ASSET_MAP[get_menu_selection(1)]
+            orders: list|int = account.print_orders("linear", asset)
+            if isinstance(orders, int) or len(orders) == 0:
+                continue
+            print("Select the 'No' of the order you want to cancel")
+            order_id: int = get_menu_selection(len(orders))
+            account.cancel_order("linear", asset, orders[order_id-1])
         elif choice == 5:
             e.cancel_all_orders("linear", "BTCUSDT")
         elif choice == 6:
@@ -156,6 +176,7 @@ def run_maintenance() -> None:
             for tf in ["15", "60", "240", "D", "W"]:
                 dbm = DatabaseManager("BTCUSDT", tf) 
                 dbm.update_table()
+                dbm.export_csv()
             input("\n>> Hit enter to continue")
         elif choice == 2:
             agent = Agent()
@@ -221,6 +242,15 @@ account_menu: str = """
 4. Cancel order 
 5. Cancel all orders
 6. Return to main menu"""
+
+choose_asset: str = """
+Which asset:
+1. Bitcoin"""
+
+side_menu: str = """
+Which side:
+1. Buy
+2. Sell"""
 
 pred_menu: str = \
 """Current Asset: {0} | Current Timeframe: {1}\n
