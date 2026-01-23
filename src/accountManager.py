@@ -91,6 +91,13 @@ class AccountManager:
         return 0
 
 
+    def cancel_all_USDT_orders(self, category:str) -> int:
+        res = self.exchange.cancel_all_USDT_orders(category)
+        if self.check_retcode(res) != 0: return -1
+        print("Order Successfully set")
+        return 0
+
+
 ##################### PRETTY PRINTING OF EXCHANGE DATA #########################
     def print_all_balances(self) -> None|int:
         """ Pretty Prints all balances for an account"""

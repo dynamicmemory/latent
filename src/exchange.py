@@ -308,17 +308,12 @@ class Exchange:
         return req
 
         
-    def cancel_all_orders(self, category:str, symbol:str) -> dict:
-        """ Cancels all orders the account has open
+    def cancel_all_USDT_orders(self, category:str) -> dict:
+        """ Cancels all USDT orders the account has open
         
         Args:
             category - market type ('linear', 'inverse', 'spot', etc)
-            symbol - Trading pair, 'BTCUSDT', etc
         """
-        params = json.dumps({"category": category,
-                             "symbol":symbol,})
+        params = json.dumps({"category": category, "settle":"USDT",})
         req: dict = self.make_auth_request("POST", "/v5/order/cancel-all", params)
         return req
-
-
-

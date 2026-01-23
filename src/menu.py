@@ -4,6 +4,7 @@ from src.exchange import Exchange
 from src.agent import Agent
 from src.sqlitedb import DatabaseManager
 from src.accountManager import AccountManager
+from src.apiManager import api_key, api_secret
 import pyfiglet
 
 USERNAME:str = "HUMAN OVERLORD"   # Temp
@@ -70,12 +71,12 @@ def manage_account() -> None:
     options:int = 6 
     # Temporary Testnet only api keys for development, test net access only
     # Swap to env var once testing complete
-    account = AccountManager(api_key="KCsB4A1InMGHlCVkoH",
-                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
+    account = AccountManager(api_key=api_key,
+                 api_secret=api_secret, 
                  testnet=True)
-    e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
-                 api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
-                 testnet=True)
+    # e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
+    #              api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
+                 # testnet=True)
 
     while True:
         print_banner("ACCOUNT")
@@ -112,7 +113,7 @@ def manage_account() -> None:
             order_id: int = get_menu_selection(len(orders))
             account.cancel_order("linear", asset, orders[order_id-1])
         elif choice == 5:
-            e.cancel_all_orders("linear", "BTCUSDT")
+            account.cancel_all_USDT_orders("linear")
         elif choice == 6:
             break 
         
