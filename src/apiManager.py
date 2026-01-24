@@ -1,3 +1,4 @@
+# Add names for api keys and a menu selection to change between different keys
 from dotenv import load_dotenv, set_key
 import os 
 

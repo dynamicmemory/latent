@@ -1,8 +1,9 @@
 # BEFORE I GET CARRIED AWAY.... YES WE WILL MAKE A MENU MANAGER, JUST FINISH THIS AS IS FOR NOW.
 # The menu class is growing at a rapid rate....
+from matplotlib.artist import get
 from src.exchange import Exchange
-from src.agent import Agent
-from src.sqlitedb import DatabaseManager
+from src.engine import Engine
+from src.databaseManager import DatabaseManager
 from src.accountManager import AccountManager
 from src.apiManager import api_key, api_secret
 import pyfiglet
@@ -143,7 +144,7 @@ def run_predict() -> None:
                 input("\n>> Hit enter to continue")
                 continue
             else:
-                agent = Agent(ASSET_MAP[asset], TIME_MAP[timeframe])
+                agent:Engine = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
                 agent.run_agent(f"./models/{ASSET_MAP[asset]}-{TIME_MAP[timeframe]}-model.pth")
                 input("\n>> Hit enter to continue")
 
@@ -152,13 +153,52 @@ def run_predict() -> None:
 
 
 def start_engine() -> None:
-    print("Feature currently under construction")
-    input("\nHit enter to continue")
-    pass
+    """ 
+
+
+    """
+    options:int = 5
+    asset:int = 0
+    engine_status = None
+    timeframe:int = 0
+    while True:
+        print_banner("AUTOMATION")
+        dynamic_fprint(start_menu, engine_status, ASSET_MAP[asset], TIME_MAP[timeframe])
+        choice:int = get_menu_selection(options)
+        if choice == 1:
+            if asset == 0 or timeframe == 0:
+                print("\nError: Select an asset and timeframe to predict on first")
+                input("\nHit enter to continue")
+                continue
+            # Engine is currently always none and start engine isnt built yet 
+            # so this is fine for now.
+            if engine_status is not None:
+                print("Engine is already running...")
+                input("\nHit enter to continue")
+                continue
+
+            print("Feature currently under construction")
+            input("\nHit enter to continue")
+
+        elif choice == 2:
+            dynamic_fprint(pred_asset)
+            asset = get_menu_selection(len(ASSET_MAP))
+        elif choice == 3:
+            dynamic_fprint(pred_timeframe)
+            timeframe = get_menu_selection(len(TIME_MAP))
+        elif choice == 4:
+            print("Feature currently under construction")
+            input("\nHit enter to continue")
+        elif choice == 5:
+            break 
+
+
 def stop_engine() -> None:
     print("Feature currently under construction")
     input("\nHit enter to continue")
     pass
+
+
 def view_dashboard() -> None:
     print("Feature currently under construction")
     input("\nHit enter to continue")
@@ -180,7 +220,10 @@ def run_maintenance() -> None:
                 dbm.export_csv()
             input("\n>> Hit enter to continue")
         elif choice == 2:
-            agent = Agent()
+            # Combined with whats in the agent class, this should move to a 
+            # retraining class that can simply be called from here, and which 
+            # calls whichever algos/model building it needs from within the class.
+            agent = Engine()
             mod = agent.list_models("./models")
             agent.print_models(mod)
 
@@ -197,7 +240,7 @@ def run_maintenance() -> None:
             choosen_model = mod[model-1]['name']
             a = choosen_model.split("-")[0]
             t = choosen_model.split("-")[1]
-            agent = Agent(a, t)
+            agent = Engine(a, t)
             agent.retrain(f"./models/{a}-{t}-model.pth")
                 
             input("\n>> Hit enter to continue")
@@ -273,6 +316,12 @@ Which timeframe:
 5. Weekly"""
 
 start_menu: str = """
+Engine is currently {0} | Current Asset: {1} | Current Timeframe: {2}\n 
+1. Start Engine 
+2. Choose asset 
+3. Choose timeframe
+4. Check health
+5. Return to main menu 
 """
 
 stop_menu: str = """

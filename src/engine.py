@@ -3,7 +3,7 @@ This class should be an orchestration class that brings everything together
 """
 from src.miniML.machLearnTools import MachLearnTools
 from src.exchange import Exchange
-from src.sqlitedb import DatabaseManager
+from src.databaseManager import DatabaseManager
 from src.features import Features 
 from src.torchnn import Torchnn
 from src.strategy import Strategy
@@ -15,7 +15,7 @@ from datetime import datetime
 asset = "BTCUSDT"
 timeframe = "15"
 
-class Agent:
+class Engine:
     def __init__(self, asset:str="BTCUSDT", timeframe:str="15"):
         self.asset = asset
         self.timeframe = timeframe
@@ -24,9 +24,17 @@ class Agent:
         self.mlt = None
         self.torchnn = None
         self.strategy = None
-        # auto running for testing purposes
-        # self.run_agent()
-        # self.run_all_tf()
+
+
+    def automate(self) -> None:
+        """Runs full pipeline of the trading engine"""
+        pass
+
+
+    def stop_automate(self) -> None:
+        """Gracefully enters the automation cycling"""
+        pass
+
 
     def test(self):
         e = Exchange(self.asset, self.timeframe)
@@ -67,21 +75,6 @@ class Agent:
         self.get_trade_details(self.asset, self.timeframe, curr_mkt_risk, decision)
 
 
-    # Testing purposes only
-    def run_all_tf(self):
-        time_list: list = ["15", "60", "240", "D", "W"] 
-        for timeframe in time_list:
-            window = 30
-            self.dbm = DatabaseManager(asset, timeframe)
-            self.features = Features(self.dbm.get_dataframe())
-            X, y = self.features.run_features()
-            self.mlt = MachLearnTools(X, y)
-            X_train, X_test, y_train, y_test = self.mlt.timeseries_pipeline(window)
-            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, window=window)
-            self.torchnn.evaluation()
-            self.torchnn.predict()
-
-
     # We dont need to pass asset and tf now, we can just use self.
     # We would execute a trade instead of all these calcs just to print it.
     def get_trade_details(self, asset, timeframe, risk, direction):
@@ -115,7 +108,18 @@ class Agent:
         print(f"Size of Pos:\t${size}")
 
 
+################################# Retraining and priting out models ###########
+    ## Needs to move to its own class, but also need the algos for Retraining
+    ## Maybe own class that calls this or whichever class eventually holds algos
+
+
     def list_models(self, model_path: str) -> list:
+        """
+        Searches the provided DIR for all models saved
+
+        Args:
+            model_path - location of saved modesl
+        """
         models = []
 
         if not os.path.exists(model_path):
@@ -139,7 +143,14 @@ class Agent:
         return models
 
 
-    def print_models(self, models) -> None:
+    # Probably doesnt belong here and should move to the menu
+    def print_models(self, models:list) -> None:
+        """
+        Prints out the name, and last modified date for all models provided.
+
+        Args: 
+            models - a list containing all saved models in a directory.
+        """
         if not models:
             print("No models found.")
             return 
@@ -150,10 +161,16 @@ class Agent:
                   f"Last updated: {m['last_modified'].strftime('%Y-%m-%d %H:%M:%S')}")
             i +=1
         print(f"{i}. Return to maintenance menu.\n")
-
         
 
     def retrain(self, model_path):
+        """
+        Retrains a model 
+
+            Args:
+                model_path - File path to save the newly trained model too, 
+                             made up from the asset name and timeframe.
+        """
         # Get data
         self.dbm = DatabaseManager(self.asset, self.timeframe)
 
@@ -167,10 +184,8 @@ class Agent:
 
         print(f"Retraining model {self.asset} - {self.timeframe}") 
 
+        # Retrain the model and save it to the provided path
         self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, training=True)
         self.torchnn.save_checkpoint(model_path)
 
         print(f"\nModel has been retrained successfull.\n")
-    
-
-
