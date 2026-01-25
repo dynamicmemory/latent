@@ -1,7 +1,5 @@
 # BEFORE I GET CARRIED AWAY.... YES WE WILL MAKE A MENU MANAGER, JUST FINISH THIS AS IS FOR NOW.
 # The menu class is growing at a rapid rate....
-from matplotlib.artist import get
-from src.exchange import Exchange
 from src.engine import Engine
 from src.databaseManager import DatabaseManager
 from src.accountManager import AccountManager
@@ -132,11 +130,11 @@ def run_predict() -> None:
         choice = get_menu_selection(options)
         if choice == 1:
             dynamic_fprint(pred_asset)
-            asset = get_menu_selection(len(ASSET_MAP))
+            asset = get_menu_selection(len(ASSET_MAP)-1)
 
         elif choice == 2:
             dynamic_fprint(pred_timeframe)
-            timeframe = get_menu_selection(len(TIME_MAP))
+            timeframe = get_menu_selection(len(TIME_MAP)-1)
 
         elif choice == 3:
             if asset == 0 or timeframe == 0:
@@ -177,15 +175,17 @@ def start_engine() -> None:
                 input("\nHit enter to continue")
                 continue
 
-            print("Feature currently under construction")
+            engine = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
+            engine.start_automation()
+
             input("\nHit enter to continue")
 
         elif choice == 2:
             dynamic_fprint(pred_asset)
-            asset = get_menu_selection(len(ASSET_MAP))
+            asset = get_menu_selection(len(ASSET_MAP)-1)
         elif choice == 3:
             dynamic_fprint(pred_timeframe)
-            timeframe = get_menu_selection(len(TIME_MAP))
+            timeframe = get_menu_selection(len(TIME_MAP)-1)
         elif choice == 4:
             print("Feature currently under construction")
             input("\nHit enter to continue")

@@ -222,7 +222,7 @@ class Exchange:
         return req
 
 
-    def fetch_position(self, category:str="linear", symbol:str="BTCUSDT") -> dict:
+    def fetch_position(self, category:str, symbol:str) -> dict:
         """ Returns the position(s) for the provide symbol
 
         Args:

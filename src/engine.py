@@ -8,6 +8,8 @@ from src.features import Features
 from src.torchnn import Torchnn
 from src.strategy import Strategy
 from src.riskCalculator import RiskCalculator
+from src.accountManager import AccountManager
+from src.apiManager import api_key, api_secret
 
 import os
 from datetime import datetime
@@ -26,12 +28,52 @@ class Engine:
         self.strategy = None
 
 
-    def automate(self) -> None:
+    def get_model(self, X_train, X_test, y_train, y_test) :
+        model_path:str = f"./models/{self.asset}-{self.timeframe}-model.pth"
+        # Train a model if one doesnt exist otherwise load model
+        os.makedirs(os.path.dirname(model_path), exist_ok=True)
+        if os.path.exists(model_path):
+            print("Loading pretrained model")
+            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test)
+            self.torchnn.load_checkpoint(model_path)
+        else:
+            print(f"Training new model on {self.asset} - {self.timeframe}") 
+            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, training=True)
+            self.torchnn.save_checkpoint(model_path)
+
+
+    def start_automation(self) -> None:
         """Runs full pipeline of the trading engine"""
-        pass
+        # ensure the database is up to date 
+        self.dbm = DatabaseManager(self.asset, self.timeframe)
+        self.dbm.update_table()
+
+        # The way the torchnn is currently built, we must always pass in x, y 
+        # test and train set (this will change in future update) therefore we 
+        # must go through the process of feature engineering and spliting the 
+        # data sets to obtain an instance of the network to call predict on...
+        self.features = Features(self.dbm.get_dataframe())
+        X, y = self.features.run_features()
+
+        # Prep data for the model
+        self.mlt = MachLearnTools(X, y)
+        X_train, X_test, y_train, y_test = self.mlt.timeseries_pipeline()
+
+        # load the model into memory and make a prediction
+        self.get_model(X_train, X_test, y_train, y_test)
+        decision = self.torchnn.predict()
+
+        # Find current market risk level
+        self.strategy = Strategy(X)
+        curr_mkt_risk: str = self.strategy.main()
+
+        # check user account details, if then do this if not do that fin sleep again.
+
+        # For the time being, this is the equiv of executing a market order
+        self.get_trade_details(self.asset, self.timeframe, curr_mkt_risk, decision)
 
 
-    def stop_automate(self) -> None:
+    def stop_automation(self) -> None:
         """Gracefully enters the automation cycling"""
         pass
 
@@ -78,37 +120,46 @@ class Engine:
     # We dont need to pass asset and tf now, we can just use self.
     # We would execute a trade instead of all these calcs just to print it.
     def get_trade_details(self, asset, timeframe, risk, direction):
-        self.exchange = Exchange(asset, timeframe)
-        # Hardcoding for time being
-        entry: float = int(float(self.exchange.get_ohlc()[-1][1]))
-        # Hard coded arbitrary stop for the time being 
-        stop, target = 0, 0
-        if direction == 1:
-            stop: int = int(float(self.exchange.get_ohlc()[-2][3]))
-            target: int = (entry - stop) * 2 + entry
-        elif direction == 0: 
-            stop: int = int(float(self.exchange.get_ohlc()[-2][2]))
-            target: int = entry - (stop - entry) * 2
+        # Test net version hardcoded for now during testing.
+        account = AccountManager(api_key, api_secret, True)
+        current_trade = account.get_position("linear", self.asset)
+        if current_trade == 1:
+            print("User currently in a long")
+        elif current_trade == 0:
+            print("User currently in a short")
         else:
-            # no trade decision, tell users
-            print(f"Agent doesn't see a good trade currently")
-            return
+            print("User currently in no trade ")
 
-        rc = RiskCalculator()
-        size, risk_percentage = rc.main(entry, stop, risk)
+        # Hardcoding for time being
+        # entry: float = int(float(self.exchange.get_ohlc()[-1][1]))
+        # Hard coded arbitrary stop for the time being 
+        # stop, target = 0, 0
+        # if direction == 1:
+            # stop: int = int(float(self.exchange.get_ohlc()[-2][3]))
+            # target: int = (entry - stop) * 2 + entry
+        # elif direction == 0: 
+        #     stop: int = int(float(self.exchange.get_ohlc()[-2][2]))
+        #     target: int = entry - (stop - entry) * 2
+        # else:
+            # no trade decision, tell users
+            # print(f"Agent doesn't see a good trade currently")
+            # return
+
+        # rc = RiskCalculator()
+        # size, risk_percentage = rc.main(entry, stop, risk)
 
         # Printing info instead of sending to the exchange to execute trade 
-        print(asset)
-        print(f"Time Frame:\t{timeframe}")
-        print(f"Risk Level:\t{risk}")
-        print(f"Direction:\t{direction}")
-        print(f"Entry Level:\t${entry}")
-        print(f"Stop Level:\t${stop}")
-        print(f"Target pri:\t${target}")
-        print(f"Size of Pos:\t${size}")
+        # print(asset)
+        # print(f"Time Frame:\t{timeframe}")
+        # print(f"Risk Level:\t{risk}")
+        # print(f"Direction:\t{direction}")
+        # print(f"Entry Level:\t${entry}")
+        # print(f"Stop Level:\t${stop}")
+        # print(f"Target pri:\t${target}")
+        # print(f"Size of Pos:\t${size}")
 
 
-################################# Retraining and priting out models ###########
+###################### Retraining and printing out models ####################
     ## Needs to move to its own class, but also need the algos for Retraining
     ## Maybe own class that calls this or whichever class eventually holds algos
 
