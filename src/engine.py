@@ -61,16 +61,54 @@ class Engine:
 
         # load the model into memory and make a prediction
         self.get_model(X_train, X_test, y_train, y_test)
-        decision = self.torchnn.predict()
+        decision:int = self.torchnn.predict()
 
         # Find current market risk level
         self.strategy = Strategy(X)
         curr_mkt_risk: str = self.strategy.main()
 
-        # check user account details, if then do this if not do that fin sleep again.
+        account = AccountManager(api_key, api_secret, True)
+        ctrade, csize = account.get_position("linear", self.asset)
+        # No trade predicted
+        if decision == 2:
+            return
+            print("There is currently no trade to make.")
+        # Predicted trade matches current position
+        elif decision == ctrade:
+            print("Current trade matches current position")
+            return 
+        elif decision != ctrade:
+            # close current trade, calculate & open new trade
+            self.trade_manager(account, ctrade, csize ,decision, curr_mkt_risk) 
+            print("Trade manager loop")
+            return
+        else:
+            print("Unknown error for now")
+            return
 
-        # For the time being, this is the equiv of executing a market order
-        self.get_trade_details(self.asset, self.timeframe, curr_mkt_risk, decision)
+        
+
+    # Soon to be its own class I think
+    def trade_manager(self, account, ctrade:int, csize:float, pred:int, risk):
+        # Cancel all stops and limit orders
+        account.cancel_all_USDT_orders("linear")
+        if ctrade == 2:
+            # Place new order 
+            return 
+        else:
+            # close current trade 
+            account.create_market_order(self.asset, pred, csize)            
+            # calc new order 
+
+            # This all has to be atomic, all work or none happen.
+            # place it 
+
+            # place take profit
+
+            # place stop 
+
+            return
+
 
 
     def stop_automation(self) -> None:
@@ -83,7 +121,7 @@ class Engine:
         print(e.get_price())
 
 
-    def run_agent(self, model_path:str):
+    def manual_prediction(self, model_path:str):
         # Get data
         self.dbm = DatabaseManager(self.asset, self.timeframe)
 
@@ -117,46 +155,38 @@ class Engine:
         self.get_trade_details(self.asset, self.timeframe, curr_mkt_risk, decision)
 
 
-    # We dont need to pass asset and tf now, we can just use self.
-    # We would execute a trade instead of all these calcs just to print it.
+
+
+    # Specifically only for manual predictions
     def get_trade_details(self, asset, timeframe, risk, direction):
-        # Test net version hardcoded for now during testing.
-        account = AccountManager(api_key, api_secret, True)
-        current_trade = account.get_position("linear", self.asset)
-        if current_trade == 1:
-            print("User currently in a long")
-        elif current_trade == 0:
-            print("User currently in a short")
-        else:
-            print("User currently in no trade ")
-
+        self.exchange = Exchange(asset, timeframe)
         # Hardcoding for time being
-        # entry: float = int(float(self.exchange.get_ohlc()[-1][1]))
+        entry: float = int(float(self.exchange.get_ohlc()[-1][1]))
         # Hard coded arbitrary stop for the time being 
-        # stop, target = 0, 0
-        # if direction == 1:
-            # stop: int = int(float(self.exchange.get_ohlc()[-2][3]))
-            # target: int = (entry - stop) * 2 + entry
-        # elif direction == 0: 
-        #     stop: int = int(float(self.exchange.get_ohlc()[-2][2]))
-        #     target: int = entry - (stop - entry) * 2
-        # else:
+        stop, target = 0, 0
+        if direction == 1:
+            stop: int = int(float(self.exchange.get_ohlc()[-2][3]))
+            target: int = (entry - stop) * 2 + entry
+        elif direction == 0: 
+            stop: int = int(float(self.exchange.get_ohlc()[-2][2]))
+            target: int = entry - (stop - entry) * 2
+        else:
             # no trade decision, tell users
-            # print(f"Agent doesn't see a good trade currently")
-            # return
+            print(f"Agent doesn't see a good trade currently")
+            return
 
-        # rc = RiskCalculator()
-        # size, risk_percentage = rc.main(entry, stop, risk)
+        rc = RiskCalculator()
+        size, risk_percentage = rc.main(entry, stop, risk)
 
         # Printing info instead of sending to the exchange to execute trade 
-        # print(asset)
-        # print(f"Time Frame:\t{timeframe}")
-        # print(f"Risk Level:\t{risk}")
-        # print(f"Direction:\t{direction}")
-        # print(f"Entry Level:\t${entry}")
-        # print(f"Stop Level:\t${stop}")
-        # print(f"Target pri:\t${target}")
-        # print(f"Size of Pos:\t${size}")
+        print(asset)
+        print(f"Time Frame:\t{timeframe}")
+        print(f"Risk Level:\t{risk}")
+        print(f"Direction:\t{direction}")
+        print(f"Entry Level:\t${entry}")
+        print(f"Stop Level:\t${stop}")
+        print(f"Target pri:\t${target}")
+        print(f"Size of Pos:\t${size}")
 
 
 ###################### Retraining and printing out models ####################

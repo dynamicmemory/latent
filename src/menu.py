@@ -143,7 +143,7 @@ def run_predict() -> None:
                 continue
             else:
                 agent:Engine = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
-                agent.run_agent(f"./models/{ASSET_MAP[asset]}-{TIME_MAP[timeframe]}-model.pth")
+                agent.manual_prediction(f"./models/{ASSET_MAP[asset]}-{TIME_MAP[timeframe]}-model.pth")
                 input("\n>> Hit enter to continue")
 
         elif choice == 4:
@@ -176,7 +176,9 @@ def start_engine() -> None:
                 continue
 
             engine = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
+            # Loop should start here? Menu should not be doing this. Spin off thread?
             engine.start_automation()
+            # Print whats happening & sleep?
 
             input("\nHit enter to continue")
 
