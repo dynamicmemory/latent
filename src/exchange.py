@@ -314,6 +314,6 @@ class Exchange:
         Args:
             category - market type ('linear', 'inverse', 'spot', etc)
         """
-        params = json.dumps({"category": category, "settle":"USDT",})
+        params = json.dumps({"category": category, "settleCoin":"USDT",})
         req: dict = self.make_auth_request("POST", "/v5/order/cancel-all", params)
         return req

@@ -62,6 +62,7 @@ class Engine:
         # load the model into memory and make a prediction
         self.get_model(X_train, X_test, y_train, y_test)
         decision:int = self.torchnn.predict()
+        decision = 0
 
         # Find current market risk level
         self.strategy = Strategy(X)
@@ -69,6 +70,9 @@ class Engine:
 
         account = AccountManager(api_key, api_secret, True)
         ctrade, csize = account.get_position("linear", self.asset)
+        if ctrade == -1:
+            print("Call to get position failed")
+            return 
         # No trade predicted
         if decision == 2:
             return
@@ -80,7 +84,7 @@ class Engine:
         elif decision != ctrade:
             # close current trade, calculate & open new trade
             self.trade_manager(account, ctrade, csize ,decision, curr_mkt_risk) 
-            print("Trade manager loop")
+            # print("Trade manager loop")
             return
         else:
             print("Unknown error for now")
@@ -89,23 +93,76 @@ class Engine:
         
 
     # Soon to be its own class I think
-    def trade_manager(self, account, ctrade:int, csize:float, pred:int, risk):
+    # PROBLEMS: Hard coded stop and entry and target, all must be algorithmically 
+    #           calculated.
+    def trade_manager(self, account, current_trade:int, current_size:float, pred:int, risk):
+        print("Start of trade_manager")
         # Cancel all stops and limit orders
-        account.cancel_all_USDT_orders("linear")
-        if ctrade == 2:
+        if account.cancel_all_USDT_orders("linear") < 0:
+            print("Call to cancel all orders failed")
+            return 
+        print("Call to cancel worked")
+
+        balance = account.get_balance(asset="USDT")
+        if balance < 0:
+            print("Call for balance failed")
+            return 
+        print("Call for balance worked")
+        
+        exchange = Exchange(self.asset, self.timeframe)
+        ohlc = exchange.get_ohlc()
+        # print(ohlc)
+        
+        # Calculate entry, stop, target and size
+        entry: float = int(float(ohlc[-1][1]))
+
+        # Hard coded arbitrary stop for the time being 
+        stop, target = 0, 0
+        if pred == 1:
+            stop: int = int(float(ohlc[-2][3]))
+            target: int = (entry - stop) * 2 + entry
+        elif pred == 0: 
+            stop: int = int(float(ohlc[-2][2]))
+            target: int = entry - (stop - entry) * 2
+
+        print(f"Entry {entry}, Stop {stop}, Target {target}, Account {balance}") 
+        rc = RiskCalculator()
+        if balance <= 0 or entry <= 0 or stop <= 0:
+            print("Error occured in calculating trade details", balance, entry, stop)
+            return 
+        size, risk_percentage = rc.main(balance, entry, stop, risk)
+
+        print(asset)
+        print(f"Time Frame:\t{timeframe}")
+        print(f"Risk Level:\t{risk}")
+        print(f"Direction:\t{pred}")
+        print(f"Entry Level:\t${entry}")
+        print(f"Stop Level:\t${stop}")
+        print(f"Target pri:\t${target}")
+        print(f"Size of Pos:\t${size}")
+
+        if current_trade == 2:
+            print("Not in trade, marketing in")
             # Place new order 
+            # also have to drop stop and target orders
             return 
         else:
             # close current trade 
-            account.create_market_order(self.asset, pred, csize)            
+            print("Closing current trade")
+            # account.create_market_order(self.asset, pred, current_size)            
+
             # calc new order 
+            print("Calculating new order (already calculated)")
 
             # This all has to be atomic, all work or none happen.
             # place it 
+            print("Placing new order")
 
             # place take profit
+            print("Placing take profit")
 
             # place stop 
+            print("Placing stop order")
 
             return
 

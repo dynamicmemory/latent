@@ -15,8 +15,7 @@ class AccountManager:
     def check_retcode(self, response:dict) -> int:
         """ Checks the retCode response from a query to the exchange """
         if response["retCode"] != 0:
-            print(f"Exchange error\ncode: {response["retCode"]}\n\
-                    message: {response["retMsg"]}")
+            print(f"Exchange error\ncode: {response["retCode"]}\nmessage: {response["retMsg"]}")
             return -1
         else:
             return 0
@@ -32,7 +31,7 @@ class AccountManager:
         Returns:
             res - float value of account balance for the asset of -1 on failure
         """
-        res = self.exchange.fetch_balance(asset)
+        res = self.exchange.fetch_balance(asset=asset)
         if self.check_retcode(res) != 0: return -1
 
         res = res["result"]["list"][0]["coin"][0]["walletBalance"]
@@ -41,7 +40,7 @@ class AccountManager:
 
     def get_position(self, category:str="linear", symbol:str="BTCUSDT") -> tuple:
         res = self.exchange.fetch_position(category, symbol)
-        if self.check_retcode(res) != 0: return -1
+        if self.check_retcode(res) != 0: return (-1, -1)   # retunr a tuple on failure
         result = res["result"]["list"][0]
         if result["side"] == "Buy":
             return (1, float(result["size"]))

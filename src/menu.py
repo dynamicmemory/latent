@@ -73,9 +73,8 @@ def manage_account() -> None:
     account = AccountManager(api_key=api_key,
                  api_secret=api_secret, 
                  testnet=True)
-    # e = Exchange(api_key="KCsB4A1InMGHlCVkoH",
-    #              api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj", 
-                 # testnet=True)
+    # api_key="KCsB4A1InMGHlCVkoH"
+    # api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj"
 
     while True:
         print_banner("ACCOUNT")
