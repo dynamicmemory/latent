@@ -62,7 +62,7 @@ class Engine:
         # load the model into memory and make a prediction
         self.get_model(X_train, X_test, y_train, y_test)
         decision:int = self.torchnn.predict()
-        decision = 0
+        decision = 1
 
         # Find current market risk level
         self.strategy = Strategy(X)
@@ -97,6 +97,7 @@ class Engine:
     #           calculated.
     def trade_manager(self, account, current_trade:int, current_size:float, pred:int, risk):
         print("Start of trade_manager")
+
         # Cancel all stops and limit orders
         if account.cancel_all_USDT_orders("linear") < 0:
             print("Call to cancel all orders failed")
@@ -125,6 +126,7 @@ class Engine:
             stop: int = int(float(ohlc[-2][2]))
             target: int = entry - (stop - entry) * 2
 
+
         print(f"Entry {entry}, Stop {stop}, Target {target}, Account {balance}") 
         rc = RiskCalculator()
         if balance <= 0 or entry <= 0 or stop <= 0:
@@ -141,6 +143,13 @@ class Engine:
         print(f"Target pri:\t${target}")
         print(f"Size of Pos:\t${size}")
 
+
+        pred_dir = "Buy" if pred == 1 else "Sell"
+        target_dir = "Sell" if pred_dir == "Buy" else "Buy"
+        trigger_dir = 1 if pred == "Sell" else 2
+        size = str(size)
+        target = str(target)
+
         if current_trade == 2:
             print("Not in trade, marketing in")
             # Place new order 
@@ -149,20 +158,24 @@ class Engine:
         else:
             # close current trade 
             print("Closing current trade")
-            # account.create_market_order(self.asset, pred, current_size)            
+            account.create_market_order(self.asset, pred_dir, str(current_size))            
 
+            # print(self.asset, type(self.asset), pred, type(pred), current_size, type(current_size))
             # calc new order 
             print("Calculating new order (already calculated)")
 
             # This all has to be atomic, all work or none happen.
             # place it 
             print("Placing new order")
-
+            account.create_market_order(self.asset, pred_dir, size)
+            #
             # place take profit
             print("Placing take profit")
+            account.create_limit_order(self.asset, target_dir, size, target)
 
             # place stop 
             print("Placing stop order")
+            account.create_stop_loss(self.asset, target_dir, size, str(stop), trigger_dir)
 
             return
 
@@ -210,8 +223,6 @@ class Engine:
 
         # For the time being, this is the equiv of executing a market order
         self.get_trade_details(self.asset, self.timeframe, curr_mkt_risk, decision)
-
-
 
 
     # Specifically only for manual predictions

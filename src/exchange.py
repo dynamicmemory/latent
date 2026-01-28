@@ -281,7 +281,7 @@ class Exchange:
 
     # Not tested, test when ready to market buy or sell
     def send_market_order(self, category:str, symbol:str, side:str, qty:str) -> dict:
-        """ Sends a limit order to the exchange 
+        """ Sends a market order to the exchange 
 
         Args:
             category - market type ('linear', 'inverse', 'spot', etc)
@@ -297,6 +297,28 @@ class Exchange:
                              })
         req: dict = self.make_auth_request("POST", "/v5/order/create", params)
         return req
+
+
+    def set_stop_loss(self, category:str, symbol:str, side:str, qty:str, trigger, trigger_dir) ->dict:
+        """ Sends a market order to the exchange 
+
+        Args:
+            category - market type ('linear', 'inverse', 'spot', etc)
+            symbol - Trading pair, 'BTCUSDT', etc
+            side - Direction of trade 'Buy' or 'Sell'
+            qty - Order quanity in numerator value
+        """
+        params = json.dumps({"category":category,
+                            "symbol":symbol,
+                            "side":side,
+                            "orderType":"Market",
+                            "qty":qty,
+                            "triggerDirection": trigger_dir,
+                            "triggerPrice": trigger
+                             })
+        req: dict = self.make_auth_request("POST", "/v5/order/create", params)
+        return req
+
 
 
     def cancel_order(self, category:str, orderId:str, symbol:str) -> dict:

@@ -87,6 +87,24 @@ class AccountManager:
         return 0
     
 
+    def create_stop_loss(self, asset, side, size, trigger, trigger_dir) -> int:
+        """
+        Sends a market order to the exchange for execution 
+
+        Args: 
+            asset - The asset to place an order for, 'BTCUSDT' for example
+            side - Buy or Sell
+            size - the size of the order in terms of the trading assest
+
+        Returns:
+            -1 on failure and 0 on success
+        """
+        res = self.exchange.set_stop_loss("linear", asset, side, size, trigger, trigger_dir)
+        if self.check_retcode(res) != 0: return -1
+        print("Order Successfully set")
+        return 0
+    
+
     def cancel_order(self, category:str, asset, order_id) -> int:
         """
         Cancels an order that has the passed in order_id

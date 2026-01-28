@@ -7,9 +7,10 @@ class RiskCalculator:
         # entry_price: int = 10000 
         # stop_price: int = 9995
         risk_percentage: float = 0.01 
+        max_size = account_size / entry_price * 5
         # hardcoding for now 
         if risk == "low":
-            risk_percentage = 0.05
+            risk_percentage = 0.03
         elif risk == "med":
             risk_percentage = 0.02
         elif risk == "high":
@@ -23,6 +24,11 @@ class RiskCalculator:
             return 0, 0 
 
         size = (account_size * risk_percentage) / (abs(entry_price - stop_price))
-        size = int(size * entry_price)
+        # size = int(size * entry_price)
         # print(size)
+        # Short term solution to capping size to fit max order (this normally 
+        # wont be a problem)
+        size = min(size, max_size)
+        # Hardcoding for testing so that we arnt aping half a mill every teset
+        size = 0.001
         return size, risk_percentage
