@@ -99,11 +99,3 @@ class Torchnn:
         self.model.load_state_dict(checkpoint["model_state"])
         self.window = checkpoint["window"]
         self.model.eval()
-
-
-
-
-
-
-
-

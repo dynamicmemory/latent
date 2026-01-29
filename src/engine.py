@@ -62,7 +62,7 @@ class Engine:
         # load the model into memory and make a prediction
         self.get_model(X_train, X_test, y_train, y_test)
         decision:int = self.torchnn.predict()
-        decision = 1
+        decision = 0
 
         # Find current market risk level
         self.strategy = Strategy(X)
@@ -90,7 +90,6 @@ class Engine:
             print("Unknown error for now")
             return
 
-        
 
     # Soon to be its own class I think
     # PROBLEMS: Hard coded stop and entry and target, all must be algorithmically 
@@ -112,7 +111,6 @@ class Engine:
         
         exchange = Exchange(self.asset, self.timeframe)
         ohlc = exchange.get_ohlc()
-        # print(ohlc)
         
         # Calculate entry, stop, target and size
         entry: float = int(float(ohlc[-1][1]))
@@ -338,3 +336,133 @@ class Engine:
         self.torchnn.save_checkpoint(model_path)
 
         print(f"\nModel has been retrained successfull.\n")
+
+
+
+
+
+
+# One possible solution
+
+# import threading
+# import time
+#
+# class Engine:
+#     def __init__(self, asset="BTCUSDT", timeframe="15"):
+#         self.asset = asset
+#         self.timeframe = timeframe
+#         self.dbm = None
+#         self.torchnn = None
+#         self.running = False
+#
+#     def start_automation(self, interval=60):
+#         """Starts automation in a separate thread."""
+#         if self.running:
+#             print("Automation already running")
+#             return
+#
+#         self.running = True
+#         thread = threading.Thread(target=self._automation_loop, args=(interval,))
+#         thread.start()
+#         print("Automation thread started")
+#
+#     def _automation_loop(self, interval):
+#         """Runs continuously while self.running=True."""
+#         while self.running:
+#             try:
+#                 self.run_cycle()
+#             except Exception as e:
+#                 print(f"Error in automation cycle: {e}")
+#             time.sleep(interval)
+#
+#     def stop_automation(self):
+#         """Stops the automation loop."""
+#         self.running = False
+#         print("Automation stopped")
+#
+#     def run_cycle(self):
+#         """Single iteration of automation."""
+#         # 1. Ensure DB is up to date
+#         if not self.dbm:
+#             self.dbm = DatabaseManager(self.asset, self.timeframe)
+#         self.dbm.update_table()
+#
+#         # 2. Load or get model
+#         self.get_model()
+#
+#         # 3. Make prediction
+#         decision = self.predict()
+#
+#         # 4. Manage trades
+#         self.manage_trades(decision)
+#
+#     def get_model(self):
+#         """Load pre-trained model; no need for X_train/X_test yet."""
+#         model_path = f"./models/{self.asset}-{self.timeframe}-model.pth"
+#         if not self.torchnn:
+#             # For now, you could pass dummy X/y or refactor Torchnn to accept just model path
+#             self.torchnn = Torchnn(mlt=None, X_train=None, X_test=None, y_train=None, y_test=None)
+#         if os.path.exists(model_path):
+#             self.torchnn.load_checkpoint(model_path)
+#         else:
+#             print("No model found, train it first!")
+#
+#     def predict(self):
+#         """Return predicted trade direction."""
+#         if not self.torchnn:
+#             raise RuntimeError("Model not loaded")
+#         return self.torchnn.predict()
+#
+#     def manage_trades(self, decision):
+#         """Handle all trading logic based on predicted decision."""
+#         account = AccountManager(api_key, api_secret, True)
+#         ctrade, csize = account.get_position("linear", self.asset)
+#         if ctrade == -1:
+#             print("Failed to get position")
+#             return
+#
+#         # If decision == 2, do nothing
+#         if decision == 2:
+#             print("No trade predicted")
+#             return
+#
+#         # If current position matches prediction, do nothing
+#         if decision == ctrade:
+#             print("Current trade matches prediction")
+#             return
+#
+#         # Otherwise, manage trades
+#         self.trade_manager(account, ctrade, csize, decision)
+#
+#     def trade_manager(self, account, current_trade, current_size, pred):
+#         """Slimmed down version of your trade_manager logic."""
+#         # Cancel all orders first
+#         if account.cancel_all_USDT_orders("linear") < 0:
+#             print("Failed to cancel orders")
+#             return
+#
+#         balance = account.get_balance("USDT")
+#         if balance <= 0:
+#             print("Failed to get balance")
+#             return
+#
+#         # Fetch last candle
+#         exchange = Exchange(self.asset, self.timeframe)
+#         ohlc = exchange.get_ohlc()
+#         entry = float(ohlc[-1][1])
+#
+#         # Dummy stop/target logic for now
+#         stop, target = entry * 0.995, entry * 1.005
+#         size = 0.001  # Replace with RiskCalculator logic later
+#
+#         pred_dir = "Buy" if pred == 1 else "Sell"
+#         target_dir = "Sell" if pred_dir == "Buy" else "Buy"
+#
+#         # Close current trade if any
+#         if current_trade != 2:
+#             account.create_market_order(self.asset, target_dir, current_size)
+#
+#         # Open new trade
+#         account.create_market_order(self.asset, pred_dir, size)
+#         account.create_limit_order(self.asset, target_dir, size, target)
+#         account.create_stop_loss(self.asset, target_dir, size, stop, trigger_dir=1)

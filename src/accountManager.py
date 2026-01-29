@@ -40,14 +40,14 @@ class AccountManager:
 
     def get_position(self, category:str="linear", symbol:str="BTCUSDT") -> tuple:
         res = self.exchange.fetch_position(category, symbol)
-        if self.check_retcode(res) != 0: return (-1, -1)   # retunr a tuple on failure
+        if self.check_retcode(res) != 0: return (-1, "")   # retunr a tuple on failure
         result = res["result"]["list"][0]
         if result["side"] == "Buy":
             return (1, float(result["size"]))
         elif result["side"] == "Sell":
             return (0, result["size"]) 
         else: 
-            return (2, 0)
+            return (2, "0")
 
 
     def create_limit_order(self, asset, side, size, price) -> int:
