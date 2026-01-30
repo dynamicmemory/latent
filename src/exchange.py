@@ -56,25 +56,25 @@ class Exchange:
             return None
 
 
-    def get_ohlc(self, limit=1000) -> list:
+    def get_ohlc(self, asset, tf, limit=1000) -> dict:
         """
         Retrieves the open, high, low and close of the given asset
         """
         kline: str = "/v5/market/kline"
         params: dict = {"category": "linear",
-                        "symbol": self.symbol,
-                        "interval": self.interval,
+                        "symbol": asset,
+                        "interval": tf,
                         "limit": limit,
                         }
-        json: dict|None = self.make_request("GET", self.base_url+kline, params=params)
-        if not json:
-            return None
+        json: dict = self.make_request("GET", self.base_url+kline, params=params)
+        # if not json:
+        #     return None
 
         # self.handle_error(json)
 
-        results = json["result"]["list"]
-        results.reverse()
-        return results
+        # results = json["result"]["list"]
+        # results.reverse()
+        return json 
 
 
     def get_closed_candles(self, limit=1000) -> list|None:

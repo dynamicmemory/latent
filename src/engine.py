@@ -13,6 +13,8 @@ from src.apiManager import api_key, api_secret
 
 import os
 from datetime import datetime
+
+from src.tradeManager import TradeManager
 # Hard coded for testing, will be passed in or initiated via user.
 asset = "BTCUSDT"
 timeframe = "15"
@@ -62,33 +64,36 @@ class Engine:
         # load the model into memory and make a prediction
         self.get_model(X_train, X_test, y_train, y_test)
         decision:int = self.torchnn.predict()
-        decision = 0
+        decision = 1
 
         # Find current market risk level
         self.strategy = Strategy(X)
-        curr_mkt_risk: str = self.strategy.main()
+        risk: str = self.strategy.main()
 
-        account = AccountManager(api_key, api_secret, True)
-        ctrade, csize = account.get_position("linear", self.asset)
-        if ctrade == -1:
-            print("Call to get position failed")
-            return 
-        # No trade predicted
-        if decision == 2:
-            return
-            print("There is currently no trade to make.")
-        # Predicted trade matches current position
-        elif decision == ctrade:
-            print("Current trade matches current position")
-            return 
-        elif decision != ctrade:
-            # close current trade, calculate & open new trade
-            self.trade_manager(account, ctrade, csize ,decision, curr_mkt_risk) 
-            # print("Trade manager loop")
-            return
-        else:
-            print("Unknown error for now")
-            return
+        trade = TradeManager(self.asset, self.timeframe)
+        trade.manage_trade(decision, risk)
+
+        # account = AccountManager(api_key, api_secret, True)
+        # ctrade, csize = account.get_position("linear", self.asset)
+        # if ctrade == -1:
+        #     print("Call to get position failed")
+        #     return 
+        # # No trade predicted
+        # if decision == 2:
+        #     return
+        #     print("There is currently no trade to make.")
+        # # Predicted trade matches current position
+        # elif decision == ctrade:
+        #     print("Current trade matches current position")
+        #     return 
+        # elif decision != ctrade:
+        #     # close current trade, calculate & open new trade
+        #     self.trade_manager(account, ctrade, csize ,decision, curr_mkt_risk) 
+        #     # print("Trade manager loop")
+        #     return
+        # else:
+        #     print("Unknown error for now")
+        #     return
 
 
     # Soon to be its own class I think
@@ -146,7 +151,7 @@ class Engine:
         target_dir = "Sell" if pred_dir == "Buy" else "Buy"
         trigger_dir = 1 if pred == "Sell" else 2
         size = str(size)
-        target = str(target)
+        # target = str(target)
 
         if current_trade == 2:
             print("Not in trade, marketing in")
