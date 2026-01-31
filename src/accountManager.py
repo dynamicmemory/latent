@@ -85,7 +85,7 @@ class AccountManager:
         """
         res = self.exchange.send_market_order("linear", asset, side, size)
         if self.check_retcode(res) != 0: return -1
-        print("Market Order Successfully set")
+        print("Market Order Successfully executed")
         return 0
     
 
@@ -133,7 +133,7 @@ class AccountManager:
 
 
     def get_last_two_ohlc(self, asset, timeframe) -> tuple:
-        res: dict = self.exchange.get_ohlc(asset, 2)
+        res: dict = self.exchange.get_ohlc(asset, timeframe, 2)
         if self.check_retcode(res) != 0: return -1, -1
         return res["result"]["list"][0], res["result"]["list"][1]        
 

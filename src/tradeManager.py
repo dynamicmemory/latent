@@ -1,5 +1,6 @@
 # Stateful, knows all the details of the current trade, the details for the 
 # flip to the other side, the details of risk and any other market related info
+from os import wait
 from src.accountManager import AccountManager 
 from src.apiManager import api_key, api_secret
 from enum import Enum 
@@ -49,7 +50,29 @@ class TradeManager:
         # Flip sides of the market
         self._close_position(decision)
         self._open_position(decision)
-        return 
+
+
+    # TODO: Add fail safes to ensure operations (deal with in exchange class)
+    def cancel_orders_close_position(self):
+        """ Automatically closes position and cancels orders. """
+        print("MAKES IT IN")
+        self._get_position()
+        print(self.pos_size, self.position)
+        if self.position < 0:
+            print("Failed to retrive current position, may still be in trade")
+            return 
+        # No position
+        elif self.position == 2:
+            return 
+
+        if self.account.cancel_all_USDT_orders("linear") < 0:
+            print("Failed to cancel all orders, may still be active orders")
+            return 
+
+        side = "Buy" if self.position == 0 else "Sell"
+
+        print(self.asset, side, self.pos_size)
+        self.account.create_market_order(self.asset, side, str(self.pos_size))
 
 
     def _get_position(self):
@@ -65,6 +88,7 @@ class TradeManager:
         self.position = pos 
         self.pos_size = size
 
+
     # TODO: Replace with ml values
     def _calc_stop(self, decision, ohlc) -> float:
         """ Calculates the stop loss price for the order"""
@@ -73,7 +97,8 @@ class TradeManager:
 
     def _calc_entry(self, ohlc) -> float:
         """Calculates the entry price for the order """
-        return ohlc[1]
+        return int(float(ohlc[1]))
+
 
     # TODO: Replace with ml values or risk profiled values
     def _calc_target(self, decision, entry, stop):
@@ -101,46 +126,51 @@ class TradeManager:
             case "high":    risk_percentage = 0.01
             case "extreme": risk_percentage = 0.005
 
+        denominator = max(abs(entry - stop), 50)
         if abs(entry - stop) == 0:
-            print("Entry_price - stop_price would be 0, avoiding 0 divide error")
-            return 0, 0 
+            print("entry - stop would be 0, avoiding 0 divide error")
+            print("Entry -",entry, "Stop -",stop)
+            # return 0 
 
-        size = (account_size * risk_percentage) / (abs(entry - stop))
+        size = (account_size * risk_percentage) / denominator#(abs(entry - stop))
         size = min(size, max_size) # Cap max size atm
         size = 0.001   # returning fixed val for testing orders
-        return size, risk_percentage
+        print(size, str(size))
+        return size
 
-
+    # TODO: Safeguards for atomic order placing i.e cancel all & close all on single failure.
     def _open_position(self, decision:int):
         """
         Opens a position, stop loss and target order. Cancels all previous 
         orders prior to executing the trade.
         """
         current_candle, one_candle_back = self.account.get_last_two_ohlc(self.asset, self.timeframe)
-        print(current_candle, one_candle_back)
-        return 
         side = "Buy" if decision == 1 else "Sell" 
         entry = self._calc_entry(current_candle)
         stop = self._calc_stop(decision, one_candle_back)
         size = self._calc_size(entry, stop)
         target = self._calc_target(decision, entry, stop)
 
+        if size == 0:
+            return 
+
         if self.account.cancel_all_USDT_orders("linear") < 0:
             print("Call to cancel all orders failed")
             return 
 
         # The position 
-        self.account.create_market_order(self.asset, side, size) 
+        self.account.create_market_order(self.asset, side, str(size)) 
         # The stop; deicions + 1 will equal 1 when shorting and 2 when longing.
         self.account.create_stop_loss(self.asset, side, str(size), str(stop), decision+1)
         # The target 
         side = "Buy" if side == "Sell" else "Buy"
-        self.account.create_limit_order(self.asset, side, str(size), target)
+        self.account.create_limit_order(self.asset, side, str(size), str(target))
 
 
     def _close_position(self, decision:int):
         """Closes the current open position """
         side = "Buy" if decision == 1 else "Sell" 
+        print(self.asset, side, self.pos_size)
         self.account.create_market_order(self.asset, side, self.pos_size)
 
 
@@ -156,98 +186,3 @@ class TradeManager:
         # s = Strategy()
         pass
 
-###############################################################################
-
-    #     decision:int = self.torchnn.predict()
-    #     decision = 0
-    #
-    #     # Find current market risk level
-    #     self.strategy = Strategy(X)
-    #     curr_mkt_risk: str = self.strategy.main()
-    #
-    #     account = AccountManager(api_key, api_secret, True)
-    #     ctrade, csize = account.get_position("linear", self.asset)
-    #     if ctrade == -1:
-    #         print("Call to get position failed")
-    #         return 
-    #     # No trade predicted
-    #     if decision == 2:
-    #         return
-    #         print("There is currently no trade to make.")
-    #     # Predicted trade matches current position
-    #     elif decision == ctrade:
-    #         print("Current trade matches current position")
-    #         return 
-    #     elif decision != ctrade:
-    #         # close current trade, calculate & open new trade
-    #         self.trade_manager(account, ctrade, csize ,decision, curr_mkt_risk) 
-    #         # print("Trade manager loop")
-    #         return
-    #     else:
-    #         print("Unknown error for now")
-    #         return
-    #
-    #
-    # def trade_manager(self, account, current_trade:int, current_size:float, pred:int, risk):
-    #     print("Start of trade_manager")
-    #
-    #     # Cancel all stops and limit orders
-    #     if account.cancel_all_USDT_orders("linear") < 0:
-    #         print("Call to cancel all orders failed")
-    #         return 
-    #     print("Call to cancel worked")
-    #
-    #     balance = account.get_balance(asset="USDT")
-    #     if balance < 0:
-    #         print("Call for balance failed")
-    #         return 
-    #     print("Call for balance worked")
-    #
-    #     exchange = Exchange(self.asset, self.timeframe)
-    #     ohlc = exchange.get_ohlc()
-    #
-    #     # Calculate entry, stop, target and size
-    #     entry: float = int(float(ohlc[-1][1]))
-    #
-    #     # Hard coded arbitrary stop for the time being 
-    #     stop, target = 0, 0
-    #     if pred == 1:
-    #         stop: int = int(float(ohlc[-2][3]))
-    #         target: int = (entry - stop) * 2 + entry
-    #     elif pred == 0: 
-    #         stop: int = int(float(ohlc[-2][2]))
-    #         target: int = entry - (stop - entry) * 2
-    #
-    #
-    #     print(f"Entry {entry}, Stop {stop}, Target {target}, Account {balance}") 
-    #     rc = RiskCalculator()
-    #     if balance <= 0 or entry <= 0 or stop <= 0:
-    #         print("Error occured in calculating trade details", balance, entry, stop)
-    #         return 
-    #     size, risk_percentage = rc.main(balance, entry, stop, risk)
-    #
-    #     print(asset)
-    #     print(f"Time Frame:\t{timeframe}")
-    #     print(f"Risk Level:\t{risk}")
-    #     print(f"Direction:\t{pred}")
-    #     print(f"Entry Level:\t${entry}")
-    #     print(f"Stop Level:\t${stop}")
-    #     print(f"Target pri:\t${target}")
-    #     print(f"Size of Pos:\t${size}")
-    #
-    #
-    #     pred_dir = "Buy" if pred == 1 else "Sell"
-    #     target_dir = "Sell" if pred_dir == "Buy" else "Buy"
-    #     trigger_dir = 1 if pred == "Sell" else 2
-    #     size = str(size)
-    #     target = str(target)
-    #
-    #     if current_trade == 2:
-    #         print("Not in trade, marketing in")
-    #         # Place new order 
-    #         # also have to drop stop and target orders
-    #         return 
-    #     else:
-    #         # close current trade 
-    #         print("Closing current trade")
-    #         account.create_market_order(self.asset, pred_dir, str(current_size))            

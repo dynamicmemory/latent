@@ -10,6 +10,11 @@ USERNAME:str = "HUMAN OVERLORD"   # Temp
 TIME_MAP: dict[int, str] = { 1: "15", 2: "60", 3: "240", 4: "D", 5: "W", 0: "None"}
 ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", 0: "None"}
 
+# FOR AUTOMATION MENU, REPLACE WITH SETTINGS IN .CONFIG WHEN BUILD 
+AUTOMATION_ASSET = None 
+AUTOMATION_TIMEFRAME = None 
+AUTOMATION_ENGINE = None 
+
 def print_banner(banner_text:str="MEMORYVOID") -> None:
     """
     Clears the terminal display and prints a banner for the current menu
@@ -44,7 +49,7 @@ def get_menu_selection(options:int) -> int:
 
 def run_main_menu() -> None:
     """ Runs the main menu for the application """
-    options:int = 8
+    options:int = 7
     while True:
         print_banner()
         dynamic_fprint(main_menu, USERNAME)
@@ -54,11 +59,10 @@ def run_main_menu() -> None:
         if   choice == 1: manage_account()
         elif choice == 2: run_predict()
         elif choice == 3: start_engine() 
-        elif choice == 4: stop_engine() 
-        elif choice == 5: view_dashboard() 
-        elif choice == 6: run_maintenance()
-        elif choice == 7: run_settings()  
-        elif choice == 8: break
+        elif choice == 4: view_dashboard() 
+        elif choice == 5: run_maintenance()
+        elif choice == 6: run_settings()  
+        elif choice == 7: break
 
     print("\033c", end="")
     exit()
@@ -87,22 +91,22 @@ def manage_account() -> None:
             account.print_all_usdt_positions()
             account.print_orders("linear", "BTCUSDT")
         elif choice == 2:
-            dynamic_fprint(choose_asset)
+            dynamic_fprint(choose_asset_menu)
             asset = ASSET_MAP[get_menu_selection(1)]
-            dynamic_fprint(side_menu)
+            dynamic_fprint(choose_side_menu)
             side = "Buy" if get_menu_selection(2) == 1 else "Sell"
             size = input("Enter amount: >> ")
             price = input("Enter price: >> ")
             account.create_limit_order(asset, side, size, price)
         elif choice == 3:
-            dynamic_fprint(choose_asset)
+            dynamic_fprint(choose_asset_menu)
             asset = ASSET_MAP[get_menu_selection(1)]
-            dynamic_fprint(side_menu)
+            dynamic_fprint(choose_side_menu)
             side = "Buy" if get_menu_selection(2) == 1 else "Sell"
             size = input("Enter amount: >> ")
             account.create_market_order(asset, side, size)
         elif choice == 4:
-            dynamic_fprint(choose_asset)
+            dynamic_fprint(choose_asset_menu)
             asset: str = ASSET_MAP[get_menu_selection(1)]
             orders: list|int = account.print_orders("linear", asset)
             if isinstance(orders, int) or len(orders) == 0:
@@ -128,11 +132,11 @@ def run_predict() -> None:
 
         choice = get_menu_selection(options)
         if choice == 1:
-            dynamic_fprint(pred_asset)
+            dynamic_fprint(choose_asset_menu)
             asset = get_menu_selection(len(ASSET_MAP)-1)
 
         elif choice == 2:
-            dynamic_fprint(pred_timeframe)
+            dynamic_fprint(timeframe_menu)
             timeframe = get_menu_selection(len(TIME_MAP)-1)
 
         elif choice == 3:
@@ -154,48 +158,56 @@ def start_engine() -> None:
 
 
     """
-    options:int = 5
+    global AUTOMATION_ENGINE
+    options:int = 6
     asset:int = 0
-    engine_status = None
+    engine_status = None if AUTOMATION_ENGINE is None else "Running" 
     timeframe:int = 0
     while True:
         print_banner("AUTOMATION")
-        dynamic_fprint(start_menu, engine_status, ASSET_MAP[asset], TIME_MAP[timeframe])
+        dynamic_fprint(automate_menu, engine_status, ASSET_MAP[asset], TIME_MAP[timeframe])
         choice:int = get_menu_selection(options)
         if choice == 1:
-            if asset == 0 or timeframe == 0:
-                print("\nError: Select an asset and timeframe to predict on first")
-                input("\nHit enter to continue")
-                continue
-            # Engine is currently always none and start engine isnt built yet 
-            # so this is fine for now.
             if engine_status is not None:
                 print("Engine is already running...")
                 input("\nHit enter to continue")
                 continue
 
-            engine = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
-            # Loop should start here? Menu should not be doing this. Spin off thread?
-            engine.start_automation()
-            # Print whats happening & sleep?
+            if asset == 0 or timeframe == 0:
+                print("\nError: Select an asset and timeframe to predict on first")
+                input("\nHit enter to continue")
+                continue
+
+            if AUTOMATION_ENGINE is None:
+                AUTOMATION_ENGINE = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
+            AUTOMATION_ENGINE.start_automation()
 
             input("\nHit enter to continue")
 
         elif choice == 2:
-            dynamic_fprint(pred_asset)
+            dynamic_fprint(choose_asset_menu)
             asset = get_menu_selection(len(ASSET_MAP)-1)
         elif choice == 3:
-            dynamic_fprint(pred_timeframe)
+            dynamic_fprint(timeframe_menu)
             timeframe = get_menu_selection(len(TIME_MAP)-1)
         elif choice == 4:
             print("Feature currently under construction")
             input("\nHit enter to continue")
+        
         elif choice == 5:
+            if AUTOMATION_ENGINE is None:
+                print("Engine currently not running")
+                input("\nHit enter to continue")
+                continue 
+            AUTOMATION_ENGINE.stop_automation()
+
+            input("\nHit enter to continue")
+        elif choice == 6:
             break 
 
 
 def stop_engine() -> None:
-    print("Feature currently under construction")
+
     input("\nHit enter to continue")
     pass
 
@@ -274,11 +286,10 @@ main_menu: str = \
 1. Manage account
 2. Predict (manual)
 3. Start engine
-4. Stop engine
-5. View Dashboard
-6. Maintenance
-7. Settings
-8. Exit"""
+4. View Dashboard
+5. Maintenance
+6. Settings
+7. Exit"""
 
 account_menu: str = """
 1. Account overview 
@@ -288,15 +299,6 @@ account_menu: str = """
 5. Cancel all orders
 6. Return to main menu"""
 
-choose_asset: str = """
-Which asset:
-1. Bitcoin"""
-
-side_menu: str = """
-Which side:
-1. Buy
-2. Sell"""
-
 pred_menu: str = \
 """Current Asset: {0} | Current Timeframe: {1}\n
 1. Choose asset
@@ -304,25 +306,14 @@ pred_menu: str = \
 3. Make a prediction
 4. Return to main menu"""
 
-pred_asset: str = """
-Which asset:
-1. Bitcoin"""
-
-pred_timeframe: str = """
-Which timeframe:
-1. 15 minutes
-2. 1 hour
-3. 4 hour
-4. Daily
-5. Weekly"""
-
-start_menu: str = """
+automate_menu: str = """
 Engine is currently {0} | Current Asset: {1} | Current Timeframe: {2}\n 
 1. Start Engine 
 2. Choose asset 
 3. Choose timeframe
 4. Check health
-5. Return to main menu 
+5. Stop Engine
+6. Return to main menu 
 """
 
 stop_menu: str = """
@@ -344,3 +335,20 @@ settings_menu: str = """
 4. Preferences
 5. Return to main menu
 """
+
+choose_asset_menu: str = """
+Which asset:
+1. Bitcoin"""
+
+choose_side_menu: str = """
+Which side:
+1. Buy
+2. Sell"""
+
+timeframe_menu: str = """
+Which timeframe:
+1. 15 minutes
+2. 1 hour
+3. 4 hour
+4. Daily
+5. Weekly"""
