@@ -4,6 +4,10 @@ import os
 
 dotenv_path = ".env"
 load_dotenv(dotenv_path)
+    
+# Current test apis
+# api_key="KCsB4A1InMGHlCVkoH"
+# api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj"
 
 api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")

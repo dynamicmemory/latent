@@ -3,16 +3,19 @@
 from src.engine import Engine
 from src.databaseManager import DatabaseManager
 from src.accountManager import AccountManager
+from src.settings import Settings 
 from src.apiManager import api_key, api_secret
 import pyfiglet
+
+settings = Settings()
 
 USERNAME:str = "HUMAN OVERLORD"   # Temp
 TIME_MAP: dict[int, str] = { 1: "15", 2: "60", 3: "240", 4: "D", 5: "W", 0: "None"}
 ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", 0: "None"}
 
 # FOR AUTOMATION MENU, REPLACE WITH SETTINGS IN .CONFIG WHEN BUILD 
-AUTOMATION_ASSET = None 
-AUTOMATION_TIMEFRAME = None 
+AUTOMATION_ASSET = settings.default_asset() 
+AUTOMATION_TIMEFRAME = settings.default_timeframe() 
 AUTOMATION_ENGINE = None 
 
 def print_banner(banner_text:str="MEMORYVOID") -> None:
@@ -72,13 +75,9 @@ def run_main_menu() -> None:
 def manage_account() -> None:
     """ """
     options:int = 6 
-    # Temporary Testnet only api keys for development, test net access only
-    # Swap to env var once testing complete
     account = AccountManager(api_key=api_key,
                  api_secret=api_secret, 
                  testnet=True)
-    # api_key="KCsB4A1InMGHlCVkoH"
-    # api_secret="jjmP9FrX9gjySQvEguBPYAR2gJd7DKDJJJxj"
 
     while True:
         print_banner("ACCOUNT")
@@ -154,10 +153,7 @@ def run_predict() -> None:
 
 
 def start_engine() -> None:
-    """ 
-
-
-    """
+    """ Menu for running the main automation engine """
     global AUTOMATION_ENGINE
     options:int = 6
     asset:int = 0
@@ -240,7 +236,6 @@ def run_maintenance() -> None:
             mod = agent.list_models("./models")
             agent.print_models(mod)
 
-            # print(len(mod))
             if len(mod) == 0:
                 print("\nThere are no models to retrain, go create one... blah blah.")
                 return;

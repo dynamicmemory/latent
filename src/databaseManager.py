@@ -25,7 +25,7 @@ class DatabaseManager:
         """
         self.asset = asset 
         self.timeframe = timeframe
-        self.db_name = f"{asset}.db"
+        self.db_name = f"./data/{asset}.db"
         self.table_name = f"{self.asset}_{self.timeframe}"
         self.database = Database(self.db_name, self.table_name)
         self.database.create_table() 
