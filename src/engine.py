@@ -91,16 +91,17 @@ class Engine:
             self.torchnn.save_checkpoint(model_path)
 
 
+    # The way the torchnn is currently built, we must always pass in x, y 
+    # test and train set (this will change in future update) therefore we 
+    # must go through the process of feature engineering and spliting the 
+    # data sets to obtain an instance of the network to call predict on...
     def market_cycle(self) -> None:
         """Runs full pipeline of the trading engine"""
         # ensure the database is up to date 
         self.dbm = DatabaseManager(self.asset, self.timeframe)
         self.dbm.update_table()
 
-        # The way the torchnn is currently built, we must always pass in x, y 
-        # test and train set (this will change in future update) therefore we 
-        # must go through the process of feature engineering and spliting the 
-        # data sets to obtain an instance of the network to call predict on...
+
         self.features = Features(self.dbm.get_dataframe())
         X, y = self.features.run_features()
 
@@ -111,7 +112,8 @@ class Engine:
         # load the model into memory and make a prediction
         self.get_model(X_train, X_test, y_train, y_test)
         decision:int = self.torchnn.predict()
-        decision = 1
+        # Hard coded for on the fly debugging and testing
+        # decision = 1
 
         # Find current market risk level
         self.strategy = Strategy(X)

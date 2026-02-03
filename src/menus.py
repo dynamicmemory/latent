@@ -1,9 +1,8 @@
-# BEFORE I GET CARRIED AWAY.... YES WE WILL MAKE A MENU MANAGER, JUST FINISH THIS AS IS FOR NOW.
 # The menu class is growing at a rapid rate....
 from src.engine import Engine
 from src.databaseManager import DatabaseManager
 from src.accountManager import AccountManager
-from src.settings import Settings 
+from src.settingss import Settings 
 from src.apiManager import api_key, api_secret
 import pyfiglet
 
@@ -12,13 +11,9 @@ settings = Settings()
 USERNAME:str = "HUMAN OVERLORD"   # Temp
 TIME_MAP: dict[int, str] = { 1: "15", 2: "60", 3: "240", 4: "D", 5: "W", 0: "None"}
 ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", 0: "None"}
+AUTOMATION_ENGINE = None
 
-# FOR AUTOMATION MENU, REPLACE WITH SETTINGS IN .CONFIG WHEN BUILD 
-AUTOMATION_ASSET = settings.default_asset() 
-AUTOMATION_TIMEFRAME = settings.default_timeframe() 
-AUTOMATION_ENGINE = None 
-
-def print_banner(banner_text:str="MEMORYVOID") -> None:
+def print_banner(banner_text:str="Algorithmic Trading SYS") -> None:
     """
     Clears the terminal display and prints a banner for the current menu
            
@@ -55,7 +50,7 @@ def run_main_menu() -> None:
     options:int = 7
     while True:
         print_banner()
-        dynamic_fprint(main_menu, USERNAME)
+        dynamic_fprint(main_menu, settings.user())
         choice = get_menu_selection(options)
 
         # TODO: Change to a dict and run choice from the dict
@@ -154,11 +149,14 @@ def run_predict() -> None:
 
 def start_engine() -> None:
     """ Menu for running the main automation engine """
-    global AUTOMATION_ENGINE
     options:int = 6
-    asset:int = 0
-    engine_status = None if AUTOMATION_ENGINE is None else "Running" 
-    timeframe:int = 0
+    asset:int = settings.default_asset() 
+    timeframe:int = settings.default_timeframe() 
+    
+    engine_status = settings.automation_engine()
+    if engine_status is None:
+        AUTOMATION_ENGINE = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
+
     while True:
         print_banner("AUTOMATION")
         dynamic_fprint(automate_menu, engine_status, ASSET_MAP[asset], TIME_MAP[timeframe])
@@ -174,28 +172,30 @@ def start_engine() -> None:
                 input("\nHit enter to continue")
                 continue
 
-            if AUTOMATION_ENGINE is None:
-                AUTOMATION_ENGINE = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
             AUTOMATION_ENGINE.start_automation()
+            settings.save_engine("Running")
 
             input("\nHit enter to continue")
 
         elif choice == 2:
             dynamic_fprint(choose_asset_menu)
             asset = get_menu_selection(len(ASSET_MAP)-1)
+            settings.save_asset(asset)
         elif choice == 3:
             dynamic_fprint(timeframe_menu)
             timeframe = get_menu_selection(len(TIME_MAP)-1)
+            settings.save_timeframe(timeframe)
         elif choice == 4:
             print("Feature currently under construction")
             input("\nHit enter to continue")
         
         elif choice == 5:
-            if AUTOMATION_ENGINE is None:
+            if settings.automation_engine() is None:
                 print("Engine currently not running")
                 input("\nHit enter to continue")
                 continue 
             AUTOMATION_ENGINE.stop_automation()
+            settings.save_engine(None)
 
             input("\nHit enter to continue")
         elif choice == 6:
@@ -272,6 +272,7 @@ def run_settings() -> None:
 
 
 if __name__ == "__main__":
+    settings = Settings()
     pass
 
 
