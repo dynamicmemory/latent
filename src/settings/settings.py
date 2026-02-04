@@ -45,7 +45,7 @@ class Settings:
         return self._config.get("user")
 
 
-    def default_asset(self) -> int:
+    def asset(self) -> int:
         val = self._config.get("default_asset")
         if val is None or isinstance(val, str):
             print("Asset is set to None in config")
@@ -54,7 +54,7 @@ class Settings:
         return val
 
 
-    def default_timeframe(self):
+    def timeframe(self):
         val = self._config.get("default_timeframe")
         if val is None:
             print("Timeframe is set to None in config")

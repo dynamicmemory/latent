@@ -5,7 +5,7 @@ def menu_runner(title: str, options: dict[int, list], header: str, args: list) -
     menu_length: int =  len(options) + 1 
     while True:
         print_banner(title)
-        dynamic_fprint(header, args)
+        dynamic_fprint(header, *args)
 
         for key, (label, _) in options.items():
             print(f"{key}. {label}")
@@ -18,7 +18,7 @@ def menu_runner(title: str, options: dict[int, list], header: str, args: list) -
 
         _, func = options[choice]
 
-        func
+        func()
 
 
 def print_banner(banner_text:str="Algorithmic Trading SYS") -> None:
@@ -53,6 +53,16 @@ def get_menu_selection(options:int) -> int:
         if choice > 0 and choice < options+1:
             return choice 
         print("Enter a number from the provided options")
+
+
+def convert_asset_tostring(record: int) -> str:
+    """Returns the record from the asset map that matches the integer passed in"""
+    return ASSET_MAP[record]
+
+
+def convert_timeframe_tostring(record: int) -> str:
+    """Returns the record from the time map that matches the integer passed in"""
+    return TIME_MAP[record]
 
 
 TIME_MAP: dict[int, str] = { 1: "15", 

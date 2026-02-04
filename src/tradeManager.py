@@ -15,8 +15,8 @@ class Decision(Enum):
     
 
 class TradeManager:
-    def __init__(self, asset:str, timeframe:str):
-        self.account = AccountManager(api_key, api_secret, True)
+    def __init__(self, account: AccountManager, asset:str, timeframe:str):
+        self.account = account
         self.asset: str = asset 
         self.timeframe: str = timeframe
         self.position: int = -1

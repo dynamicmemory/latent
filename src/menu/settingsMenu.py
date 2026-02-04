@@ -5,12 +5,21 @@ from src.settings.settings import Settings
 class SettingsMenu(IMenu):
     def __init__(self, settings: Settings):
         self.settings = settings
-    
+        self.menu: dict[int, list] = {
+            # 1: ["", self.],
+            # 2: ["", self.],
+            # 4: ["", self.],
+            # 4: ["", self.],
+        }
+
 
     def run(self) -> None:
-        pass
+        args: list = []
+        menu_runner(title, self.menu, header, args)
+    
 
-
+title: str = ""
+header: str = ""
 
 
 # Global settings for the program, make these persistance with a config file

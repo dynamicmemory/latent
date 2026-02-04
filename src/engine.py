@@ -1,7 +1,7 @@
 """ 
 This class should be an orchestration class that brings everything together 
 """
-from pandas.core.frame import is_1d_only_ea_dtype
+from src.accountManager import AccountManager
 from src.miniML.machLearnTools import MachLearnTools
 from src.exchange import Exchange
 from src.databaseManager import DatabaseManager
@@ -11,7 +11,6 @@ from src.strategy import Strategy
 from src.tradeManager import TradeManager
 from datetime import datetime
 import os 
-import time
 import threading 
 
 TIME_MAP: dict[str, int] = {
@@ -23,14 +22,15 @@ TIME_MAP: dict[str, int] = {
 }
 
 class Engine:
-    def __init__(self, asset:str="BTCUSDT", timeframe:str="15"):
+    def __init__(self, account: AccountManager, asset:str="BTCUSDT", timeframe:str="15"):
         self.asset = asset
         self.timeframe = timeframe
+        self.account_manager = account
         self.dbm = None
         self.features = None
         self.mlt = None
         self.torchnn = None
-        self.trade = TradeManager(self.asset, self.timeframe)
+        self.trade = TradeManager(self.account_manager, self.asset, self.timeframe)
         self.stop_event = threading.Event()
         self.thread = None
         
@@ -214,7 +214,7 @@ class Engine:
         print(f"{i}. Return to maintenance menu.\n")
         
 
-    def retrain(self, model_path):
+    def retrain(self, model_path, asset, timeframe):
         """
         Retrains a model 
 
@@ -223,20 +223,20 @@ class Engine:
                              made up from the asset name and timeframe.
         """
         # Get data
-        self.dbm = DatabaseManager(self.asset, self.timeframe)
+        dbm = DatabaseManager(asset, timeframe)
 
         # Engineer features
-        self.features = Features(self.dbm.get_dataframe())
-        X, y = self.features.run_features()
+        features = Features(dbm.get_dataframe())
+        X, y = features.run_features()
 
         # Prep data for the model
-        self.mlt = MachLearnTools(X, y)
-        X_train, X_test, y_train, y_test = self.mlt.timeseries_pipeline()
+        mlt = MachLearnTools(X, y)
+        X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
 
-        print(f"Retraining model {self.asset} - {self.timeframe}") 
+        print(f"Retraining model {asset} - {timeframe}") 
 
         # Retrain the model and save it to the provided path
-        self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, training=True)
-        self.torchnn.save_checkpoint(model_path)
+        torchnn = Torchnn(mlt, X_train, X_test, y_train, y_test, training=True)
+        torchnn.save_checkpoint(model_path)
 
         print(f"\nModel has been retrained successfull.\n")

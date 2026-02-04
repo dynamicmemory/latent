@@ -1,4 +1,3 @@
-from src.menu.menuInterface import IMenu 
 from src.menu.accountMenu import AccountMenu
 from src.menu.predictionMenu import PredictionMenu 
 from src.menu.automationMenu import AutomationMenu
@@ -7,44 +6,31 @@ from src.menu.maintenanceMenu import MaintenanceMenu
 from src.menu.settingsMenu import SettingsMenu
 from src.menu.menuUtilities import *
 from src.settings.settings import Settings
+from src.accountManager import AccountManager
+from src.engine import Engine
 
 class MainMenu:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, account: AccountManager, engine: Engine) -> None:
         self.settings = settings
+        self.account = account 
+        self.engine = engine
         self.menus: dict[int, list] = {
-            1: ["Manage account", AccountMenu(self.settings)],
-            2: ["Make a Prediction", PredictionMenu(self.settings)],
-            3: ["Automation Engine", AutomationMenu(self.settings)],
-            4: ["Dashboard", DashboardMenu(self.settings)],
-            5: ["Maintenance", MaintenanceMenu(self.settings)],
-            6: ["Settings", SettingsMenu(self.settings)],
+            1: ["Manage account", AccountMenu(self.settings, self.account).run],
+            2: ["Make a Prediction", PredictionMenu(self.settings).run],
+            3: ["Automation Engine", AutomationMenu(self.settings).run],
+            4: ["Dashboard", DashboardMenu(self.settings).run],
+            5: ["Maintenance", MaintenanceMenu(self.settings, self.engine).run],
+            6: ["Settings", SettingsMenu(self.settings).run],
         }
 
 
     def run_main_menu(self):
         """ Runs the main menu for the application """
-        args: list = (self.settings.username())
+        args: list = [self.settings.username()]
         menu_runner(heading, self.menus, main_menu, args)
 
         print("\033c", end="")
         exit()
-
-        # options = len(self.menus) + 1
-
-        # while True:
-        #     print_banner("Algorithmic Trading SYS")
-            # dynamic_fprint(main_menu, self.settings.username)
-            # for key in self.menus.keys():
-            #     print(f"{key}. {self.menus[key][0]}")
-            # print(f"{options}. Exit")
-
-            # choice = get_menu_selection(options)
-            #
-            # if choice == options:
-            #     break
-            # else:
-            #     self.menus[choice][1].run()
-
 
 
 heading: str = "Algorithmic Trading SYS"
