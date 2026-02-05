@@ -1,6 +1,6 @@
 from src.engine import Engine
 from src.menu.menuInterface import IMenu
-from src.menu.menuUtilities import menu_runner, convert_asset_tostring, TIME_MAP, get_menu_selection
+from src.menu.menuUtilities import *
 from src.settings.settings import Settings
 from src.databaseManager import DatabaseManager
 
@@ -15,8 +15,7 @@ class MaintenanceMenu(IMenu):
 
 
     def run(self) -> None:
-        args: list = []
-        menu_runner(title, self.menu, header, args)
+        menu_runner(title, self.menu, header, lambda: [])
 
 
     def update_database(self) -> None:
@@ -24,18 +23,17 @@ class MaintenanceMenu(IMenu):
             if key == 0:
                 continue
 
-            dbm = DatabaseManager(convert_asset_tostring(self.settings.asset()), 
+            dbm = DatabaseManager(asset_tostring(self.settings.asset()), 
                                   timeframe) 
             dbm.update_table()
             dbm.export_csv()
-        input("\n>> Hit enter to continue")
 
 
-    # Combined with whats in the engine class, this should move to a 
-    # retraining class that can simply be called from here, and which 
-    # calls whichever algos/model building it needs from within the class.
+    # Retraining models should not belong with the engine, there should be a 
+    # model class of some kind or model manager, which should contain retrain 
+    # that is callable from this menu
     def retrain_models(self) -> None:
-        models = self.engine.list_models("./models")
+        models = self.engine.list_models("./pickled_models")
         self.engine.print_models(models)
 
         if len(models) == 0:
@@ -50,9 +48,7 @@ class MaintenanceMenu(IMenu):
         choosen_model = models[model-1]['name']
         a = choosen_model.split("-")[0]
         t = choosen_model.split("-")[1]
-        self.engine.retrain(f"./models/{a}-{t}-model.pth", a, t)
-
-        input("\n>> Hit enter to continue")
+        self.engine.retrain(f"./pickled_models/{a}-{t}-model.pth", a, t)
 
 
 title: str = "Maintenance"

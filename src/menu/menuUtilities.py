@@ -1,10 +1,10 @@
 import pyfiglet
 
-
-def menu_runner(title: str, options: dict[int, list], header: str, args: list) -> None:
+def menu_runner(title: str, options: dict[int, list], header: str, args_callable) -> None:
     menu_length: int =  len(options) + 1 
     while True:
         print_banner(title)
+        args = args_callable()
         dynamic_fprint(header, *args)
 
         for key, (label, _) in options.items():
@@ -20,6 +20,11 @@ def menu_runner(title: str, options: dict[int, list], header: str, args: list) -
 
         func()
 
+        # Known bug that this runs on inner menu exit choices, comes from main
+        # menus initial call not == menu_length, therefore this run onces when 
+        # exiting inner menu.
+        input("\nHit enter to continue")
+
 
 def print_banner(banner_text:str="Algorithmic Trading SYS") -> None:
     """
@@ -31,7 +36,7 @@ def print_banner(banner_text:str="Algorithmic Trading SYS") -> None:
     print("\033c", end="")
     text = pyfiglet.figlet_format(banner_text, font="slant")
     print(text)
-    print("-"*60)
+    print("-"*70)
 
 
 def dynamic_fprint(template:str, *args:list):
@@ -42,7 +47,7 @@ def dynamic_fprint(template:str, *args:list):
     
 def get_menu_selection(options:int) -> int:
     """ Returns the selected menu item """
-    print("-"*60)
+    print("-"*70)
     while True:
         try:
             choice = int(input("\n>> "))
@@ -55,14 +60,33 @@ def get_menu_selection(options:int) -> int:
         print("Enter a number from the provided options")
 
 
-def convert_asset_tostring(record: int) -> str:
+# MAP RELATED UTILS
+def asset_tostring(record: int) -> str:
     """Returns the record from the asset map that matches the integer passed in"""
     return ASSET_MAP[record]
 
 
-def convert_timeframe_tostring(record: int) -> str:
+def timeframe_tostring(record: int) -> str:
     """Returns the record from the time map that matches the integer passed in"""
     return TIME_MAP[record]
+
+
+def choose_timeframe() -> int:
+    for k, v in TIME_MAP.items():
+        if k == 0:
+            continue
+        print(f"{k}. {v}")
+    choice = get_menu_selection(len(TIME_MAP)-1) # -1 for 0 option
+    return choice
+
+
+def choose_asset() -> int: 
+    for k, v in ASSET_MAP.items():
+        if k == 0:
+            continue 
+        print(f"{k}. {v}")
+    choice = get_menu_selection(len(ASSET_MAP)-1) # -1 for 0 option
+    return choice
 
 
 TIME_MAP: dict[int, str] = { 1: "15", 
@@ -74,3 +98,4 @@ TIME_MAP: dict[int, str] = { 1: "15",
 
 ASSET_MAP: dict[int, str] = { 1: "BTCUSDT", 
                              0: "None"}
+

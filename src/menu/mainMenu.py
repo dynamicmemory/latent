@@ -16,18 +16,19 @@ class MainMenu:
         self.engine = engine
         self.menus: dict[int, list] = {
             1: ["Manage account", AccountMenu(self.settings, self.account).run],
-            2: ["Make a Prediction", PredictionMenu(self.settings).run],
-            3: ["Automation Engine", AutomationMenu(self.settings).run],
+            2: ["Make a Prediction", PredictionMenu(self.settings, self.engine).run],
+            3: ["Automation Engine", AutomationMenu(self.settings, self.engine).run],
             4: ["Dashboard", DashboardMenu(self.settings).run],
             5: ["Maintenance", MaintenanceMenu(self.settings, self.engine).run],
             6: ["Settings", SettingsMenu(self.settings).run],
         }
 
 
-    def run_main_menu(self):
+    def run(self):
         """ Runs the main menu for the application """
-        args: list = [self.settings.username()]
-        menu_runner(heading, self.menus, main_menu, args)
+        menu_runner(heading, self.menus, main_menu, lambda: [
+            self.settings.username()
+        ])
 
         print("\033c", end="")
         exit()

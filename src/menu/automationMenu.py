@@ -1,76 +1,62 @@
+from src.engine import Engine
 from src.menu.menuInterface import IMenu
 from src.menu.menuUtilities import *
 from src.settings.settings import Settings
+from enum import Enum
+
+class AutoStatus(Enum):
+    NONE = None
+    RUNNING = "running"
+
 
 class AutomationMenu(IMenu):
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, engine: Engine):
         self.settings = settings
+        self.engine = engine
         self.menu: dict[int, list] = {
-            # 1: ["", self.],
-            # 2: ["", self.],
-            # 3: ["", self.],
-            # 4: ["", self.],
+            1: ["Start Automation", self.start_engine],
+            2: ["Stop Automation", self.stop_engine],
+            3: ["Check health", self.check_health],
+            4: ["Change timeframe", self.change_asset],
+            5: ["Change Asset", self.change_timeframe],
         }
 
 
     def run(self) -> None:
-        args: list = []
-        menu_runner(title, self.menu, header, args)
+        menu_runner(title, self.menu, header, lambda: [
+            self.settings.automation_status(),
+            asset_tostring(self.settings.asset()),
+            timeframe_tostring(self.settings.timeframe())
+        ])
 
-title: str = ""
-header: str = ""
+
+    def start_engine(self) -> None:
+        if self.settings.automation_status() is None:
+            self.engine.start_automation()
+            self.settings.save_automation_status(AutoStatus.RUNNING.value)
+            return
+        print("Automation is already running...")
+
+    
+    def stop_engine(self) -> None:
+        if self.settings.automation_status() is not None:
+            self.engine.stop_automation()
+            self.settings.save_automation_status(AutoStatus.NONE.value)
+            return 
+        print("Automation is currently turned off...")
 
 
-# def start_engine() -> None:
-#     """ Menu for running the main automation engine """
-#     options:int = 6
-#     asset:int = settings.default_asset() 
-#     timeframe:int = settings.default_timeframe() 
-#
-#     engine_status = settings.automation_engine()
-#     if engine_status is None:
-#         AUTOMATION_ENGINE = Engine(ASSET_MAP[asset], TIME_MAP[timeframe])
-#
-#     while True:
-#         print_banner("AUTOMATION")
-#         dynamic_fprint(automate_menu, engine_status, ASSET_MAP[asset], TIME_MAP[timeframe])
-#         choice:int = get_menu_selection(options)
-#         if choice == 1:
-#             if engine_status is not None:
-#                 print("Engine is already running...")
-#                 input("\nHit enter to continue")
-#                 continue
-#
-#             if asset == 0 or timeframe == 0:
-#                 print("\nError: Select an asset and timeframe to predict on first")
-#                 input("\nHit enter to continue")
-#                 continue
-#
-#             AUTOMATION_ENGINE.start_automation()
-#             settings.save_engine("Running")
-#
-#             input("\nHit enter to continue")
-#
-#         elif choice == 2:
-#             dynamic_fprint(choose_asset_menu)
-#             asset = get_menu_selection(len(ASSET_MAP)-1)
-#             settings.save_asset(asset)
-#         elif choice == 3:
-#             dynamic_fprint(timeframe_menu)
-#             timeframe = get_menu_selection(len(TIME_MAP)-1)
-#             settings.save_timeframe(timeframe)
-#         elif choice == 4:
-#             print("Feature currently under construction")
-#             input("\nHit enter to continue")
-#
-#         elif choice == 5:
-#             if settings.automation_engine() is None:
-#                 print("Engine currently not running")
-#                 input("\nHit enter to continue")
-#                 continue 
-#             AUTOMATION_ENGINE.stop_automation()
-#             settings.save_engine(None)
-#
-#             input("\nHit enter to continue")
-#         elif choice == 6:
-#             break 
+    def check_health(self) -> None:
+        print("Feature under construction")
+
+
+    def change_asset(self) -> None:
+        self.settings.save_asset(choose_asset())
+         
+
+    def change_timeframe(self) -> None:
+        self.settings.save_timeframe(choose_timeframe())
+
+
+title: str = "Automation Engine"
+header: str = "Automation is {0} | Asset - {1} | Timeframe - {2}\n"

@@ -11,13 +11,11 @@ class DashboardMenu(IMenu):
 
 
     def run(self) -> None:
-        args: list = []
-        menu_runner(title, self.menu, header, args)
+        menu_runner(title, self.menu, header, lambda: [])
 
 
     def dashboard(self) -> None:
         print("The engineer is currently working on it!") 
-        input("\n Hit enter to continue")
 
 
 title: str = "Dashboard"

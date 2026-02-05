@@ -8,7 +8,7 @@ class Settings:
         self._config: dict[str,None|str|int] = {
             "default_asset": 1,
             "default_timeframe": 1,
-            "automation_engine": None,
+            "automation_status": None,
             "user": "HUMAN OVERLORD",
         }
         self.load()
@@ -42,7 +42,7 @@ class Settings:
 
     # GETTERS
     def username(self) -> str:
-        return self._config.get("user")
+        return str(self._config.get("user"))
 
 
     def asset(self) -> int:
@@ -63,13 +63,18 @@ class Settings:
         return int(val)
 
 
-    def automation_engine(self):
-        val = self._config.get("automation_engine")
+    def automation_status(self):
+        val = self._config.get("automation_status")
         return val
 
 
     # SETTERS / SAVEERS
     # Could be generalized to single function call
+    def save_username(self, value):
+        self._config["user"] = value
+        self.save()
+
+
     def save_asset(self, value):
         self._config["default_asset"] = value
         self.save()
@@ -80,6 +85,6 @@ class Settings:
         self.save()
 
 
-    def save_engine(self, value):
-        self._config["automation_engine"] = value 
+    def save_automation_status(self, value):
+        self._config["automation_status"] = value 
         self.save()

@@ -1,4 +1,3 @@
-# from src.menus import run_main_menu
 from src.menu.mainMenu import MainMenu 
 from src.settings.settings import Settings
 from src.engine import Engine 
@@ -13,10 +12,8 @@ def main():
 
     # TODO: Use settings to initialize asset and tf vals 
     engine = Engine(account)
-
     menu = MainMenu(settings, account, engine)
-    menu.run_main_menu()
-    # run_main_menu()
+    menu.run()
 
 
 if __name__ == "__main__":

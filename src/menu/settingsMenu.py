@@ -6,34 +6,24 @@ class SettingsMenu(IMenu):
     def __init__(self, settings: Settings):
         self.settings = settings
         self.menu: dict[int, list] = {
-            # 1: ["", self.],
-            # 2: ["", self.],
-            # 4: ["", self.],
-            # 4: ["", self.],
+            1: ["Update username", self.username],
+            2: ["Edit scheduling", self.scheduler],
+            # 3: ["", self.],
         }
 
 
     def run(self) -> None:
-        args: list = []
-        menu_runner(title, self.menu, header, args)
+        menu_runner(title, self.menu, header, lambda: [])
+
+
+    def username(self) -> None:
+        name = input("Enter new Username\n\n>> ")
+        self.settings.save_username(name)
+
+
+    def scheduler(self) -> None:
+        print("Feature currently under construction")
     
 
-title: str = ""
+title: str = "System Settings"
 header: str = ""
-
-
-# Global settings for the program, make these persistance with a config file
-# def run_settings() -> None:
-#     options:int = 5
-#     while True:
-#         print_banner("SETTINGS")
-#         dynamic_fprint(settings_menu)
-#         choice = get_menu_selection(options)
-#
-#         if choice != 5:
-#             print("Feature currently under construction")
-#             input("\nHit enter to continue")
-#         else:
-#             return;
-#
-#
