@@ -25,7 +25,7 @@ class PredictionMenu(IMenu):
     def predict(self) -> None:
         asset = asset_tostring(self.settings.asset())
         timeframe = timeframe_tostring(self.settings.timeframe())
-        self.engine.manual_prediction(f"./models/{asset}-{timeframe}-model.pth")
+        self.engine.manual_prediction(f"./pickled_models/{asset}-{timeframe}-model.pth")
 
 
     def change_asset(self) -> None:

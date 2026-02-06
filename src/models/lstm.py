@@ -26,6 +26,7 @@ class LSTM(BaseModel):
         self.hidden_size = hidden_size
         self.input_size = input_size
         self.output_size = output_size
+        self.window = None
         self.model: None|TimeSeriesNN = None
 
 
@@ -57,26 +58,25 @@ class LSTM(BaseModel):
 
 
     # --- Evaluation ---
-    def evaluation(self):
-        # y_test = torch.tensor(self.y_test.flatten(), dtype=torch.long)
-        # self.model.eval()
-        # with torch.no_grad():
-            # preds = torch.argmax(self.model(self.X_test), dim=1)
-            # acc = (preds == self.y_test.flatten()).float().mean()
-            # print("Test Accuracy:", acc.item())
-        pass
+    def evaluation(self, X_test, y_test):
+        y_test = torch.tensor(y_test.flatten(), dtype=torch.long)
+        self.model.eval()
+        with torch.no_grad():
+            preds = torch.argmax(self.model(X_test), dim=1)
+            acc = (preds == y_test).float().mean()
+            print("Test Accuracy:", acc.item())
     
     
     # --- Predict next candle ---
-    def predict(self, X):
+    def predict(self, X, X_train):
         """
 
         Args: 
             X - the latest windowed features 
         """
         X = torch.tensor(X, dtype=torch.float32)
+        X = X.reshape(1, self.window, X_train.shape[2])
 
-        self.model.eval()
         with torch.no_grad():
             pred_next = torch.argmax(self.model(X), dim=1).item()
         print(f"Next candle prediction: {pred_next}")
@@ -89,6 +89,7 @@ class LSTM(BaseModel):
             "input_size": self.input_size,
             "hidden_size": self.hidden_size,
             "output_size": self.output_size,
+            "window": self.window,
             "epochs": self.epochs,
             "lr": self.lr, 
         }
@@ -98,8 +99,9 @@ class LSTM(BaseModel):
     def load(self, path:str) -> None:
         checkpoint = torch.load(path)
         self.input_size = checkpoint["input_size"]
-        self.hidden_size= checkpoint["hidden_size"]
-        self.output_size= checkpoint["output_size"]
+        self.hidden_size = checkpoint["hidden_size"]
+        self.output_size = checkpoint["output_size"]
+        self.window = checkpoint["window"]
         self.epochs = checkpoint["epochs"]
         self.lr = checkpoint["lr"]
 
