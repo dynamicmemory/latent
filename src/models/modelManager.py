@@ -1,4 +1,5 @@
 from __future__ import annotations
+from lstm import LSTM
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,8 +11,13 @@ class ModelManager:
         pass
 
 
-    def select(self) -> None:
-        pass
+    def select(self, model: str, **kwargs) -> None:
+        models = {
+                "lstm": LSTM,
+                # "cnn": CNN,
+                # "" : ,
+        }
+        self.model = models[model](**kwargs)
 
 
     def train(self, X, y) -> None:

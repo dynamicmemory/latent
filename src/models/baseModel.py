@@ -3,20 +3,20 @@ from abc import ABC, abstractmethod
 
 class BaseModel(ABC):
     @abstractmethod
-    def train(self, X, y):
+    def train(self, X, y) -> None:
         pass
 
 
     @abstractmethod
-    def predict(self, X):
+    def predict(self, X) -> float:
         pass 
 
 
     @abstractmethod
-    def save(self, path: str):
+    def save(self, path: str) -> None:
         pass 
 
 
     @abstractmethod
-    def load(self, path: str):
+    def load(self, path: str) -> None:
         pass
