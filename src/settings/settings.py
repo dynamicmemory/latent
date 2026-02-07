@@ -6,8 +6,8 @@ CONFIG_FILE = Path("./config.json")
 class Settings:
     def __init__(self):
         self._config: dict[str,None|str|int] = {
-            "default_asset": 1,
-            "default_timeframe": 1,
+            "default_asset": "BTCUSDT",
+            "default_timeframe": "15",
             "automation_status": None,
             "user": "HUMAN OVERLORD",
         }
@@ -45,22 +45,22 @@ class Settings:
         return str(self._config.get("user"))
 
 
-    def asset(self) -> int:
+    def asset(self) -> str:
         val = self._config.get("default_asset")
-        if val is None or isinstance(val, str):
+        if val is None or isinstance(val, int):
             print("Asset is set to None in config")
-            return 1
+            return ""
 
         return val
 
 
-    def timeframe(self):
+    def timeframe(self) -> str:
         val = self._config.get("default_timeframe")
-        if val is None:
+        if val is None or isinstance(val, int):
             print("Timeframe is set to None in config")
-            return 1
+            return ""
 
-        return int(val)
+        return val
 
 
     def automation_status(self):

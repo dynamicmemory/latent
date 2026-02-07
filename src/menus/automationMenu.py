@@ -1,6 +1,6 @@
 from src.engine import Engine
-from src.menu.menuInterface import IMenu
-from src.menu.menuUtilities import *
+from src.menus.menuInterface import IMenu
+from src.menus.menuUtilities import *
 from src.settings.settings import Settings
 from enum import Enum
 
@@ -25,8 +25,8 @@ class AutomationMenu(IMenu):
     def run(self) -> None:
         menu_runner(title, self.menu, header, lambda: [
             self.settings.automation_status(),
-            asset_tostring(self.settings.asset()),
-            timeframe_tostring(self.settings.timeframe())
+            self.settings.asset(),
+            self.settings.timeframe()
         ])
 
 

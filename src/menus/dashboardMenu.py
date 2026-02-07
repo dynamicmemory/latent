@@ -1,5 +1,5 @@
-from src.menu.menuInterface import IMenu
-from src.menu.menuUtilities import *
+from src.menus.menuInterface import IMenu
+from src.menus.menuUtilities import *
 from src.settings.settings import Settings
 
 class DashboardMenu(IMenu):

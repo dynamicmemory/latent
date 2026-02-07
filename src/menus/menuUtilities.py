@@ -71,22 +71,22 @@ def timeframe_tostring(record: int) -> str:
     return TIME_MAP[record]
 
 
-def choose_timeframe() -> int:
+def choose_timeframe() -> str:
     for k, v in TIME_MAP.items():
         if k == 0:
             continue
         print(f"{k}. {v}")
     choice = get_menu_selection(len(TIME_MAP)-1) # -1 for 0 option
-    return choice
+    return TIME_MAP[choice]
 
 
-def choose_asset() -> int: 
+def choose_asset() -> str: 
     for k, v in ASSET_MAP.items():
         if k == 0:
             continue 
         print(f"{k}. {v}")
     choice = get_menu_selection(len(ASSET_MAP)-1) # -1 for 0 option
-    return choice
+    return ASSET_MAP[choice]
 
 
 TIME_MAP: dict[int, str] = { 1: "15", 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from lstm import LSTM
+from src.models.lstm import LSTM
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,9 +26,9 @@ class ModelManager:
         return 
 
 
-    def predict(self, X) -> None:
+    def predict(self, X, x) -> None:
         if self.model is not None:
-            self.model.predict(X)
+            self.model.predict(X, x)
         return 
 
 

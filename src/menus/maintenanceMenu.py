@@ -1,6 +1,6 @@
 from src.engine import Engine
-from src.menu.menuInterface import IMenu
-from src.menu.menuUtilities import *
+from src.menus.menuInterface import IMenu
+from src.menus.menuUtilities import *
 from src.settings.settings import Settings
 from src.databaseManager import DatabaseManager
 
@@ -23,8 +23,7 @@ class MaintenanceMenu(IMenu):
             if key == 0:
                 continue
 
-            dbm = DatabaseManager(asset_tostring(self.settings.asset()), 
-                                  timeframe) 
+            dbm = DatabaseManager(self.settings.asset(), timeframe) 
             dbm.update_table()
             dbm.export_csv()
 

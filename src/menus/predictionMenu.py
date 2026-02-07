@@ -1,6 +1,6 @@
 from src.engine import Engine
-from src.menu.menuInterface import IMenu
-from src.menu.menuUtilities import *
+from src.menus.menuInterface import IMenu
+from src.menus.menuUtilities import *
 from src.settings.settings import Settings
 
 class PredictionMenu(IMenu):
@@ -15,16 +15,16 @@ class PredictionMenu(IMenu):
 
     def run(self) -> None:
         menu_runner(title, self.menu, header, lambda: [
-            asset_tostring(self.settings.asset()),
-            timeframe_tostring(self.settings.timeframe())
+            self.settings.asset(),
+            self.settings.timeframe()
         ])
 
 
     # engine should not own manual prediction it belongs with the model in a 
     # separate class or model manager and should be a callable function from here.
     def predict(self) -> None:
-        asset = asset_tostring(self.settings.asset())
-        timeframe = timeframe_tostring(self.settings.timeframe())
+        asset = self.settings.asset()
+        timeframe = self.settings.timeframe()
         self.engine.manual_prediction(f"./pickled_models/{asset}-{timeframe}-model.pth")
 
 

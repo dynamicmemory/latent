@@ -33,6 +33,7 @@ class TradeManager:
         if decision == Decision.HOLD:
             return 
 
+        print("start of manage_trade")
         self._get_position()
         self.risk = risk
         # api error from exchange
@@ -50,6 +51,7 @@ class TradeManager:
         # Flip sides of the market
         self._close_position(decision)
         self._open_position(decision)
+        print("end of manage_trade")
 
 
     # TODO: Add fail safes to ensure operations (deal with in exchange class)

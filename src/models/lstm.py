@@ -26,7 +26,7 @@ class LSTM(BaseModel):
         self.hidden_size = hidden_size
         self.input_size = input_size
         self.output_size = output_size
-        self.window = None
+        self.window = 10 # HARDCODED TO 10 FOR NOW MATCHING THE DATA.
         self.model: None|TimeSeriesNN = None
 
 
@@ -74,8 +74,9 @@ class LSTM(BaseModel):
         Args: 
             X - the latest windowed features 
         """
+        X_train = torch.tensor(X_train, dtype=torch.float32)
         X = torch.tensor(X, dtype=torch.float32)
-        X = X.reshape(1, self.window, X_train.shape[2])
+        X = X.reshape(1, 10, X_train.shape[2])
 
         with torch.no_grad():
             pred_next = torch.argmax(self.model(X), dim=1).item()

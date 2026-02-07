@@ -1,6 +1,6 @@
 {
-    "default_asset": 1,
-    "default_timeframe": 1,
-    "automation_status": null,
+    "default_asset": "BTCUSDT",
+    "default_timeframe": "60",
+    "automation_status": "running",
     "user": "HUMAN OVERLORD"
 }

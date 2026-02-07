@@ -1,4 +1,4 @@
-from src.menu.mainMenu import MainMenu 
+from src.menus.mainMenu import MainMenu 
 from src.settings.settings import Settings
 from src.engine import Engine 
 from src.accountManager import AccountManager
@@ -10,8 +10,7 @@ def main():
     settings = Settings()
     account = AccountManager(api_key, api_secret, True)
 
-    # TODO: Use settings to initialize asset and tf vals 
-    engine = Engine(account)
+    engine = Engine(account, settings.asset(), settings.timeframe())
     menu = MainMenu(settings, account, engine)
     menu.run()
 

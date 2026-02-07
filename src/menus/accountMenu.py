@@ -1,6 +1,6 @@
 from src.accountManager import AccountManager
-from src.menu.menuInterface import IMenu
-from src.menu.menuUtilities import *
+from src.menus.menuInterface import IMenu
+from src.menus.menuUtilities import *
 from src.settings.settings import Settings
 
 class AccountMenu(IMenu):
@@ -21,8 +21,8 @@ class AccountMenu(IMenu):
  
     def run(self) -> None:
         menu_runner(title, self.menu, header, lambda: [
-            asset_tostring(self.settings.asset()), 
-            timeframe_tostring(self.settings.timeframe())
+            self.settings.asset(), 
+            self.settings.timeframe()
              ])
 
 
@@ -35,37 +35,33 @@ class AccountMenu(IMenu):
 
     # TODO: Add checks and better instructions on size and price
     def place_limit_buy(self) -> None:
-        asset = asset_tostring(self.settings.asset())
         size = input("Enter amount: >> ")
         price = input("Enter price: >> ")
-        self.account.create_limit_order(asset, "Buy", size, price)
+        self.account.create_limit_order(self.settings.asset(), "Buy", size, price)
 
 
     # TODO: Add checks and better instructions on size and price
     def place_limit_sell(self) -> None:
-        asset = asset_tostring(self.settings.asset())
         size = input("Enter amount: >> ")
         price = input("Enter price: >> ")
-        self.account.create_limit_order(asset, "Sell", size, price)
+        self.account.create_limit_order(self.settings.asset(), "Sell", size, price)
 
 
     # TODO: Add checks and better instructions on size 
     def market_buy(self) -> None:
-        asset = asset_tostring(self.settings.asset())
         size = input("Enter amount: >> ")
-        self.account.create_market_order(asset, "Buy", size)
+        self.account.create_market_order(self.settings.asset(), "Buy", size)
 
 
     # TODO: Add checks and better instructions on size 
     def market_sell(self) -> None:
-        asset = asset_tostring(self.settings.asset())
         size = input("Enter amount: >> ")
-        self.account.create_market_order(asset, "Sell", size)
+        self.account.create_market_order(self.settings.asset(), "Sell", size)
 
 
     # TODO: Remake this, it is sloppy and error prone
     def cancel_order(self) -> None:
-        asset = asset_tostring(self.settings.asset())
+        asset = self.settings.asset()
         orders: list|int = self.account.print_orders("linear", asset)
         if isinstance(orders, int) or len(orders) == 0:
             return 

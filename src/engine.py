@@ -1,14 +1,31 @@
+from src.settings.settings import Settings
+
+class DataPipeline:
+    def __init__(self) -> None:
+        pass
+
+    # TODO: Move it out of here into another class/manager/helper
+    def _data_pipline(self) -> tuple:
+        # dbm = DatabaseManager(self.asset, self.timeframe)
+        # dbm.update_table()
+        # X, y = Features(dbm.get_dataframe()).run_features()
+        # mlt = MachLearnTools(X, y)
+        # Using abcde for now
+        # a,b,c,d = mlt.timeseries_pipeline()
+        # e = mlt.latest_features()
+        # return a,b,c,d,e
+        pass
+
 """ 
 This class should be an orchestration class that brings everything together 
 """
 from src.accountManager import AccountManager
 from src.miniML.machLearnTools import MachLearnTools
-from src.exchange import Exchange
 from src.databaseManager import DatabaseManager
 from src.features import Features 
-from src.torchnn import Torchnn
 from src.strategy import Strategy
 from src.tradeManager import TradeManager
+from src.models.modelManager import ModelManager
 from datetime import datetime
 import os 
 import threading 
@@ -21,19 +38,19 @@ TIME_MAP: dict[str, int] = {
     "W": 604800000
 }
 
+# INITIALIZE asset and timeframe via settings
 class Engine:
     def __init__(self, account: AccountManager, asset:str="BTCUSDT", timeframe:str="15"):
         self.asset = asset
         self.timeframe = timeframe
         self.account_manager = account
-        self.dbm = None
-        self.features = None
-        self.mlt = None
-        self.torchnn = None
+
+        self.model = None # OPTIONAL load a model from the saved asset and timeframe settings?
+
         self.trade = TradeManager(self.account_manager, self.asset, self.timeframe)
         self.stop_event = threading.Event()
         self.thread = None
-        
+
 
     def start_automation(self):
         """Starts automation in a separate thread."""
@@ -77,92 +94,66 @@ class Engine:
         print("Automation stopped")       
 
 
-    def get_model(self, X_train, X_test, y_train, y_test) :
-        model_path:str = f"./pickled_models/{self.asset}-{self.timeframe}-model.pth"
+    # TODO: Move it out of here into another class/manager/helper
+    def _data_pipline(self) -> tuple:
+        dbm = DatabaseManager(self.asset, self.timeframe)
+        dbm.update_table()
+        f = Features(dbm.get_dataframe())
+        X, y = f.run_features()
+        mlt = MachLearnTools(X, y)
+        # Using abcde for now
+        a,b,c,d = mlt.timeseries_pipeline()
+        e = mlt.latest_features()
+        return a,b,c,d,e,X
+
+
+
+    
+    # TODO: model path needs to be built from the settings or else manual predict 
+    # is wrong and it will predict on the engines state and not what was selected 
+    # in the menu
+    # Read selected mode from settings too.
+    def _get_model(self, X_train, y_train, asset, timeframe):
+        model_path:str = f"./pickled_models/{asset}-{timeframe}-model.pth"
+
         # Train a model if one doesnt exist otherwise load model
         os.makedirs(os.path.dirname(model_path), exist_ok=True)
         if os.path.exists(model_path):
             print("Loading pretrained model")
-            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test)
-            self.torchnn.load_checkpoint(model_path)
+            self.model = ModelManager()
+            self.model.select("lstm") 
+            self.model.load(model_path)
         else:
-            print(f"Training new model on {self.asset} - {self.timeframe}") 
-            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, training=True)
-            self.torchnn.save_checkpoint(model_path)
+            print(f"Training new model on {asset} - {timeframe}") 
+            self.model = ModelManager()
+            self.model.select("lstm") 
+            self.model.train(X_train, y_train)
+            self.model.save(model_path)
 
 
-    # The way the torchnn is currently built, we must always pass in x, y 
-    # test and train set (this will change in future update) therefore we 
-    # must go through the process of feature engineering and spliting the 
-    # data sets to obtain an instance of the network to call predict on...
     def market_cycle(self) -> None:
         """Runs full pipeline of the trading engine"""
-        # ensure the database is up to date 
-        self.dbm = DatabaseManager(self.asset, self.timeframe)
-        self.dbm.update_table()
-
-
-        self.features = Features(self.dbm.get_dataframe())
-        X, y = self.features.run_features()
-
-        # Prep data for the model
-        self.mlt = MachLearnTools(X, y)
-        X_train, X_test, y_train, y_test = self.mlt.timeseries_pipeline()
-
+        X_train, X_test, y_train, y_test, X_latest, X_norm = self._data_pipline()
         # load the model into memory and make a prediction
-        self.get_model(X_train, X_test, y_train, y_test)
-        decision:int = self.torchnn.predict()
-        # Hard coded for on the fly debugging and testing
-        # decision = 1
-
-        # Find current market risk level
-        self.strategy = Strategy(X)
+        self._get_model(X_train, y_train, self.asset, self.timeframe)
+        decision:int = self.model.predict(X_latest, X_train)
+        print("Post prediction")
+        self.strategy = Strategy(X_norm)
         risk: str = self.strategy.main()
-
         self.trade.manage_trade(decision, risk)
         return 
 
 
-    def test(self):
-        e = Exchange(self.asset, self.timeframe)
-        print(e.get_price())
-
-
-    def manual_prediction(self, model_path:str):
-        # Get data
-        self.dbm = DatabaseManager(self.asset, self.timeframe)
-
-        # Engineer features
-        self.features = Features(self.dbm.get_dataframe())
-        X, y = self.features.run_features()
-
-        # Prep data for the model
-        self.mlt = MachLearnTools(X, y)
-        X_train, X_test, y_train, y_test = self.mlt.timeseries_pipeline()
-
-        # Train a model if one doesnt exist otherwise load model
-        os.makedirs(os.path.dirname(model_path), exist_ok=True)
-        if os.path.exists(model_path):
-            print("Loading pretrained model")
-            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test)
-            self.torchnn.load_checkpoint(model_path)
-        else:
-            print(f"Training new model on {self.asset} - {self.timeframe}") 
-            self.torchnn = Torchnn(self.mlt, X_train, X_test, y_train, y_test, training=True)
-            self.torchnn.save_checkpoint(model_path)
-
-        # Eval and predict
-        self.torchnn.evaluation()
-        decision = self.torchnn.predict()
-
-        self.strategy = Strategy(X)
-        curr_mkt_risk: str = self.strategy.main()
+    def manual_prediction(self, model_path:str, asset:str, timeframe:str):
+        X_train, X_test, y_train, y_test, X_latest = self._data_pipline()
+        self._get_model(X_train, y_train, asset, timeframe)
+        self.model.evaluation(X_test, y_test)
+        decision = self.model.predict(X_latest)
+        print(decision)
 
 
 ###################### Retraining and printing out models ####################
-    ## Needs to move to its own class, but also need the algos for Retraining
-    ## Maybe own class that calls this or whichever class eventually holds algos
-
+    ## Needs to move to its own class
 
     def list_models(self, model_path: str) -> list:
         """
@@ -214,6 +205,7 @@ class Engine:
         print(f"{i}. Return to maintenance menu.\n")
         
 
+    # Model path could probably be reconstructed from asset and tf vals
     def retrain(self, model_path, asset, timeframe):
         """
         Retrains a model 
@@ -223,20 +215,13 @@ class Engine:
                              made up from the asset name and timeframe.
         """
         # Get data
-        dbm = DatabaseManager(asset, timeframe)
-
-        # Engineer features
-        features = Features(dbm.get_dataframe())
-        X, y = features.run_features()
-
-        # Prep data for the model
-        mlt = MachLearnTools(X, y)
-        X_train, X_test, y_train, y_test = mlt.timeseries_pipeline()
+        X_train, X_test, y_train, y_test, _, _ = self._data_pipline()
+        self._get_model(X_train, y_train) 
 
         print(f"Retraining model {asset} - {timeframe}") 
 
         # Retrain the model and save it to the provided path
-        torchnn = Torchnn(mlt, X_train, X_test, y_train, y_test, training=True)
-        torchnn.save_checkpoint(model_path)
+        self.model.train(X_train, y_train)
+        self.model.save(model_path)
 
         print(f"\nModel has been retrained successfull.\n")

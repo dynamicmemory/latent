@@ -8,7 +8,7 @@ class BaseModel(ABC):
 
 
     @abstractmethod
-    def predict(self, X) -> float:
+    def predict(self, X, x) -> float:
         pass 
 
 
