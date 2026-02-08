@@ -1,12 +1,14 @@
 from src.accountManager import AccountManager
+from src.data.dataManager import DataManager
 from src.menus.menuInterface import IMenu
 from src.menus.menuUtilities import *
 from src.settings.settings import Settings
 
 class AccountMenu(IMenu):
-    def __init__(self, settings: Settings, account: AccountManager):
+    def __init__(self, settings: Settings, account: AccountManager, data: DataManager):
         self.settings = settings
         self.account = account
+        self.data = data
         self.menu: dict[int, list] = {
             1: ["Overview", self.overview],
             2: ["Place Limit Buy", self.place_limit_buy],
@@ -31,6 +33,7 @@ class AccountMenu(IMenu):
         self.account.print_all_balances()
         self.account.print_all_usdt_positions()
         self.account.print_orders("linear", "BTCUSDT")
+        input("\nHit enter to continue")
 
 
     # TODO: Add checks and better instructions on size and price
@@ -38,6 +41,7 @@ class AccountMenu(IMenu):
         size = input("Enter amount: >> ")
         price = input("Enter price: >> ")
         self.account.create_limit_order(self.settings.asset(), "Buy", size, price)
+        input("\nHit enter to continue")
 
 
     # TODO: Add checks and better instructions on size and price
@@ -45,18 +49,21 @@ class AccountMenu(IMenu):
         size = input("Enter amount: >> ")
         price = input("Enter price: >> ")
         self.account.create_limit_order(self.settings.asset(), "Sell", size, price)
+        input("\nHit enter to continue")
 
 
     # TODO: Add checks and better instructions on size 
     def market_buy(self) -> None:
         size = input("Enter amount: >> ")
         self.account.create_market_order(self.settings.asset(), "Buy", size)
+        input("\nHit enter to continue")
 
 
     # TODO: Add checks and better instructions on size 
     def market_sell(self) -> None:
         size = input("Enter amount: >> ")
         self.account.create_market_order(self.settings.asset(), "Sell", size)
+        input("\nHit enter to continue")
 
 
     # TODO: Remake this, it is sloppy and error prone
@@ -68,15 +75,19 @@ class AccountMenu(IMenu):
         print("Select the 'No' of the order you want to cancel")
         order_id: int = get_menu_selection(len(orders))
         self.account.cancel_order("linear", asset, orders[order_id-1])
+        input("\nHit enter to continue")
 
 
     def cancel_all_orders(self) -> None:
         self.account.cancel_all_USDT_orders("linear")
+        input("\nHit enter to continue")
 
 
     def change_asset_and_timeframe(self) -> None:
         self.settings.save_asset(choose_asset())
         self.settings.save_timeframe(choose_timeframe())
+        self.data.update_data()
+        input("\nHit enter to continue")
 
 
 title: str = "Account Manager"

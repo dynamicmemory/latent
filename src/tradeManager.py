@@ -33,7 +33,6 @@ class TradeManager:
         if decision == Decision.HOLD:
             return 
 
-        print("start of manage_trade")
         self._get_position()
         self.risk = risk
         # api error from exchange
@@ -50,16 +49,18 @@ class TradeManager:
 
         # Flip sides of the market
         self._close_position(decision)
+
+        # THE BUG IS IN OPEN POSITION AND ITS PIPELINE.
         self._open_position(decision)
-        print("end of manage_trade")
+        print("Made it to the end of manage trade")
 
 
     # TODO: Add fail safes to ensure operations (deal with in exchange class)
     def cancel_orders_close_position(self):
         """ Automatically closes position and cancels orders. """
-        print("MAKES IT IN")
+        # print("MAKES IT IN")
         self._get_position()
-        print(self.pos_size, self.position)
+        # print(self.pos_size, self.position)
         if self.position < 0:
             print("Failed to retrive current position, may still be in trade")
             return 
@@ -105,6 +106,7 @@ class TradeManager:
     # TODO: Replace with ml values or risk profiled values
     def _calc_target(self, decision, entry, stop):
         """Calculate target price for the take profit order"""
+        print(entry, stop)
         if decision == 1:
             return (entry - stop) * 2 + entry
         elif decision == 0: 
@@ -137,7 +139,7 @@ class TradeManager:
         size = (account_size * risk_percentage) / denominator#(abs(entry - stop))
         size = min(size, max_size) # Cap max size atm
         size = 0.001   # returning fixed val for testing orders
-        print(size, str(size))
+        # print(size, str(size))
         return size
 
     # TODO: Safeguards for atomic order placing i.e cancel all & close all on single failure.
@@ -147,6 +149,9 @@ class TradeManager:
         orders prior to executing the trade.
         """
         current_candle, one_candle_back = self.account.get_last_two_ohlc(self.asset, self.timeframe)
+        if current_candle == -1:
+            return 
+
         side = "Buy" if decision == 1 else "Sell" 
         entry = self._calc_entry(current_candle)
         stop = self._calc_stop(decision, one_candle_back)
@@ -165,6 +170,9 @@ class TradeManager:
         # The stop; deicions + 1 will equal 1 when shorting and 2 when longing.
         self.account.create_stop_loss(self.asset, side, str(size), str(stop), decision+1)
         # The target 
+        if target is None:
+            print("Target set to None, no exit set yet")
+            return
         side = "Buy" if side == "Sell" else "Buy"
         self.account.create_limit_order(self.asset, side, str(size), str(target))
 

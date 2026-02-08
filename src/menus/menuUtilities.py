@@ -20,11 +20,6 @@ def menu_runner(title: str, options: dict[int, list], header: str, args_callable
 
         func()
 
-        # Known bug that this runs on inner menu exit choices, comes from main
-        # menus initial call not == menu_length, therefore this run onces when 
-        # exiting inner menu.
-        input("\nHit enter to continue")
-
 
 def print_banner(banner_text:str="Algorithmic Trading SYS") -> None:
     """

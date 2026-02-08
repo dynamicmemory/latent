@@ -16,6 +16,7 @@ class DashboardMenu(IMenu):
 
     def dashboard(self) -> None:
         print("The engineer is currently working on it!") 
+        input("\nHit enter to continue")
 
 
 title: str = "Dashboard"

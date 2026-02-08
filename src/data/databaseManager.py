@@ -1,5 +1,5 @@
 from src.exchange import Exchange
-from src.database import Database
+from src.data.database import Database
 import pandas as pd
 import time
 import csv

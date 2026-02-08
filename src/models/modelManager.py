@@ -7,38 +7,28 @@ if TYPE_CHECKING:
 
 class ModelManager:
     def __init__(self) -> None:
-        self.model: BaseModel | None = None
-        pass
+        self.model: BaseModel = LSTM() 
 
 
     def select(self, model: str, **kwargs) -> None:
         models = {
                 "lstm": LSTM,
                 # "cnn": CNN,
-                # "" : ,
         }
         self.model = models[model](**kwargs)
 
 
     def train(self, X, y) -> None:
-        if self.model is not None:
-            self.model.train(X, y)
-        return 
+        self.model.train(X, y)
 
 
     def predict(self, X, x) -> None:
-        if self.model is not None:
-            self.model.predict(X, x)
-        return 
+        self.model.predict(X, x)
 
 
     def save(self, path) -> None:
-        if self.model is not None:
-            self.model.save(path)
-        return 
+        self.model.save(path)
 
 
     def load(self, path) -> None: 
-        if self.model is not None:
-            self.model.load(path)
-        return  
+        self.model.load(path)

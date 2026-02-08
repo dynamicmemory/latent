@@ -1,3 +1,4 @@
+from src.data.dataManager import DataManager
 from src.engine import Engine
 from src.menus.menuInterface import IMenu
 from src.menus.menuUtilities import *
@@ -10,9 +11,10 @@ class AutoStatus(Enum):
 
 
 class AutomationMenu(IMenu):
-    def __init__(self, settings: Settings, engine: Engine):
+    def __init__(self, settings: Settings, engine: Engine, data: DataManager):
         self.settings = settings
         self.engine = engine
+        self.data = data
         self.menu: dict[int, list] = {
             1: ["Start Automation", self.start_engine],
             2: ["Stop Automation", self.stop_engine],
@@ -36,6 +38,7 @@ class AutomationMenu(IMenu):
             self.settings.save_automation_status(AutoStatus.RUNNING.value)
             return
         print("Automation is already running...")
+        input("\nHit enter to continue")
 
     
     def stop_engine(self) -> None:
@@ -44,18 +47,24 @@ class AutomationMenu(IMenu):
             self.settings.save_automation_status(AutoStatus.NONE.value)
             return 
         print("Automation is currently turned off...")
+        input("\nHit enter to continue")
 
 
     def check_health(self) -> None:
         print("Feature under construction")
+        input("\nHit enter to continue")
 
 
     def change_asset(self) -> None:
         self.settings.save_asset(choose_asset())
+        self.data.update_data()
+        input("\nHit enter to continue")
          
 
     def change_timeframe(self) -> None:
         self.settings.save_timeframe(choose_timeframe())
+        self.data.update_data()
+        input("\nHit enter to continue")
 
 
 title: str = "Automation Engine"

@@ -1,33 +1,12 @@
-from src.settings.settings import Settings
-
-class DataPipeline:
-    def __init__(self) -> None:
-        pass
-
-    # TODO: Move it out of here into another class/manager/helper
-    def _data_pipline(self) -> tuple:
-        # dbm = DatabaseManager(self.asset, self.timeframe)
-        # dbm.update_table()
-        # X, y = Features(dbm.get_dataframe()).run_features()
-        # mlt = MachLearnTools(X, y)
-        # Using abcde for now
-        # a,b,c,d = mlt.timeseries_pipeline()
-        # e = mlt.latest_features()
-        # return a,b,c,d,e
-        pass
-
 """ 
 This class should be an orchestration class that brings everything together 
 """
 from src.accountManager import AccountManager
-from src.miniML.machLearnTools import MachLearnTools
-from src.databaseManager import DatabaseManager
-from src.features import Features 
+from src.data.dataManager import DataManager
 from src.strategy import Strategy
 from src.tradeManager import TradeManager
 from src.models.modelManager import ModelManager
-from datetime import datetime
-import os 
+import os
 import threading 
 
 TIME_MAP: dict[str, int] = {
@@ -40,13 +19,15 @@ TIME_MAP: dict[str, int] = {
 
 # INITIALIZE asset and timeframe via settings
 class Engine:
-    def __init__(self, account: AccountManager, asset:str="BTCUSDT", timeframe:str="15"):
+    def __init__(self, account: AccountManager, data: DataManager, asset:str="BTCUSDT", timeframe:str="15"):
         self.asset = asset
         self.timeframe = timeframe
         self.account_manager = account
+        self.data = data
 
         self.model = None # OPTIONAL load a model from the saved asset and timeframe settings?
 
+        # Needs to load from settings, stale state occurs.
         self.trade = TradeManager(self.account_manager, self.asset, self.timeframe)
         self.stop_event = threading.Event()
         self.thread = None
@@ -94,25 +75,33 @@ class Engine:
         print("Automation stopped")       
 
 
-    # TODO: Move it out of here into another class/manager/helper
-    def _data_pipline(self) -> tuple:
-        dbm = DatabaseManager(self.asset, self.timeframe)
-        dbm.update_table()
-        f = Features(dbm.get_dataframe())
-        X, y = f.run_features()
-        mlt = MachLearnTools(X, y)
-        # Using abcde for now
-        a,b,c,d = mlt.timeseries_pipeline()
-        e = mlt.latest_features()
-        return a,b,c,d,e,X
+    def market_cycle(self) -> None:
+        """Runs full pipeline of the trading engine"""
+        X_train, y_train = self.data.get_training_set()
+        X_latest = self.data.get_latest()
+        X_features = self.data.get_X_features()
+
+        # load the model into memory and make a prediction
+        self._get_model(X_train, y_train, self.asset, self.timeframe)
+        decision:int = self.model.predict(X_latest, X_train)
+        self.strategy = Strategy(X_features)
+        risk: str = self.strategy.main()
+        self.trade.manage_trade(decision, risk)
+        print("Market cycle finished")
+        return 
 
 
+    def manual_prediction(self, model_path:str, asset:str, timeframe:str):
+        X_train, y_train = self.data.get_training_set()
+        X_test, y_test = self.data.get_testing_set()
+        X_latest = self.data.get_latest()
 
-    
-    # TODO: model path needs to be built from the settings or else manual predict 
-    # is wrong and it will predict on the engines state and not what was selected 
-    # in the menu
-    # Read selected mode from settings too.
+        self._get_model(X_train, y_train, asset, timeframe)
+        self.model.evaluation(X_test, y_test)
+        decision = self.model.predict(X_latest)
+        print(decision)
+
+
     def _get_model(self, X_train, y_train, asset, timeframe):
         model_path:str = f"./pickled_models/{asset}-{timeframe}-model.pth"
 
@@ -131,81 +120,6 @@ class Engine:
             self.model.save(model_path)
 
 
-    def market_cycle(self) -> None:
-        """Runs full pipeline of the trading engine"""
-        X_train, X_test, y_train, y_test, X_latest, X_norm = self._data_pipline()
-        # load the model into memory and make a prediction
-        self._get_model(X_train, y_train, self.asset, self.timeframe)
-        decision:int = self.model.predict(X_latest, X_train)
-        print("Post prediction")
-        self.strategy = Strategy(X_norm)
-        risk: str = self.strategy.main()
-        self.trade.manage_trade(decision, risk)
-        return 
-
-
-    def manual_prediction(self, model_path:str, asset:str, timeframe:str):
-        X_train, X_test, y_train, y_test, X_latest = self._data_pipline()
-        self._get_model(X_train, y_train, asset, timeframe)
-        self.model.evaluation(X_test, y_test)
-        decision = self.model.predict(X_latest)
-        print(decision)
-
-
-###################### Retraining and printing out models ####################
-    ## Needs to move to its own class
-
-    def list_models(self, model_path: str) -> list:
-        """
-        Searches the provided DIR for all models saved
-
-        Args:
-            model_path - location of saved modesl
-        """
-        models = []
-
-        if not os.path.exists(model_path):
-            return models 
-
-        for fname in os.listdir(model_path):
-            if not fname.endswith(".pth"):
-                continue 
-
-            path = os.path.join(model_path, fname)
-            mtime = os.path.getmtime(path)
-            last_modified = datetime.fromtimestamp(mtime)
-
-            models.append({
-                "name": fname,
-                "path": path, 
-                "last_modified": last_modified,
-            })
-
-        models.sort(key=lambda x: x["last_modified"], reverse=True)
-        return models
-
-
-    # Probably doesnt belong here and should move to the menu
-    def print_models(self, models:list) -> None:
-        """
-        Prints out the name, and last modified date for all models provided.
-
-        Args: 
-            models - a list containing all saved models in a directory.
-        """
-        if not models:
-            print("No models found.")
-            return 
-
-        i:int = 1
-        for m in models:
-            print(f"{i}. {m['name']:<22} - "
-                  f"Last updated: {m['last_modified'].strftime('%Y-%m-%d %H:%M:%S')}")
-            i +=1
-        print(f"{i}. Return to maintenance menu.\n")
-        
-
-    # Model path could probably be reconstructed from asset and tf vals
     def retrain(self, model_path, asset, timeframe):
         """
         Retrains a model 
@@ -214,13 +128,11 @@ class Engine:
                 model_path - File path to save the newly trained model too, 
                              made up from the asset name and timeframe.
         """
-        # Get data
-        X_train, X_test, y_train, y_test, _, _ = self._data_pipline()
-        self._get_model(X_train, y_train) 
+        X_train, y_train = self.data.get_training_set()
 
         print(f"Retraining model {asset} - {timeframe}") 
-
-        # Retrain the model and save it to the provided path
+        self.model = ModelManager()
+        self.model.select("lstm") 
         self.model.train(X_train, y_train)
         self.model.save(model_path)
 

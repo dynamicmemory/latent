@@ -21,8 +21,6 @@ class AccountManager:
             return 0
 
 
-
-
     def get_balance(self, asset="BTCUSDT") -> float: 
         """ 
         Returns the float value balance of the passed in symbol 

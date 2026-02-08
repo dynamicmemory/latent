@@ -19,10 +19,12 @@ class SettingsMenu(IMenu):
     def username(self) -> None:
         name = input("Enter new Username\n\n>> ")
         self.settings.save_username(name)
+        input("\nHit enter to continue")
 
 
     def scheduler(self) -> None:
         print("Feature currently under construction")
+        input("\nHit enter to continue")
     
 
 title: str = "System Settings"
