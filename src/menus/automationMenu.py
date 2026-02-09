@@ -1,5 +1,5 @@
 from src.data.dataManager import DataManager
-from src.engine import Engine
+from src.engine.engine import Engine
 from src.menus.menuInterface import IMenu
 from src.menus.menuUtilities import *
 from src.settings.settings import Settings
@@ -36,9 +36,10 @@ class AutomationMenu(IMenu):
         if self.settings.automation_status() is None:
             self.engine.start_automation()
             self.settings.save_automation_status(AutoStatus.RUNNING.value)
+            input("\nHit enter to continue >> ")
             return
         print("Automation is already running...")
-        input("\nHit enter to continue")
+        input("\nHit enter to continue >> ")
 
     
     def stop_engine(self) -> None:
@@ -47,24 +48,28 @@ class AutomationMenu(IMenu):
             self.settings.save_automation_status(AutoStatus.NONE.value)
             return 
         print("Automation is currently turned off...")
-        input("\nHit enter to continue")
+        input("\nHit enter to continue >> ")
 
 
     def check_health(self) -> None:
         print("Feature under construction")
-        input("\nHit enter to continue")
+        input("\nHit enter to continue >> ")
 
 
     def change_asset(self) -> None:
-        self.settings.save_asset(choose_asset())
-        self.data.update_data()
-        input("\nHit enter to continue")
+        asset = choose_asset()
+        timeframe = self.settings.timeframe()
+        self.settings.save_asset(asset)
+        self.data.update_data(asset, timeframe)
+        input("\nHit enter to continue >> ")
          
 
     def change_timeframe(self) -> None:
-        self.settings.save_timeframe(choose_timeframe())
-        self.data.update_data()
-        input("\nHit enter to continue")
+        timeframe = choose_timeframe()
+        asset = self.settings.asset()
+        self.settings.save_timeframe(timeframe)
+        self.data.update_data(asset, timeframe)
+        input("\nHit enter to continue >> ")
 
 
 title: str = "Automation Engine"

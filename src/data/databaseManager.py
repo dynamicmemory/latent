@@ -1,4 +1,4 @@
-from src.exchange import Exchange
+from src.exchange.exchange import Exchange
 from src.data.database import Database
 import pandas as pd
 import time

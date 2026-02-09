@@ -1,5 +1,5 @@
 from src.data.dataManager import DataManager
-from src.engine import Engine
+from src.engine.engine import Engine
 from src.menus.menuInterface import IMenu
 from src.menus.menuUtilities import *
 from src.settings.settings import Settings
@@ -27,23 +27,26 @@ class PredictionMenu(IMenu):
     def predict(self) -> None:
         asset = self.settings.asset()
         timeframe = self.settings.timeframe()
-        self.engine.manual_prediction(f"./pickled_models/{asset}-{timeframe}-model.pth")
+        self.engine.manual_prediction(asset, timeframe)
         input("\nHit enter to continue")
 
 
     def change_asset(self) -> None:
-        self.settings.save_asset(choose_asset())
-        self.data.update_data()
-        print("Asset has been updated")
+        asset = choose_asset()
+        timeframe = self.settings.timeframe()
         input("\nHit enter to continue")
-
+        self.settings.save_asset(asset)
+        self.data.update_data(asset, timeframe)
+        input("\nHit enter to continue")
+         
 
     def change_timeframe(self) -> None:
-        self.settings.save_timeframe(choose_timeframe())
-        self.data.update_data()
-        print("Timeframe has been updated")
+        timeframe = choose_timeframe()
+        asset = self.settings.asset()
+        self.settings.save_timeframe(timeframe)
+        self.data.update_data(asset, timeframe)
         input("\nHit enter to continue")
-        
+
 
 title: str = "Make A Prediction"
 header: str = "Current Asset: {0} | Current Timeframe: {1}\n"

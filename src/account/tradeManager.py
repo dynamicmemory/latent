@@ -1,8 +1,8 @@
 # Stateful, knows all the details of the current trade, the details for the 
 # flip to the other side, the details of risk and any other market related info
 from os import wait
-from src.accountManager import AccountManager 
-from src.apiManager import api_key, api_secret
+from src.account.accountManager import AccountManager 
+from src.exchange.apiManager import api_key, api_secret
 from enum import Enum 
 
 CATEGORY:str = "linear"
@@ -24,7 +24,7 @@ class TradeManager:
         self.risk: str = ""
 
 
-    def manage_trade(self, decision:int, risk:str):
+    def manage_trade(self, decision:float, risk:str):
         """ 
         Runs the flow for a decision, executes a trade, or returns doing 
         nothing at all depending on what the model decided.
@@ -32,7 +32,7 @@ class TradeManager:
         # Do nothing if the model predicted so
         if decision == Decision.HOLD:
             return 
-
+    
         self._get_position()
         self.risk = risk
         # api error from exchange
@@ -49,10 +49,7 @@ class TradeManager:
 
         # Flip sides of the market
         self._close_position(decision)
-
-        # THE BUG IS IN OPEN POSITION AND ITS PIPELINE.
         self._open_position(decision)
-        print("Made it to the end of manage trade")
 
 
     # TODO: Add fail safes to ensure operations (deal with in exchange class)
@@ -139,11 +136,11 @@ class TradeManager:
         size = (account_size * risk_percentage) / denominator#(abs(entry - stop))
         size = min(size, max_size) # Cap max size atm
         size = 0.001   # returning fixed val for testing orders
-        # print(size, str(size))
+        print(size, str(size))
         return size
 
     # TODO: Safeguards for atomic order placing i.e cancel all & close all on single failure.
-    def _open_position(self, decision:int):
+    def _open_position(self, decision:float):
         """
         Opens a position, stop loss and target order. Cancels all previous 
         orders prior to executing the trade.
@@ -168,7 +165,7 @@ class TradeManager:
         # The position 
         self.account.create_market_order(self.asset, side, str(size)) 
         # The stop; deicions + 1 will equal 1 when shorting and 2 when longing.
-        self.account.create_stop_loss(self.asset, side, str(size), str(stop), decision+1)
+        self.account.create_stop_loss(self.asset, side, str(size), str(stop), int(decision+1))
         # The target 
         if target is None:
             print("Target set to None, no exit set yet")
@@ -177,14 +174,14 @@ class TradeManager:
         self.account.create_limit_order(self.asset, side, str(size), str(target))
 
 
-    def _close_position(self, decision:int):
+    def _close_position(self, decision:float):
         """Closes the current open position """
         side = "Buy" if decision == 1 else "Sell" 
         print(self.asset, side, self.pos_size)
         self.account.create_market_order(self.asset, side, self.pos_size)
 
 
-    def _convert_decision(self, decision:int) -> str:
+    def _convert_decision(self, decision:float) -> str:
         """
         Converts an int representation of a models decision into exchange 
         understood values. 0 == "Sell", 1 == "Buy"
@@ -193,6 +190,5 @@ class TradeManager:
 
 
     def _calc_risk_reigme(self ):
-        # s = Strategy()
         pass
 

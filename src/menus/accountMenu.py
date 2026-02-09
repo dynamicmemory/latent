@@ -1,4 +1,4 @@
-from src.accountManager import AccountManager
+from src.account.accountManager import AccountManager
 from src.data.dataManager import DataManager
 from src.menus.menuInterface import IMenu
 from src.menus.menuUtilities import *
@@ -84,9 +84,11 @@ class AccountMenu(IMenu):
 
 
     def change_asset_and_timeframe(self) -> None:
-        self.settings.save_asset(choose_asset())
-        self.settings.save_timeframe(choose_timeframe())
-        self.data.update_data()
+        asset = choose_asset()
+        timeframe = choose_timeframe()
+        self.settings.save_asset(asset)
+        self.settings.save_timeframe(timeframe)
+        self.data.update_data(asset, timeframe)
         input("\nHit enter to continue")
 
 

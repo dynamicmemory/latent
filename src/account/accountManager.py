@@ -1,7 +1,7 @@
 # TODO: Change how we are pretty printing, perhaps dictionaries or move out of class
 # TODO: If an account manager menu class is made, move all pretty printing out 
 #       of this class and only returned processed exchange reponses.
-from src.exchange import Exchange
+from src.exchange.exchange import Exchange
 
 class AccountManager:
     def __init__(self, api_key:str, api_secret:str, testnet:bool=False):

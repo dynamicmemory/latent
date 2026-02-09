@@ -18,12 +18,12 @@ class ModelManager:
         self.model = models[model](**kwargs)
 
 
-    def train(self, X, y) -> None:
-        self.model.train(X, y)
+    def train(self, X_train, y_train) -> None:
+        self.model.train(X_train, y_train)
 
 
-    def predict(self, X, x) -> None:
-        self.model.predict(X, x)
+    def predict(self, X_latest, X_train) -> float:
+        return self.model.predict(X_latest, X_train)
 
 
     def save(self, path) -> None:
@@ -32,3 +32,4 @@ class ModelManager:
 
     def load(self, path) -> None: 
         self.model.load(path)
+

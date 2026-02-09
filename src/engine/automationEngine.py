@@ -1,10 +1,6 @@
-""" 
-This class should be an orchestration class that brings everything together 
-"""
-from src.accountManager import AccountManager
 from src.data.dataManager import DataManager
-from src.strategy import Strategy
-from src.tradeManager import TradeManager
+from src.account.strategy import Strategy
+from src.account.tradeManager import TradeManager
 from src.models.modelManager import ModelManager
 import os
 import threading 
@@ -17,19 +13,15 @@ TIME_MAP: dict[str, int] = {
     "W": 604800000
 }
 
-# INITIALIZE asset and timeframe via settings
-class Engine:
-    def __init__(self, account: AccountManager, data: DataManager, asset:str="BTCUSDT", timeframe:str="15"):
-        self.asset = asset
-        self.timeframe = timeframe
-        self.account_manager = account
-        self.data = data
-
-        self.model = None # OPTIONAL load a model from the saved asset and timeframe settings?
-
-        # Needs to load from settings, stale state occurs.
+class AutomationEngine: 
+    def __init__(self, settings, account_manager) -> None:
+        self.asset = settings.asset()
+        self.timeframe = settings.timeframe()
+        self.account_manager = account_manager
+        self.data_manager = DataManager(self.asset, self.timeframe) 
         self.trade = TradeManager(self.account_manager, self.asset, self.timeframe)
         self.stop_event = threading.Event()
+        self.model = None
         self.thread = None
 
 
@@ -40,6 +32,8 @@ class Engine:
             return
 
         self.stop_event.clear()
+        
+        self.market_cycle()
 
         self.thread = threading.Thread(target=self._automation_loop, daemon=True)
         self.thread.start()
@@ -51,6 +45,7 @@ class Engine:
         """Runs continuously while self.running=True."""
         # UTC milliseconds / 1000 = seconds = 1 time frame
         interval = TIME_MAP[self.timeframe] / 1000 
+        self.stop_event.wait(interval)
 
         while not self.stop_event.is_set():
             try:
@@ -74,32 +69,23 @@ class Engine:
         self.thread.join()
         print("Automation stopped")       
 
-
+    
     def market_cycle(self) -> None:
         """Runs full pipeline of the trading engine"""
-        X_train, y_train = self.data.get_training_set()
-        X_latest = self.data.get_latest()
-        X_features = self.data.get_X_features()
+        self.data_manager.update_data(self.asset, self.timeframe)
+        X_train, y_train = self.data_manager.get_training_set()
+        X_latest = self.data_manager.get_latest()
+        X_features = self.data_manager.get_X_features()
 
         # load the model into memory and make a prediction
-        self._get_model(X_train, y_train, self.asset, self.timeframe)
-        decision:int = self.model.predict(X_latest, X_train)
+        if self.model is None:
+            self._get_model(X_train, y_train, self.asset, self.timeframe)
+
+        decision: float = self.model.predict(X_latest, X_train)
         self.strategy = Strategy(X_features)
         risk: str = self.strategy.main()
         self.trade.manage_trade(decision, risk)
-        print("Market cycle finished")
         return 
-
-
-    def manual_prediction(self, model_path:str, asset:str, timeframe:str):
-        X_train, y_train = self.data.get_training_set()
-        X_test, y_test = self.data.get_testing_set()
-        X_latest = self.data.get_latest()
-
-        self._get_model(X_train, y_train, asset, timeframe)
-        self.model.evaluation(X_test, y_test)
-        decision = self.model.predict(X_latest)
-        print(decision)
 
 
     def _get_model(self, X_train, y_train, asset, timeframe):
@@ -120,20 +106,3 @@ class Engine:
             self.model.save(model_path)
 
 
-    def retrain(self, model_path, asset, timeframe):
-        """
-        Retrains a model 
-
-            Args:
-                model_path - File path to save the newly trained model too, 
-                             made up from the asset name and timeframe.
-        """
-        X_train, y_train = self.data.get_training_set()
-
-        print(f"Retraining model {asset} - {timeframe}") 
-        self.model = ModelManager()
-        self.model.select("lstm") 
-        self.model.train(X_train, y_train)
-        self.model.save(model_path)
-
-        print(f"\nModel has been retrained successfull.\n")

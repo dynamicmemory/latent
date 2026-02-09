@@ -7,8 +7,8 @@ from src.menus.maintenanceMenu import MaintenanceMenu
 from src.menus.settingsMenu import SettingsMenu
 from src.menus.menuUtilities import *
 from src.settings.settings import Settings
-from src.accountManager import AccountManager
-from src.engine import Engine
+from src.account.accountManager import AccountManager
+from src.engine.engine import Engine
 
 class MainMenu:
     def __init__(self, settings: Settings, account: AccountManager, engine: Engine, data: DataManager) -> None:

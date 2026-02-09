@@ -1,11 +1,9 @@
-from src.settings.settings import Settings
 from src.data.databaseManager import DatabaseManager
 from src.data.features import Features 
 from src.miniML.machLearnTools import MachLearnTools
 
 class DataManager:
-    def __init__(self, settings: Settings) -> None:
-        self.settings = settings
+    def __init__(self, asset: str, timeframe: str) -> None:
         self.X_train = None 
         self.y_train = None 
         self.X_test = None 
@@ -14,16 +12,17 @@ class DataManager:
         self.X_features = None
         self.labels = None
         self.window = 10 # consider passing in value instead
-        self.data_pipline()
+        self.data_pipline(asset, timeframe)
 
-    def update_data(self) -> None:
+    def update_data(self, asset: str, timeframe: str ) -> None:
         # Could possibly pass in window here if user wanted to change training 
         # and prediction window. Undecided.
-        self.data_pipline()
+        self.data_pipline(asset, timeframe)
 
 
-    def data_pipline(self) -> None:
-        dbm = DatabaseManager(self.settings.asset(), self.settings.timeframe())
+    def data_pipline(self, asset, timeframe) -> None:
+        dbm = DatabaseManager(asset, timeframe)
+        print("Updating database in data pipeline")
         dbm.update_table()
         features = Features(dbm.get_dataframe())
         self.X_features, self.labels = features.run_features()

@@ -68,18 +68,18 @@ class LSTM(BaseModel):
     
     
     # --- Predict next candle ---
-    def predict(self, X, X_train):
+    def predict(self, X_latest, X_train):
         """
 
         Args: 
             X - the latest windowed features 
         """
         X_train = torch.tensor(X_train, dtype=torch.float32)
-        X = torch.tensor(X, dtype=torch.float32)
-        X = X.reshape(1, 10, X_train.shape[2])
+        X_latest = torch.tensor(X_latest, dtype=torch.float32)
+        X_latest = X_latest.reshape(1, 10, X_train.shape[2])
 
         with torch.no_grad():
-            pred_next = torch.argmax(self.model(X), dim=1).item()
+            pred_next = torch.argmax(self.model(X_latest), dim=1).item()
         print(f"Next candle prediction: {pred_next}")
         return pred_next
     
