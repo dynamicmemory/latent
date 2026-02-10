@@ -32,12 +32,12 @@ class AutomationEngine:
             return
 
         self.stop_event.clear()
-        
+
+        print("Automation thread started")
         self.market_cycle()
 
         self.thread = threading.Thread(target=self._automation_loop, daemon=True)
         self.thread.start()
-        print("Automation thread started")
         return 
 
 
@@ -89,6 +89,8 @@ class AutomationEngine:
 
 
     def _get_model(self, X_train, y_train, asset, timeframe):
+        """ Loads a pretrained model if one exists, otherwise trains a new 
+        model on the provided asset and timeframe using the X_training set."""
         model_path:str = f"./pickled_models/{asset}-{timeframe}-model.pth"
 
         # Train a model if one doesnt exist otherwise load model

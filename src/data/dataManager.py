@@ -22,7 +22,6 @@ class DataManager:
 
     def data_pipline(self, asset, timeframe) -> None:
         dbm = DatabaseManager(asset, timeframe)
-        print("Updating database in data pipeline")
         dbm.update_table()
         features = Features(dbm.get_dataframe())
         self.X_features, self.labels = features.run_features()

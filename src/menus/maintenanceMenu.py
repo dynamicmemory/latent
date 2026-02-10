@@ -27,7 +27,10 @@ class MaintenanceMenu(IMenu):
 
             dbm = DatabaseManager(self.settings.asset(), timeframe) 
             dbm.update_table()
+            print(f"Updating {self.settings.asset()}-{timeframe}")
             dbm.export_csv()
+            print(f"Exporting update to backup csv")
+
         input("\nHit enter to continue")
 
 

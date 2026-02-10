@@ -1,5 +1,6 @@
 from src.exchange.exchange import Exchange
 from src.data.database import Database
+from src.log import Log
 import pandas as pd
 import time
 import csv
@@ -29,6 +30,7 @@ class DatabaseManager:
         self.table_name = f"{self.asset}_{self.timeframe}"
         self.database = Database(self.db_name, self.table_name)
         self.database.create_table() 
+        self.log = Log()
 
 
     def update_table(self):
@@ -37,7 +39,8 @@ class DatabaseManager:
         difference between the current unix time vs the last record in the db.
         """
         self.database.open()
-        print(f"Updating table - {self.table_name}")
+        msg:str = f"Updating table - {self.table_name}"
+        self.log.write(f"[DatabaseManager][update_table] - {msg}")
         e = Exchange(self.asset, self.timeframe)
 
         # Check for an empty table before querying latest row, add as test 
@@ -75,7 +78,10 @@ class DatabaseManager:
         # we are looking at closed candle time steps only
         adjusted_utc: int = UTC - last_timestamp - time_step_length
         nrows: int = int(adjusted_utc / time_step_length)
-        print(f"Number of candles to retreive:{nrows}")
+
+        msg:str = f"Number of candles to retreive:{nrows}"
+        self.log.write(f"[DatabaseManager][calculate_missing_rows] - {msg}")
+
         return nrows
 
 
@@ -116,4 +122,6 @@ class DatabaseManager:
             writer.writerows(rows)
 
         self.database.close()
-        print(f"Successfully exported {self.table_name} table to csv")
+        msg:str = f"Successfully exported {self.table_name} table to csv"
+        self.log.write(f"[DatabaseManager][export_csv] - {msg}")
+

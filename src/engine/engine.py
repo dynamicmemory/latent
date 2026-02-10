@@ -24,6 +24,7 @@ class Engine:
 
 
     def start_automation(self) -> None:
+        """Starts the automation loop."""
         if not self.automating:
             self.autoEngine = AutomationEngine(self.settings, self.account_manager)
             self.autoEngine.start_automation()
@@ -34,6 +35,7 @@ class Engine:
 
 
     def stop_automation(self) -> None:
+        """Stops the automation loop."""
         if self.automating:
             self.autoEngine.stop_automation()
             self.automating = False 
@@ -43,6 +45,7 @@ class Engine:
 
 
     def manual_prediction(self, asset:str, timeframe:str):
+        """Makes a prediction using on the passed in asset and timeframe. """
         X_train, y_train = self.data.get_training_set()
         X_test, y_test = self.data.get_testing_set()
         X_latest = self.data.get_latest()
@@ -50,10 +53,14 @@ class Engine:
         self._get_model(X_train, y_train, asset, timeframe)
         # self.model.evaluation(X_test, y_test)
         decision = self.model.predict(X_latest, X_train)
-        print(decision)
+
+        print("Models predicts: ", end="")
+        print("Buy" if decision == 1 else "Sell" if decision == 0 else "No trade")
 
 
     def _get_model(self, X_train, y_train, asset, timeframe):
+        """ Loads a pretrained model if one exists, otherwise trains a new 
+        model on the provided asset and timeframe using the X_training set."""
         model_path:str = f"./pickled_models/{asset}-{timeframe}-model.pth"
 
         # Train a model if one doesnt exist otherwise load model

@@ -8,3 +8,128 @@
 2026-02-10 15:26:25.528252 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
 2026-02-10 15:26:26.100339 - [AccountManager][cancel_all_USDT_orders] - All Orders successfully Cancelled
 2026-02-10 15:26:26.531057 - [AccountManager][check_retcode] - code: 10001 message: Qty invalid
+2026-02-10 15:33:16.006032 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:33:16.006156 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:1
+2026-02-10 15:33:21.263529 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:33:21.263771 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:33:21.298407 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_15 table to csv
+2026-02-10 15:33:21.299824 - [DatabaseManager][update_table] - Updating table - BTCUSDT_60
+2026-02-10 15:33:21.299914 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:21
+2026-02-10 15:33:21.531076 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_60 table to csv
+2026-02-10 15:33:21.531713 - [DatabaseManager][update_table] - Updating table - BTCUSDT_240
+2026-02-10 15:33:21.531797 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:5
+2026-02-10 15:33:21.770281 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_240 table to csv
+2026-02-10 15:33:21.770855 - [DatabaseManager][update_table] - Updating table - BTCUSDT_D
+2026-02-10 15:33:21.771009 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:1
+2026-02-10 15:33:22.228411 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_D table to csv
+2026-02-10 15:33:22.228885 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 15:33:22.229045 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:33:22.230672 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_W table to csv
+2026-02-10 15:36:09.837334 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:36:09.837449 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:36:16.140777 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:36:16.140996 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:36:16.173436 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_15 table to csv
+2026-02-10 15:36:16.174588 - [DatabaseManager][update_table] - Updating table - BTCUSDT_60
+2026-02-10 15:36:16.174686 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:36:16.184418 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_60 table to csv
+2026-02-10 15:36:16.185180 - [DatabaseManager][update_table] - Updating table - BTCUSDT_240
+2026-02-10 15:36:16.185261 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:36:16.191117 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_240 table to csv
+2026-02-10 15:36:16.191501 - [DatabaseManager][update_table] - Updating table - BTCUSDT_D
+2026-02-10 15:36:16.191592 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:36:16.195084 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_D table to csv
+2026-02-10 15:36:16.195415 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 15:36:16.195528 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:36:16.196813 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_W table to csv
+2026-02-10 15:38:15.151284 - [AccountManager][check_retcode] - code: 110003 message: price is invalid
+2026-02-10 15:38:22.246185 - [AccountManager][check_retcode] - code: 110003 message: price is invalid
+2026-02-10 15:38:26.979811 - [AccountManager][check_retcode] - code: 110003 message: price is invalid
+2026-02-10 15:38:55.184401 - [AccountManager][cancel_order] - Order successfully Cancelled
+2026-02-10 15:39:02.760773 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770701937309],server_timestamp[1770701942699],recv_window[5000]
+2026-02-10 15:39:20.166589 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:39:20.166826 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:39:20.217102 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:39:20.217221 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:39:21.102374 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 15:39:26.927078 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770701961650],server_timestamp[1770701966865],recv_window[5000]
+2026-02-10 15:44:59.422085 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:44:59.422233 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:45:07.670167 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:45:07.670393 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:46:45.017106 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:46:45.017208 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:1
+2026-02-10 15:47:05.474313 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:47:05.474425 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:48:32.380652 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:48:32.380762 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:49:13.438387 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770702545608],server_timestamp[1770702553376],recv_window[5000]
+2026-02-10 15:49:18.401022 - [AccountManager][cancel_order] - Order successfully Cancelled
+2026-02-10 15:49:25.624583 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770702560411],server_timestamp[1770702565561],recv_window[5000]
+2026-02-10 15:49:37.989200 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:49:37.989462 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:49:38.035483 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:49:38.035615 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:49:38.783859 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 15:49:57.953142 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:49:57.953385 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:49:57.997011 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:49:57.997191 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:49:58.861163 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 15:50:51.332725 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:50:51.332974 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:50:51.377222 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:50:51.377368 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:50:51.677978 - [AccountManager][check_retcode] - code: 10004 message: Error sign, please check your signature generation algorithm: origin_string[1770702651458KCsB4A1InMGHlCVkoH5000category=linear&symbol=BTCUSDT]
+2026-02-10 15:52:05.989204 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:52:05.989327 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:53:29.418376 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:53:29.418500 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:53:38.164721 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-10 15:53:38.164863 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:53:43.451875 - [DatabaseManager][update_table] - Updating table - BTCUSDT_240
+2026-02-10 15:53:43.452021 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:53:50.335998 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 15:53:50.336122 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 15:54:08.784386 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770702842929],server_timestamp[1770702848722],recv_window[5000]
+2026-02-10 15:54:45.845616 - [AccountManager][check_retcode] - code: 10004 message: Error sign, please check your signature generation algorithm: origin_string[1770702885405KCsB4A1InMGHlCVkoH5000category=linear&settleCoin=USDT]
+2026-02-10 15:54:51.299445 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770702885845],server_timestamp[1770702891236],recv_window[5000]
+2026-02-10 15:55:23.263379 - [AccountManager][cancel_order] - Order successfully Cancelled
+2026-02-10 16:01:49.114320 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:01:49.114497 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:01:49.134302 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:01:49.134434 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:01:54.573180 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770703309152],server_timestamp[1770703314511],recv_window[5000]
+2026-02-10 16:01:58.925106 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:01:58.925339 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:01:58.944907 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:01:58.945012 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:01:59.396467 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 16:02:00.373682 - [AccountManager][cancel_all_USDT_orders] - All Orders successfully Cancelled
+2026-02-10 16:02:00.589901 - [AccountManager][check_retcode] - code: 10001 message: Qty invalid
+2026-02-10 16:02:02.936548 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:02:02.936753 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:02:02.956460 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:02:02.956549 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:02:03.254060 - [AccountManager][check_retcode] - code: 10004 message: Error sign, please check your signature generation algorithm: origin_string[1770703322973KCsB4A1InMGHlCVkoH5000category=linear&symbol=BTCUSDT]
+2026-02-10 16:02:10.534161 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770703325274],server_timestamp[1770703330468],recv_window[5000]
+2026-02-10 16:02:10.537998 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:02:10.538176 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:02:10.556448 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:02:10.556546 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:02:11.312894 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 16:02:11.975914 - [AccountManager][cancel_all_USDT_orders] - All Orders successfully Cancelled
+2026-02-10 16:02:12.376422 - [AccountManager][check_retcode] - code: 10001 message: Qty invalid
+2026-02-10 16:06:36.896143 - [AccountManager][cancel_order] - Order successfully Cancelled
+2026-02-10 16:06:44.155690 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770703598741],server_timestamp[1770703604090],recv_window[5000]
+2026-02-10 16:08:27.267082 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-10 16:08:27.267188 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-10 16:09:03.578070 - [AccountManager][cancel_order] - Order successfully Cancelled
+2026-02-10 16:11:45.568867 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770703895290],server_timestamp[1770703905506],recv_window[5000]
+2026-02-10 16:16:19.732641 - [AccountManager][cancel_order] - Order successfully Cancelled
+2026-02-10 16:16:27.696657 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770704182405],server_timestamp[1770704187634],recv_window[5000]
+2026-02-10 16:17:19.622287 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770704229152],server_timestamp[1770704239559],recv_window[5000]
+2026-02-10 16:18:13.609898 - [AccountManager][check_retcode] - code: 10002 message: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770704288351],server_timestamp[1770704293544],recv_window[5000]
+2026-02-10 16:18:14.030282 - [AccountManager][check_retcode] - code: 10004 message: Error sign, please check your signature generation algorithm: origin_string[1770704293610KCsB4A1InMGHlCVkoH5000category=linear&symbol=BTCUSDT&openOnly=0]
+2026-02-10 16:18:30.378687 - [AccountManager][cancel_order] - Order successfully Cancelled
+2026-02-10 16:19:41.640556 - [AccountManager][cancel_order] - Order successfully Cancelled

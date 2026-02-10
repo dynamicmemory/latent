@@ -34,7 +34,6 @@ class PredictionMenu(IMenu):
     def change_asset(self) -> None:
         asset = choose_asset()
         timeframe = self.settings.timeframe()
-        input("\nHit enter to continue")
         self.settings.save_asset(asset)
         self.data.update_data(asset, timeframe)
         input("\nHit enter to continue")

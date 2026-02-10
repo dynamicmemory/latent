@@ -36,7 +36,7 @@ class MainMenu:
         exit()
 
 
-heading: str = "Algorithmic Trading SYS"
+heading: str = "  Latent Systems"
 
 main_menu: str = \
 """Welcome back {0}, what would you like to do?

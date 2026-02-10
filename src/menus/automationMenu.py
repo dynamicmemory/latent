@@ -19,8 +19,8 @@ class AutomationMenu(IMenu):
             1: ["Start Automation", self.start_engine],
             2: ["Stop Automation", self.stop_engine],
             3: ["Check health", self.check_health],
-            4: ["Change timeframe", self.change_asset],
-            5: ["Change Asset", self.change_timeframe],
+            4: ["Change Asset", self.change_asset],
+            5: ["Change Timeframe", self.change_timeframe],
         }
 
 

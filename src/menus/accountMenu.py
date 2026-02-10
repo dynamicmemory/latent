@@ -72,7 +72,7 @@ class AccountMenu(IMenu):
         orders: list|int = self.account.print_orders("linear", asset)
         if isinstance(orders, int) or len(orders) == 0:
             return 
-        print("Select the 'No' of the order you want to cancel")
+        print("Select the 'Number' of the order you want to cancel")
         order_id: int = get_menu_selection(len(orders))
         self.account.cancel_order("linear", asset, orders[order_id-1])
         input("\nHit enter to continue")

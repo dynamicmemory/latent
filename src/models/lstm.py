@@ -80,7 +80,7 @@ class LSTM(BaseModel):
 
         with torch.no_grad():
             pred_next = torch.argmax(self.model(X_latest), dim=1).item()
-        print(f"Next candle prediction: {pred_next}")
+        # print(f"Next candle prediction: {pred_next}")
         return pred_next
     
 
