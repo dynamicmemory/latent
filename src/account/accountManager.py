@@ -2,20 +2,32 @@
 # TODO: If an account manager menu class is made, move all pretty printing out 
 #       of this class and only returned processed exchange reponses.
 from src.exchange.exchange import Exchange
+from src.log import Log
 
 class AccountManager:
     def __init__(self, api_key:str, api_secret:str, testnet:bool=False):
         self.api_key:str = api_key
         self.api_secret:str = api_secret
+        self.log = Log()
         self.exchange = Exchange(api_key=self.api_key, 
                                  api_secret=self.api_secret, 
                                  testnet=testnet)
+
+    def write_to_log(self, func: str, msg:str, print_msg:bool=False) -> None:
+        self.log.write(f"[AccountManager][{func}] - {msg}")
+        if print_msg:
+            print(msg)
 
 
     def check_retcode(self, response:dict) -> int:
         """ Checks the retCode response from a query to the exchange """
         if response["retCode"] != 0:
-            print(f"Exchange error\ncode: {response["retCode"]}\nmessage: {response["retMsg"]}")
+            c:str = response['retCode']
+            m:str = response['retMsg']
+            msg:str = f"code: {c} message: {m}"
+            self.write_to_log("check_retcode", msg) 
+
+            print("Having trouble contacting exchange, try again shortly.")
             return -1
         else:
             return 0
@@ -64,7 +76,9 @@ class AccountManager:
             -1 on failure and 0 on success
         """
         res = self.exchange.send_limit_order("linear", asset, side, size, price)
-        if self.check_retcode(res) != 0: return -1
+        if self.check_retcode(res) != 0: 
+            return -1
+
         print("Limit Order Successfully set")
         return 0
 
@@ -82,8 +96,11 @@ class AccountManager:
             -1 on failure and 0 on success
         """
         res = self.exchange.send_market_order("linear", asset, side, size)
-        if self.check_retcode(res) != 0: return -1
-        print("Market Order Successfully executed")
+        if self.check_retcode(res) != 0: 
+            return -1
+
+        msg:str = "Market Order Successfully executed"
+        self.write_to_log("create_market_order", msg, True)
         return 0
     
 
@@ -103,8 +120,10 @@ class AccountManager:
             -1 on failure and 0 on success
         """
         res = self.exchange.set_stop_loss("linear", asset, side, size, trigger, trigger_dir)
-        if self.check_retcode(res) != 0: return -1
-        print("Stoploss Successfully set")
+        if self.check_retcode(res) != 0: 
+            return -1
+        msg:str = "Stop loss Successfully set"
+        self.write_to_log("create_stop_loss", msg, True)
         return 0
     
 
@@ -118,21 +137,29 @@ class AccountManager:
             order_id - The exchange generated id number of the cancelled order
         """
         res = self.exchange.cancel_order(category, order_id["orderId"], asset)
-        if self.check_retcode(res) != 0: return -1
-        print("Successfully cancelled order")
+        if self.check_retcode(res) != 0: 
+            return -1
+
+        msg:str = "Order successfully Cancelled"
+        self.write_to_log("cancel_order", msg, True)
         return 0
 
 
     def cancel_all_USDT_orders(self, category:str) -> int:
         res = self.exchange.cancel_all_USDT_orders(category)
-        if self.check_retcode(res) != 0: return -1
-        print("Order Successfully set")
+        if self.check_retcode(res) != 0: 
+            return -1
+
+        msg:str = "All Orders successfully Cancelled"
+        self.write_to_log("cancel_all_USDT_orders", msg, True)
         return 0
 
 
     def get_last_two_ohlc(self, asset, timeframe) -> tuple:
         res: dict = self.exchange.get_ohlc(asset, timeframe, 2)
-        if self.check_retcode(res) != 0: return -1, -1
+        if self.check_retcode(res) != 0: 
+            return -1, -1
+
         return res["result"]["list"][0], res["result"]["list"][1]        
 
 ##################### PRETTY PRINTING OF EXCHANGE DATA #########################

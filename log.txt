@@ -1,0 +1,10 @@
+2026-02-10 14:55:10.219994 - [AccoutManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 15:25:47.443989 - [AccoutManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 15:26:10.177445 - [AccountManager][cancel_all_USDT_orders] - All Orders successfully Cancelled
+2026-02-10 15:26:10.376748 - [AccountManager][create_market_order] - Market Order Successfully executed
+2026-02-10 15:26:14.009375 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 15:26:14.600630 - [AccountManager][cancel_all_USDT_orders] - All Orders successfully Cancelled
+2026-02-10 15:26:14.784705 - [AccountManager][check_retcode] - code: 10001 message: Qty invalid
+2026-02-10 15:26:25.528252 - [AccountManager][check_retcode] - code: 10001 message: The number of contracts exceeds minimum limit allowed
+2026-02-10 15:26:26.100339 - [AccountManager][cancel_all_USDT_orders] - All Orders successfully Cancelled
+2026-02-10 15:26:26.531057 - [AccountManager][check_retcode] - code: 10001 message: Qty invalid

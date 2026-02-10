@@ -40,8 +40,10 @@ class TradeManager:
             return 
         # Do nothing if we are already doing what the model says to do
         elif decision == self.position:
-            print(f"Already {decision}")
+            msg = "Long" if decision == 1 else "Short" if decision == 0 else "No position"
+            print(f"Modelled predicted: {msg}, Already {msg}")
             return
+
         # Not in any position 
         elif self.position == Decision.HOLD:
             self._open_position(decision)
@@ -59,19 +61,19 @@ class TradeManager:
         self._get_position()
         # print(self.pos_size, self.position)
         if self.position < 0:
-            print("Failed to retrive current position, may still be in trade")
+            print("Failed to retrive current position, manual close is needed")
             return 
         # No position
         elif self.position == 2:
             return 
 
         if self.account.cancel_all_USDT_orders("linear") < 0:
-            print("Failed to cancel all orders, may still be active orders")
+            print("Failed to cancel all orders, manual close is needed")
             return 
 
         side = "Buy" if self.position == 0 else "Sell"
 
-        print(self.asset, side, self.pos_size)
+        # print(self.asset, side, self.pos_size)
         self.account.create_market_order(self.asset, side, str(self.pos_size))
 
 
@@ -103,7 +105,7 @@ class TradeManager:
     # TODO: Replace with ml values or risk profiled values
     def _calc_target(self, decision, entry, stop):
         """Calculate target price for the take profit order"""
-        print(entry, stop)
+        # print(entry, stop)
         if decision == 1:
             return (entry - stop) * 2 + entry
         elif decision == 0: 
@@ -119,7 +121,7 @@ class TradeManager:
             return 
 
         risk_percentage: float = 0.01 
-        max_size = account_size / entry * 5 # *5 is capping pos size 5x lev
+        max_size: float = account_size / entry * 3 # *5 is capping pos size 5x lev
 
         match self.risk:
             case "low":     risk_percentage = 0.03
@@ -129,15 +131,13 @@ class TradeManager:
 
         denominator = max(abs(entry - stop), 50)
         if abs(entry - stop) == 0:
-            print("entry - stop would be 0, avoiding 0 divide error")
-            print("Entry -",entry, "Stop -",stop)
-            # return 0 
+            print("Market volatility too high, unable to calculate size")
+            # print("Entry -",entry, "Stop -",stop)
+            return 0 
 
-        size = (account_size * risk_percentage) / denominator#(abs(entry - stop))
-        size = min(size, max_size) # Cap max size atm
-        size = 0.001   # returning fixed val for testing orders
-        print(size, str(size))
-        return size
+        size: float = (account_size * risk_percentage) / denominator#(abs(entry - stop))
+        return min(size, max_size) # Cap max size atm
+
 
     # TODO: Safeguards for atomic order placing i.e cancel all & close all on single failure.
     def _open_position(self, decision:float):
@@ -162,22 +162,30 @@ class TradeManager:
             print("Call to cancel all orders failed")
             return 
 
-        # The position 
-        self.account.create_market_order(self.asset, side, str(size)) 
-        # The stop; deicions + 1 will equal 1 when shorting and 2 when longing.
-        self.account.create_stop_loss(self.asset, side, str(size), str(stop), int(decision+1))
-        # The target 
         if target is None:
-            print("Target set to None, no exit set yet")
+            print("Target set to None, cancelling trades")
             return
+
+        # The position 
+        if self.account.create_market_order(self.asset, side, str(size)) == -1:
+            return 
+         
+        # The stop; deicions + 1 will equal 1 when shorting and 2 when longing.
+        if self.account.create_stop_loss(self.asset, side, str(size), str(stop), int(decision+1)) == -1:
+            self._close_position(decision)
+            return 
+
+        # The target 
         side = "Buy" if side == "Sell" else "Buy"
-        self.account.create_limit_order(self.asset, side, str(size), str(target))
+        if self.account.create_limit_order(self.asset, side, str(size), str(target)) == -1:
+            self.account.cancel_all_USDT_orders("linear")
+            return 
 
 
     def _close_position(self, decision:float):
         """Closes the current open position """
         side = "Buy" if decision == 1 else "Sell" 
-        print(self.asset, side, self.pos_size)
+        # print(self.asset, side, self.pos_size)
         self.account.create_market_order(self.asset, side, self.pos_size)
 
 

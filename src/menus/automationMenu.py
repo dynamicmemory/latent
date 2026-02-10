@@ -46,6 +46,7 @@ class AutomationMenu(IMenu):
         if self.settings.automation_status() is not None:
             self.engine.stop_automation()
             self.settings.save_automation_status(AutoStatus.NONE.value)
+            input("\nHit enter to continue >> ")
             return 
         print("Automation is currently turned off...")
         input("\nHit enter to continue >> ")
