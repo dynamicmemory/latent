@@ -296,3 +296,20 @@
 2026-02-15 10:23:19.157910 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
 2026-02-15 10:23:19.158035 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
 2026-02-15 10:23:19.159745 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_W table to csv
+2026-02-16 17:55:58.497374 - [DatabaseManager][update_table] - Updating table - BTCUSDT_240
+2026-02-16 17:55:58.497816 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:7
+2026-02-16 17:56:02.232083 - [DatabaseManager][update_table] - Updating table - BTCUSDT_15
+2026-02-16 17:56:02.232528 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:126
+2026-02-16 17:56:02.713749 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_15 table to csv
+2026-02-16 17:56:02.714880 - [DatabaseManager][update_table] - Updating table - BTCUSDT_60
+2026-02-16 17:56:02.714963 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:31
+2026-02-16 17:56:03.105863 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_60 table to csv
+2026-02-16 17:56:03.106677 - [DatabaseManager][update_table] - Updating table - BTCUSDT_240
+2026-02-16 17:56:03.106771 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:0
+2026-02-16 17:56:03.111718 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_240 table to csv
+2026-02-16 17:56:03.112023 - [DatabaseManager][update_table] - Updating table - BTCUSDT_D
+2026-02-16 17:56:03.112108 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:1
+2026-02-16 17:56:03.409324 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_D table to csv
+2026-02-16 17:56:03.409782 - [DatabaseManager][update_table] - Updating table - BTCUSDT_W
+2026-02-16 17:56:03.409894 - [DatabaseManager][calculate_missing_rows] - Number of candles to retreive:1
+2026-02-16 17:56:03.742381 - [DatabaseManager][export_csv] - Successfully exported BTCUSDT_W table to csv
