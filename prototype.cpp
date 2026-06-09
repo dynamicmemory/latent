@@ -119,9 +119,10 @@ strvec match_records(const strvec keywords) {
  * v2: Remove duplicate knowledge, add context around retrieved knowledge
 */
 std::string build_prompt(const std::string prompt, const strvec records) {
-    std::string output = "question: " + prompt + " context: ";
+    std::string output = "context: "; 
     for (auto rec : records)
         output += rec + " ";
+    output += " question: " + prompt;
     return output;
 }
 
@@ -155,9 +156,13 @@ void query_model(const std::string input) {
     ::freeaddrinfo(addr);
     
     std::string body = 
-        "{\"model\": \"qwen3:8B\","
+        "{\"model\": \"llama3.1:8B\","
         "\"prompt\": \"" + input + "\","
         "\"stream\": true}";
+    // std::string body = 
+    //     R"({"model": "llama3.1:8B", 
+        // "prompt": "Explain bitcoin in one sentence", 
+        // "stream": true})";
 
     std::string http_req = 
         "POST /api/generate HTTP/1.1\r\n"
@@ -169,31 +174,17 @@ void query_model(const std::string input) {
 
     std::cout << input;
 
-//     ssize_t send = ::send(server, http_req.data(), http_req.size(), 0); 
-//
-//     std::cout << "Size sent: " << send << "\n";
-//
-//     std::string res;
-//     char buff[4096];
-//     while (res.find("\r\n\r\n") == std::string::npos) {
-//         ssize_t recieve = ::recv(server, buff, sizeof(buff), 0);    
-//
-//         if (recieve <= 0)
-//             break;
-//
-//         res.append(buff, recieve);
-//     }
-//     std::cout << res << std::endl;
-// }
     ssize_t send = ::send(server, http_req.c_str(), http_req.size(), 0);
     std::cout << "Size sent: " << send << "\n";
 
     while (1) {
 
+        // std::cout << "in the while loop\n";
         char res[4096];
         char *p;
         int recieve = ::recv(server, res, sizeof(res), 0);
 
+        // std::cout << res ;
         if (recieve <=0) {
             std::cout << "Connection closed or stalled \n";
             break;
