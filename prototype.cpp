@@ -4,15 +4,20 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <cstring>
 
-using VecStr = std::vector<std::string>;
+using strvec = std::vector<std::string>;
 
-VecStr process_query(const std::string prompt);
-VecStr split_words(const std::string &input);
-VecStr match_records(const VecStr keywords);
-std::string build_prompt(const std::string prompt, const VecStr records);
+strvec process_query(std::string prompt);
+strvec split_words(const std::string &input);
+strvec match_records(const strvec keywords);
+std::string build_prompt(const std::string prompt, const strvec records);
 void query_model(const std::string input);
-VecStr stopping_words();
+strvec stopping_words();
+strvec stored_knowledge();
 
 
 int main(void) {
@@ -27,10 +32,10 @@ int main(void) {
             break;
        
         // Process the prompt for keywords
-        VecStr keywords = process_query(prompt);
+        strvec keywords = process_query(prompt);
          
         // Retrieve records containing keywords 
-        VecStr records = match_records(keywords);
+        strvec records = match_records(keywords);
 
         // Build prompt 
         std::string input = build_prompt(prompt, records);
@@ -42,13 +47,17 @@ int main(void) {
     return 0;
 }
 
-VecStr process_query(const std::string prompt) {
+/*Strips out stopping words and returns a vector of keywords only 
+ *
+ * TODO: Keep context of question, embeddings
+*/
+strvec process_query(std::string prompt) {
     std::transform(prompt.begin(), prompt.end(), prompt.begin(), 
             [](unsigned char c) { return std::tolower(c); });
 
-    VecStr stop_words = stopping_words();
-    VecStr prompt_vec = split_words(prompt);
-    VecStr keywords;
+    strvec stop_words = stopping_words();
+    strvec prompt_vec = split_words(prompt);
+    strvec keywords;
 
     for (auto pword : prompt_vec) {
         bool in = false;
@@ -67,29 +76,149 @@ VecStr process_query(const std::string prompt) {
     return keywords;    
 }
 
-VecStr split_words(const std::string &input) {
+/* Utility function for splitting strings into string vectors*/
+strvec split_words(const std::string &input) {
     std::istringstream stream(input);
-    VecStr output;
+    strvec output;
     std::string word;
     while (stream >> word) 
         output.push_back(word);
     return output;
 }
 
-VecStr match_records(const VecStr keywords) {
 
+/* v1: match records from the "knowledge base" which is just hard coded strings 
+ *     for now.
+ *
+ * v2: Interchangable database with specialised knowledge bases.
+*/
+strvec match_records(const strvec keywords) {
+    strvec records = stored_knowledge();
+    strvec context;
+
+    for (auto rec : records) {
+        // Process each record, lower case them, strip stopping words
+        strvec record_keywords = process_query(rec);
+
+        // For each word in the keywords from the prompt 
+        for (auto word : keywords) 
+            // For each word in the keywords from the current record 
+            for (auto recword : record_keywords) 
+                // If one word matches, then add the whole untouched record
+                if (word == recword) {
+                    context.push_back(rec);
+                    continue;
+                }
+    }
+    return context;
 }
 
-std::string build_prompt(const std::string prompt, const VecStr records) {
-
+/* v1: Add the context from the knowledge base into a generic message scaffolding 
+ *     and the original prompt
+ * 
+ * v2: Remove duplicate knowledge, add context around retrieved knowledge
+*/
+std::string build_prompt(const std::string prompt, const strvec records) {
+    std::string output = "question: " + prompt + " context: ";
+    for (auto rec : records)
+        output += rec + " ";
+    return output;
 }
 
+/* Send the prompt to the model, incredible hacky*/
 void query_model(const std::string input) {
+    const char host[] = "127.0.0.1";
+    const char port[] = "11434";
 
+    struct addrinfo hints, *addr;
+    ::memset(&hints, 0, sizeof(addrinfo));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = AF_UNSPEC;
+    
+    int status = ::getaddrinfo(host, port, &hints, &addr);
+    if (status != 0) {
+        std::cout << "getaddrinfo failed\n";
+        return;
+    }
+   
+    int server = ::socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+    if (server < 0) {
+        std::cout << "socket failed\n";
+        return;
+    }
+    
+    int connect = ::connect(server, addr->ai_addr, addr->ai_addrlen);
+    if (connect < 0) {
+        std::cout << "connect failed\n";
+        return;
+    }
+    ::freeaddrinfo(addr);
+    
+    std::string body = 
+        "{\"model\": \"qwen3:8B\","
+        "\"prompt\": \"" + input + "\","
+        "\"stream\": true}";
+
+    std::string http_req = 
+        "POST /api/generate HTTP/1.1\r\n"
+        "Host: localhost:11434\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: " + std::to_string(body.size()) + "\r\n"
+        "\r\n" + 
+        body;
+
+    std::cout << input;
+
+//     ssize_t send = ::send(server, http_req.data(), http_req.size(), 0); 
+//
+//     std::cout << "Size sent: " << send << "\n";
+//
+//     std::string res;
+//     char buff[4096];
+//     while (res.find("\r\n\r\n") == std::string::npos) {
+//         ssize_t recieve = ::recv(server, buff, sizeof(buff), 0);    
+//
+//         if (recieve <= 0)
+//             break;
+//
+//         res.append(buff, recieve);
+//     }
+//     std::cout << res << std::endl;
+// }
+    ssize_t send = ::send(server, http_req.c_str(), http_req.size(), 0);
+    std::cout << "Size sent: " << send << "\n";
+
+    while (1) {
+
+        char res[4096];
+        char *p;
+        int recieve = ::recv(server, res, sizeof(res), 0);
+
+        if (recieve <=0) {
+            std::cout << "Connection closed or stalled \n";
+            break;
+        }
+
+        // Find the response and print it to the terminal char by char
+        if ((p=strstr(res, "\"response\":\""))) {
+            p+=12;
+
+            while (*p && *p != '"')
+                putchar(*p++);
+        }
+
+        fflush(stdout);
+        // Exit loop on response finished
+        if ((p=strstr(res, "\"done\":true"))) {
+            printf("\n");
+            break;
+        }
+    }
 }
 
-VecStr stopping_words() {
-    VecStr words = {"a","about","above","after","again","against","all",
+/* Hard coded set of stopping words*/
+strvec stopping_words() {
+    strvec words = {"a","about","above","after","again","against","all",
         "am","an","and","any","are","as","at","be","because","been","before",
         "being","below","between","both","but","by","could","did","do","does",
         "doing","down","during","each","few","for","from","further","had","has",
@@ -102,4 +231,36 @@ VecStr stopping_words() {
         "until","up","very","was","we","were","what","when","where","which","while",
         "who","whom","why","will","with","you","your","yours","yourself","yourselves"};
     return words;
+}
+
+/* Hard coded set of knowledge*/
+strvec stored_knowledge() {
+    strvec knowledge = {
+        "The user is interested in cybernetics and control theory",
+        "The user has studied Ashby's Law of Requisite Variety",
+        "The user believes regulation is a fundamental concept in intelligence",
+        "The user is interested in systems that create regulators to manage environmental variables",
+        "The user discussed a room requiring regulation of temperature and humidity",
+        "The user proposed a higher-level regulator that creates lower-level regulators",
+        "The user is interested in building AI systems from cybernetic principles rather than scaling alone",
+        "The user believes intelligence may emerge from layered regulatory structures",
+        "The user is studying software development and artificial intelligence",
+        "The user prefers Linux as a primary operating system",
+        "The user primarily programs in C",
+        "The user also uses C++ and Python",
+        "The user wants to build local AI systems rather than relying entirely on cloud services",
+        "The user is building a local RAG system as a portfolio project",
+        "The user intends for model backends to be replaceable",
+        "The user intends for database backends to be replaceable",
+        "The user plans to start with SQLite",
+        "The user plans to start with Ollama as the model backend",
+        "The user eventually wants direct model loading instead of Ollama",
+        "The project may be used to demonstrate engineering and AI skills to employers",
+        "The working project name is RagTag",
+        "The first database backend is SQLite",
+        "The first model backend is Ollama",
+        "The preferred implementation language is C++",
+        "The user owns a ThinkPad T15"
+    };
+    return knowledge;
 }
