@@ -155,8 +155,8 @@ using strvec = std::vector<std::string>;
         ::freeaddrinfo(addr);
 
         std::string body = 
-            // "{\"model\": \"llama3.1:8B\","
-            "{\"model\": \"qwen3:8B\","
+            "{\"model\": \"llama3.1:8B\","
+            // "{\"model\": \"qwen3:8B\","
             "\"prompt\": \"" + input + "\","
             "\"stream\": true,"
             "\"think\": false}";

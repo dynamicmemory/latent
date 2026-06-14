@@ -1,0 +1,12 @@
+The user is interested in cybernetics and control theory
+The user has studied Ashby's Law of Requisite Variety
+The user believes regulation is a fundamental concept in intelligence
+The user proposed a higher-level regulator that creates lower-level regulators
+The user is interested in building AI systems from cybernetic principles rather than scaling alone
+The user believes intelligence may emerge from layered regulatory structures
+The user is studying software development and artificial intelligence
+The user prefers Linux as a primary operating system
+The user primarily programs in C
+The user also uses C++ and Python
+The user wants to build local AI systems rather than relying entirely on cloud services
+The user is building a local RAG system as a portfolio project

@@ -8,11 +8,14 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstring>
+#include <fstream>
+#include <sstream>
 
 struct Query {
     std::string prompt;
     std::vector<std::string> keywords;
 };
+
 
 class QueryAnalyser {
 private:
@@ -38,7 +41,6 @@ public:
             }
             keywords.push_back(pword);
         }
-
         return keywords;    
     }
 
@@ -71,11 +73,12 @@ public:
 };
 
 
+
 class KnowledgeBase {
 private:
 public:
-    std::vector<std::string> retrieve(std::vector<std::string> keywords) {
-        std::vector<std::string> records = knowledge_base();
+    std::vector<std::string> retrieve_context(std::vector<std::string> keywords) {
+        std::vector<std::string> records = load_knowledge();
         std::vector<std::string> context;
 
         for (auto rec : records) {
@@ -84,16 +87,19 @@ public:
                 [](unsigned char c) { return std::tolower(c); });
             std::vector<std::string> record_keywords = split_string(rec);
 
-            // TODO Will add a record multiple times if multiple keywords are in prompt or record
-            // For each word in the keywords from the prompt 
             for (auto word : keywords) { 
+                bool in = false;
                 // For each word in the keywords from the current record 
                 for (auto recword : record_keywords) 
                     // If one word matches, then add the whole untouched record
                     if (word == recword) {
                         context.push_back(rec);
-                        continue;
+                        in = true;                
+                        break;
                     }
+                // Stops looking at record if a match has already occured
+                if (in)
+                    break;
             }
         }
         return context;
@@ -110,21 +116,19 @@ public:
     }
 
     /* Hard coded set of knowledge*/
-    std::vector<std::string> knowledge_base() {
-        std::vector<std::string> knowledge = {
-            "The user is interested in cybernetics and control theory",
-            "The user has studied Ashby's Law of Requisite Variety",
-            "The user believes regulation is a fundamental concept in intelligence",
-            "The user proposed a higher-level regulator that creates lower-level regulators",
-            "The user is interested in building AI systems from cybernetic principles rather than scaling alone",
-            "The user believes intelligence may emerge from layered regulatory structures",
-            "The user is studying software development and artificial intelligence",
-            "The user prefers Linux as a primary operating system",
-            "The user primarily programs in C",
-            "The user also uses C++ and Python",
-            "The user wants to build local AI systems rather than relying entirely on cloud services",
-            "The user is building a local RAG system as a portfolio project",
-        };
+    std::vector<std::string> load_knowledge() {
+        std::string line;
+        std::vector<std::string> knowledge;
+        std::ifstream file("./knowledge_base.txt");
+        
+        // TODO: Handle failure
+        if (!file) {
+            std::cerr << "Failed to open file\n";
+        }
+
+        while (std::getline(file, line)) {
+            knowledge.push_back(line);
+        }
         return knowledge;
     }
 };
@@ -176,8 +180,8 @@ public:
         ::freeaddrinfo(addr);
 
         std::string body = 
-            // "{\"model\": \"llama3.1:8B\","
-            "{\"model\": \"qwen3:8B\","
+            "{\"model\": \"llama3.1:8B\","
+            // "{\"model\": \"qwen3:8B\","
             "\"prompt\": \"" + prompt + "\","
             "\"stream\": true,"
             "\"think\": false}";
@@ -237,7 +241,7 @@ public:
 
     void ask(std::string prompt) {
         auto keywords = analyser.analyse(prompt);
-        auto context = kb.retrieve(keywords);
+        auto context = kb.retrieve_context(keywords);
         auto reconstructed = builder.build(prompt, context);
         model.query(reconstructed);
     }

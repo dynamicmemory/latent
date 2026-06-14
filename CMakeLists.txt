@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 # src files
 add_executable(latent
-    prototype.cpp
+    prototype_v2.cpp
 )
 
 # headers 
