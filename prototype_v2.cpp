@@ -73,12 +73,43 @@ public:
 };
 
 
-
 class KnowledgeBase {
 private:
+    std::vector<std::string> records;
 public:
-    std::vector<std::string> retrieve_context(std::vector<std::string> keywords) {
-        std::vector<std::string> records = load_knowledge();
+    KnowledgeBase(/*TODO: PASS IN THE KNOWLEDGEBASE?*/) { 
+        records = load_knowledge(); 
+    }
+
+    std::vector<std::string> get_knowledge() { return records; }
+
+    /* Hard coded set of knowledge
+     * TODO: KnowledgeBase wont always be a txt file, add support or turn into interface
+     */
+    std::vector<std::string> load_knowledge() {
+        std::string line;
+        std::vector<std::string> knowledge;
+        std::ifstream file("./knowledge_base.txt"); // TODO: Change to passed in kb
+        
+        // TODO: Handle failure
+        if (!file) {
+            std::cerr << "Failed to open file\n";
+        }
+
+        while (std::getline(file, line)) {
+            knowledge.push_back(line);
+        }
+        return knowledge;
+    }
+};
+
+
+/* Retrieves matching records from the knowledge base related to the users prompt */
+class RetrivalEngine {
+private:
+public:
+    std::vector<std::string> retrieve_context(std::vector<std::string> keywords,
+                                              std::vector<std::string> records) {
         std::vector<std::string> context;
 
         for (auto rec : records) {
@@ -113,23 +144,6 @@ public:
         while (stream >> word) 
             output.push_back(word);
         return output;
-    }
-
-    /* Hard coded set of knowledge*/
-    std::vector<std::string> load_knowledge() {
-        std::string line;
-        std::vector<std::string> knowledge;
-        std::ifstream file("./knowledge_base.txt");
-        
-        // TODO: Handle failure
-        if (!file) {
-            std::cerr << "Failed to open file\n";
-        }
-
-        while (std::getline(file, line)) {
-            knowledge.push_back(line);
-        }
-        return knowledge;
     }
 };
 
@@ -235,13 +249,15 @@ class Agent {
 private:
 public:
     QueryAnalyser analyser;
+    RetrivalEngine retriever;
     KnowledgeBase kb;
     ContextBuilder builder; 
     ModelRuntime model;
 
     void ask(std::string prompt) {
         auto keywords = analyser.analyse(prompt);
-        auto context = kb.retrieve_context(keywords);
+        auto records = kb.get_knowledge();
+        auto context = retriever.retrieve_context(keywords, records);
         auto reconstructed = builder.build(prompt, context);
         model.query(reconstructed);
     }
