@@ -14,17 +14,25 @@
 struct Query {
     std::string prompt;
     std::vector<std::string> keywords;
+    std::vector<std::string> context;
 };
 
 
 class QueryAnalyser {
 private:
-public: 
+    std::vector<std::string> stop_words;
+public:
+    QueryAnalyser() { stop_words = stopping_words(); }
+
     std::vector<std::string> analyse(std::string prompt) {
+        // drop all chars to lowercase
         std::transform(prompt.begin(), prompt.end(), prompt.begin(), 
                 [](unsigned char c) { return std::tolower(c); });
 
-        std::vector<std::string> stop_words = stopping_words();
+        // drop all puncuation
+        std::replace_if(prompt.begin(), prompt.end(), 
+                [](unsigned char c) { return std::ispunct(c); }, ' ');
+
         std::vector<std::string> prompt_vec = split_string(prompt);
         std::vector<std::string> keywords;
 
@@ -97,8 +105,15 @@ public:
         }
 
         while (std::getline(file, line)) {
+            // drop all puncuation
+            std::replace_if(line.begin(), line.end(), 
+                [](unsigned char c) { return std::ispunct(c); }, ' ');
+
             knowledge.push_back(line);
         }
+
+
+
         return knowledge;
     }
 };
@@ -254,11 +269,11 @@ public:
     ContextBuilder builder; 
     ModelRuntime model;
 
-    void ask(std::string prompt) {
-        auto keywords = analyser.analyse(prompt);
+    void ask(Query query) {
+        query.keywords = analyser.analyse(query.prompt);
         auto records = kb.get_knowledge();
-        auto context = retriever.retrieve_context(keywords, records);
-        auto reconstructed = builder.build(prompt, context);
+        query.context = retriever.retrieve_context(query.keywords, records);
+        auto reconstructed = builder.build(query.prompt, query.context);
         model.query(reconstructed);
     }
 };
@@ -269,14 +284,15 @@ int main(void) {
 
     while (true) {
         // Get user input
+        Query q;
         std::string prompt; 
         std::cout << "Enter Prompt >> ";
-        std::getline(std::cin, prompt);
+        std::getline(std::cin, q.prompt);
 
-        if (prompt == "quit")
+        if (q.prompt == "quit")
             break;
 
-        smith.ask(prompt);
+        smith.ask(q);
     }
     return 0;
 }
