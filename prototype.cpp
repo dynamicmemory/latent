@@ -17,6 +17,11 @@ struct Query {
     std::vector<std::string> context;
 };
 
+struct Record {
+    std::string text;
+};
+
+
 // Utilities.h 
 std::vector<std::string> split_string(const std::string &input);
 std::string normalise(std::string &input);
@@ -32,6 +37,7 @@ std::vector<std::string> split_string(const std::string &input) {
     return output;
 }
 
+/* Mutates input string by lowering capitalisation and removing all puncuation*/
 std::string normalise(std::string &input) {
     // drop all chars to lowercase
     std::transform(input.begin(), input.end(), input.begin(), 
@@ -91,16 +97,17 @@ std::vector<std::string> QueryAnalyser::stopping_words() {
 
 
 // KnowledgeBase.h
-/* TODO: Support a directory full of .txt, .db, .pdf, etc files to read knowledge from */
+/* TODO: Support a directory full of .txt, .db, .pdf, etc files to read knowledge from 
+ * TODO: May want to add a context reload or auto updater*/
 class KnowledgeBase {
 private:
-    std::vector<std::string> records;
+    std::vector<Record> records;
 public:
     KnowledgeBase(/*TODO: PASS IN THE KNOWLEDGEBASE?*/) { 
         records = load_knowledge(); 
     }
-    std::vector<std::string> get_knowledge() { return records; }
-    std::vector<std::string> load_knowledge();
+    std::vector<Record> get_knowledge() { return records; }
+    std::vector<Record> load_knowledge();
 };
 
 
@@ -108,9 +115,9 @@ public:
 /* Hard coded set of knowledge
  * TODO: KnowledgeBase wont always be a txt file, add support or turn into interface
  */
-std::vector<std::string> KnowledgeBase::load_knowledge() {
+std::vector<Record> KnowledgeBase::load_knowledge() {
     std::string line;
-    std::vector<std::string> knowledge;
+    std::vector<Record> knowledge;
     std::ifstream file("./knowledge_base.txt"); // TODO: Change to passed in kb
 
     // TODO: Handle failure
@@ -119,11 +126,13 @@ std::vector<std::string> KnowledgeBase::load_knowledge() {
     }
 
     while (std::getline(file, line)) {
+        Record r;
         // drop all puncuation
         std::replace_if(line.begin(), line.end(), 
                 [](unsigned char c) { return std::ispunct(c); }, ' ');
-
-        knowledge.push_back(line);
+        // Assign string to the record and add to context
+        r.text = line;
+        knowledge.push_back(r);
     }
     return knowledge;
 }
@@ -133,61 +142,69 @@ std::vector<std::string> KnowledgeBase::load_knowledge() {
 /* Retrieves matching records from the knowledge base related to the users prompt */
 class RetrivalEngine {
 private:
+    int score_record(const std::vector<std::string> &keywords, 
+                     const std::vector<std::string> &record_keywords);
 public:
     std::vector<std::string> retrieve_context(std::vector<std::string> keywords,
-                                              std::vector<std::string> records);
+                                              std::vector<Record> records);
     std::vector<std::string> sort_context(std::vector<std::string> context);
 };
 
 // RetrivalEngine.cpp
 std::vector<std::string> RetrivalEngine::retrieve_context(
-        std::vector<std::string> keywords, std::vector<std::string> records) {
+        std::vector<std::string> keywords, std::vector<Record> records) {
 
-    struct Match { std::string record; int score = 0; };
+    struct Match { Record record; float score = 0; }; // TODO: Extract later
 
     std::vector<Match> matches;
     std::vector<std::string> context;
 
     for (auto rec : records) {
         Match m;
-        // Process each record, lower case them, strip puncuation 
-        rec = normalise(rec);
-        std::vector<std::string> record_keywords = split_string(rec);
+        // Record processing 
+        rec.text = normalise(rec.text);
+        std::vector<std::string> record_keywords = split_string(rec.text);
 
+        // Record scoring
         m.record = rec;
-        // TODO int score_record(keywords, record_keywords) return score into m.score
-        for (auto word : keywords) {
-            for (auto recword : record_keywords) 
-                if (word == recword)
-                    m.score++;
-        }
+        m.score = score_record(keywords, record_keywords);  // Interchangable score (eventually)
 
-        if (m.score > 0)
-            matches.push_back(m);
+        if (m.score > 0) matches.push_back(m);
     }
 
+    // Context sorting
     std::sort(matches.begin(), matches.end(), 
         [](const Match &a, const Match &b) { return a.score > b.score;});
 
     // Take the 5 best matched records
     for (auto match : matches)
         if (context.size() < 5) {
-            context.push_back(match.record);
-            std::cout << "Record: " << match.record << " Score: " << match.score << "\n";
+            context.push_back(match.record.text);
+            std::cout << "Record: " << match.record.text << " Score: " << match.score << "\n";
         }
     return context;
 }
 
+int RetrivalEngine::score_record(const std::vector<std::string> &keywords, 
+                                 const std::vector<std::string> &record_keywords) {
+    float score = 0.0;
+    for (auto word : keywords) {
+        for (auto recword : record_keywords) 
+            if (word == recword)
+                score++;
+    }
+    return score;
+}
 
-// ContextBuilder.h
-class ContextBuilder {
+// PromptBuilder.h
+class PromptBuilder {
     private: 
     public:
         std::string build(std::string prompt, std::vector<std::string> context);
 };
 
-// ContextBuilder.cpp
-std::string ContextBuilder::build(std::string prompt, std::vector<std::string> context) {
+// PromptBuilder.cpp
+std::string PromptBuilder::build(std::string prompt, std::vector<std::string> context) {
     std::string output = "context: "; 
     for (auto con : context)
         output += con + " ";
@@ -195,15 +212,16 @@ std::string ContextBuilder::build(std::string prompt, std::vector<std::string> c
     return output;
 }
 
-// ModelRuntime.h
-class ModelRuntime {
+// Client.h
+/* Could be ollama, lama.cpp, huggingface, bespoke build, etc*/
+class Client {
 private:
 public:
-    void query(std::string prompt);
+    void query_ollama(std::string prompt);
 };
 
-// ModelRuntime.cpp
-void ModelRuntime::query(std::string prompt) {
+// Client.cpp
+void Client::query_ollama(std::string prompt) {
 
     const char host[] = "127.0.0.1";
     const char port[] = "11434";
@@ -290,8 +308,8 @@ class Agent {
         QueryAnalyser analyser;
         RetrivalEngine retriever;
         KnowledgeBase kb;
-        ContextBuilder builder; 
-        ModelRuntime model;
+        PromptBuilder builder; 
+        Client model;
 
         void ask(Query query);
 };
@@ -302,8 +320,9 @@ void Agent::ask(Query query) {
     auto records = kb.get_knowledge();
     query.context = retriever.retrieve_context(query.keywords, records);
     auto reconstructed = builder.build(query.prompt, query.context);
-    model.query(reconstructed);
+    model.query_ollama(reconstructed);
 }
+
 
 // main.cpp
 int main(void) {
